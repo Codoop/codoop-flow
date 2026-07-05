@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-marketplace.json",
+  "name": "codoop-flow",
+  "description": "codoop-flow: in-session orchestration for an AI-coding ticket pipeline (build/verify/review/ship) with a deterministic guardrail CLI.",
+  "owner": {
+    "name": "your-name",
+    "url": "https://github.com/your-org"
+  },
+  "plugins": [
+    {
+      "name": "codoop-flow",
+      "source": {
+        "source": "github",
+        "repo": "your-org/codoop-flow"
+      },
+      "description": "Drive codoop-flow tickets in-session: pick -> build -> verify -> review -> ship, plus human-facing discover and ticket-lifecycle CLIs.",
+      "homepage": "https://github.com/your-org/codoop-flow",
+      "license": "MIT",
+      "keywords": ["skills", "agents", "pipeline", "tickets", "review", "ship", "worktree"]
+    }
+  ]
+}

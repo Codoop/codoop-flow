@@ -1,0 +1,9 @@
+# local config (copy from codoop_flow.toml.example)
+codoop_flow.toml
+
+# python
+__pycache__/
+*.pyc
+
+# macOS
+.DS_Store

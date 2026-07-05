@@ -1,0 +1,9 @@
+# codoop-flow configuration (copy to codoop_flow.toml and edit).
+# codoop-flow is a portable tool; these paths point at the TARGET project
+# whose ticket pipeline you want to drive.
+
+# Absolute path to the target git repository.
+target_repo = "/path/to/your/codoop-project-repo"
+
+# Where isolated per-ticket worktrees are created.
+worktree_root = "~/codoop_tickets/worktrees"

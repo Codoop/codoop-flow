@@ -1,0 +1,145 @@
+"""Human-Centric ticket lifecycle (design §4.1) — the deterministic part.
+
+The intelligent work (writing PRD / spec / plan / todo) is the human's + their
+product agent's job. This module only does the conveyor-belt plumbing around
+that: scaffold a draft, validate it's complete, and promote it to pending/
+(which the codoop-flow skill then picks up via codoop_tools.py).
+
+    drafts/<id>/  --init-->  (human/AI fills docs)  --validate-->  --promote-->  pending/<id>/
+"""
+
+from __future__ import annotations
+
+import json
+import shutil
+from dataclasses import dataclass, field
+from pathlib import Path
+
+from .config import Config
+from .ticket import METADATA_FILE, Ticket
+
+# Docs the human authors per design §4.1. module_prd + spec are hard-required
+# (a ticket with no business + no contract is not ready); plan/todo are
+# recommended but not blocking (small tickets may inline them).
+REQUIRED_DOCS = ("module_prd.md", "spec.md")
+RECOMMENDED_DOCS = ("plan.md", "todo.md")
+
+
+@dataclass
+class ValidationResult:
+    ok: bool
+    errors: list[str] = field(default_factory=list)
+    warnings: list[str] = field(default_factory=list)
+
+
+def _drafts_dir(config: Config) -> Path:
+    return config.tickets_dir / "drafts"
+
+
+def init_draft(config: Config, ticket_id: str, title: str = "") -> Path:
+    """Scaffold docs/tickets/drafts/<ticket_id>/ with a metadata stub + empty
+    design docs. Returns the draft dir. Refuses to clobber an existing draft.
+    """
+    draft = _drafts_dir(config) / ticket_id
+    if draft.exists():
+        raise FileExistsError(f"draft already exists: {draft}")
+    draft.mkdir(parents=True)
+
+    stub = {
+        "ticket_id": ticket_id,
+        "title": title or ticket_id,
+        "modules": ["backend"],
+        "test_command": {"backend": "bash script/test-backend.sh"},
+        "files_to_edit": ["backend/**"],
+        "max_healing_attempts": 3,
+        "ui_capture": False,
+    }
+    (draft / METADATA_FILE).write_text(
+        json.dumps(stub, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
+    )
+    (draft / "module_prd.md").write_text(
+        f"# {title or ticket_id} — 业务 PRD\n\n"
+        "> 100% 纯业务描述,不涉及任何代码/表结构/API 字段。\n\n"
+        "## 核心业务大图\n\n## 用户故事 (User Stories)\n\n"
+        "## 业务流转状态图\n\n## Definition of Done (验收条件)\n",
+        encoding="utf-8",
+    )
+    (draft / "spec.md").write_text(
+        "# 技术规格 (Spec)\n\n> 基于 module_prd.md,定义 API 契约 / 数据 Schema / "
+        "UI 交互 / files_to_edit 白名单。\n\n"
+        "## API 契约\n\n## 数据 Schema\n\n## UI 交互约定\n\n"
+        "## 编辑范围 (files_to_edit)\n",
+        encoding="utf-8",
+    )
+    (draft / "plan.md").write_text(
+        "# 执行步骤计划 (Plan)\n\n- Step 1: ...\n", encoding="utf-8"
+    )
+    (draft / "todo.md").write_text(
+        "# 原子任务 (Todo)\n\n- [ ] [backend] ...\n", encoding="utf-8"
+    )
+    return draft
+
+
+def _is_meaningfully_filled(path: Path) -> bool:
+    """A doc counts as filled if it has non-heading, non-blockquote content —
+    i.e. the human wrote something beyond the scaffolded headings."""
+    if not path.exists():
+        return False
+    for line in path.read_text(encoding="utf-8").splitlines():
+        s = line.strip()
+        if not s or s.startswith("#") or s.startswith(">"):
+            continue
+        # Bare scaffold list markers ("- Step 1: ..." / "- [ ] ...") don't count.
+        if s.rstrip(". ").endswith("...") or s in ("- [ ]", "-"):
+            continue
+        return True
+    return False
+
+
+def validate_draft(config: Config, ticket_id: str) -> ValidationResult:
+    """Check a draft is ready to promote: metadata parses + required docs are
+    meaningfully filled. Returns errors (blocking) and warnings (advisory)."""
+    draft = _drafts_dir(config) / ticket_id
+    errors: list[str] = []
+    warnings: list[str] = []
+
+    if not draft.exists():
+        return ValidationResult(False, [f"draft not found: {draft}"])
+
+    # metadata.json must parse + satisfy the Ticket schema.
+    try:
+        Ticket.load(draft)
+    except ValueError as e:
+        errors.append(f"metadata invalid: {e}")
+
+    for doc in REQUIRED_DOCS:
+        p = draft / doc
+        if not p.exists():
+            errors.append(f"missing required doc: {doc}")
+        elif not _is_meaningfully_filled(p):
+            errors.append(f"required doc still empty (only scaffold): {doc}")
+
+    for doc in RECOMMENDED_DOCS:
+        p = draft / doc
+        if not p.exists() or not _is_meaningfully_filled(p):
+            warnings.append(f"recommended doc empty: {doc}")
+
+    return ValidationResult(ok=not errors, errors=errors, warnings=warnings)
+
+
+def promote(config: Config, ticket_id: str) -> Path:
+    """Validate, then move drafts/<id> -> pending/<id> so the codoop-flow skill
+    can pick it up. Raises ValueError if validation fails."""
+    result = validate_draft(config, ticket_id)
+    if not result.ok:
+        raise ValueError(
+            "cannot promote — validation failed:\n"
+            + "\n".join(f"  - {e}" for e in result.errors)
+        )
+    draft = _drafts_dir(config) / ticket_id
+    config.pending_dir.mkdir(parents=True, exist_ok=True)
+    dest = config.pending_dir / ticket_id
+    if dest.exists():
+        raise FileExistsError(f"pending ticket already exists: {dest}")
+    shutil.move(str(draft), str(dest))
+    return dest

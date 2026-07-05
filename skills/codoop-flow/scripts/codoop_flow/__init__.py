@@ -1,0 +1,3 @@
+"""codoop-flow: portable AI-coding ticket pipeline driver."""
+
+__version__ = "0.1.0"
