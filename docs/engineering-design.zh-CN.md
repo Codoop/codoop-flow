@@ -14,51 +14,86 @@
 
 ```mermaid
 flowchart TD
-    subgraph ventureLoop [1. 创业探索环 (Venture-Discovery Loop)]
-        V1["1. 顶层设计与商业论证<br>Skill: product-discovery-loop<br><b>Subagents:</b><br>- product-sprint-prioritizer (PM)<br>- sales-offer-lead-gen-strategist (GTM定价)<br>- design-ux-architect & ui-designer (UI/UX)<br>- engineering-backend-architect & software-architect (技术)"] -->|"2. 协同草拟草案"| V2["docs/backlog/design-draft.md<br>(Challenge Loop 冲突对齐)"]
-        V2 -->|"3. 一致性硬审计锁"| V3["一致性硬审计锁<br>Subagent: workflow-architect"]
+    subgraph ventureLoop ["1. 创业探索环 - Venture-Discovery Loop"]
+        V1["顶层设计与商业论证
+        Skill: product-discovery-loop
+        Subagents: PM / GTM / UI-UX / 技术架构"] -->|协同草拟草案| V2["docs/backlog/design-draft.md
+        Challenge Loop 冲突对齐"]
+        V2 -->|一致性硬审计锁| V3["一致性审计
+        Subagent: workflow-architect"]
         V3 --> V4{"100% 一致性契约?"}
-        V4 -->|"否 (Challenge)"| V1
-        V4 -->|"是 [APPROVED]"| V5["4. 成果正式固化常青树<br>docs/prd/ & docs/tech/<br>(自动剪枝 backlog/)"]
+        V4 -->|否 Challenge| V1
+        V4 -->|是 APPROVED| V5["成果固化常青树
+        docs/prd/ & docs/tech/
+        自动剪枝 backlog/"]
     end
 
-    subgraph humanLoop [2. 以人为中心的需求设计环 (Human-Centric Loop)]
-        H1["1. 工单草稿初始化<br>docs/tickets/drafts/ticket_ID/"] -->|"2. 业务需求设计"| H2["2. 纯业务 PRD<br>module_prd.md (非技术无代码)<br>Subagent: product-sprint-prioritizer"]
-        H2 -->|"3. 技术规格开发"| H3["3. 契约定义 (Spec)<br>spec.md (规格驱动)<br>Skill: spec-driven-development,<br>api-and-interface-design"]
-        H3 -->|"4. 任务规划分解"| H4["4. 任务分解 (Plan & Todo)<br>plan.md & todo.md<br>Skill: planning-and-task-breakdown"]
-        H4 -->|"5. 定稿归档发布"| H5["5. 搬迁搬移 pending/<br>docs/tickets/pending/ticket_ID/"]
+    subgraph humanLoop ["2. 以人为中心的需求设计环 - Human-Centric Loop"]
+        H1["工单草稿初始化
+        docs/tickets/drafts/ticket_ID/"] -->|业务需求设计| H2["纯业务 PRD
+        module_prd.md 非技术无代码
+        Subagent: product-sprint-prioritizer"]
+        H2 -->|技术规格开发| H3["契约定义 Spec
+        spec.md 规格驱动
+        Skill: spec-driven-development"]
+        H3 -->|任务规划分解| H4["任务分解 Plan & Todo
+        plan.md & todo.md
+        Skill: planning-and-task-breakdown"]
+        H4 -->|定稿归档发布| H5["搬迁到 pending/
+        docs/tickets/pending/ticket_ID/"]
     end
 
-    subgraph doubleLoopInteraction [3. 双环交互与状态对齐 (Double-Loop Interaction)]
-        H5 -->|"1. 提单人定稿工单"| I1["1. 检测待办工单<br>launchd / 定时流水线唤醒<br>main_scheduler.py"]
-        I1 -->|"2. 进程锁校验"| I2["2. 排他锁建议锁 (fcntl)<br>codoop_flow.lock"]
-        I2 -->|"3. Worktree 隔离初始化"| I3["3. Git Worktree 隔离开发区<br>干净克隆 + 智能缓存软链重构"]
-        I3 -->|"4. 局部披露"| I4["4. 移至 in_progress/ 隔离运行<br>docs/tickets/in_progress/"]
+    subgraph doubleLoopInteraction ["3. 双环交互与状态对齐 - Double-Loop Interaction"]
+        H5 -->|提单人定稿工单| I1["检测待办工单
+        launchd / 定时流水线唤醒
+        main_scheduler.py"]
+        I1 -->|进程锁校验| I2["排他锁建议锁 fcntl
+        codoop_flow.lock"]
+        I2 -->|Worktree 隔离初始化| I3["Git Worktree 隔离开发区
+        干净克隆 + 智能缓存软链重构"]
+        I3 -->|局部披露| I4["移至 in_progress/ 隔离运行
+        docs/tickets/in_progress/"]
     end
 
-    subgraph agentLoop [4. 以 Agent 为中心的自愈实现环 (Agent-Centric Loop)]
-        I4 -->|"1. 渐进式启动"| A1["1. AI 编码引擎增量开发 (Build)<br>渐进披露 spec 修改指定目录代码<br><b>工具:</b> Claude Code / Codex / Cursor<br>Skill: incremental-implementation"]
-        A1 <-->|"2. 读写修改"| WTCode["临时隔离 Worktree"]
-        A1 -->|"3. 局部测试沙盒"| A2["2. 自适应测试沙盒 (Verify)<br>执行 script/test-[module].sh<br>自适应无头截图 (无像素大小限制)<br>docs/tickets/in_progress/[id]/public/qa-screenshots/<br>Skill: test-driven-development"]
+    subgraph agentLoop ["4. 以 Agent 为中心的自愈实现环 - Agent-Centric Loop"]
+        I4 -->|渐进式启动| A1["AI 编码引擎增量开发 Build
+        渐进披露 spec 修改指定目录代码
+        工具: Claude Code / Codex / Cursor
+        Skill: incremental-implementation"]
+        A1 <-->|读写修改| WTCode["临时隔离 Worktree"]
+        A1 -->|局部测试沙盒| A2["自适应测试沙盒 Verify
+        执行 script/test-module.sh
+        自适应无头截图 无像素大小限制
+        Skill: test-driven-development"]
         A2 --> A3{"自动化测试全绿?"}
         
-        A3 -->|"否 (平台报错去噪)"| A4["3. 即时纠错自愈 (Debug)<br>对 stderr/stdout 精准清洗<br>注入 Debug Prompt (上限 3 次)<br>Skill: debugging-and-error-recovery"]
-        A4 -->|"迭代自愈"| A1
-        A4 -->|"自愈耗尽"| A8["6. 熔断挂起移至 failed/<br>生成自愈失败报告 healing_report.md"]
+        A3 -->|否 平台报错去噪| A4["即时纠错自愈 Debug
+        对 stderr/stdout 精准清洗
+        注入 Debug Prompt 上限 3 次
+        Skill: debugging-and-error-recovery"]
+        A4 -->|迭代自愈| A1
+        A4 -->|自愈耗尽| A8["熔断挂起移至 failed/
+        生成自愈失败报告 healing_report.md"]
         
-        A3 -->|"是"| A5["4. 并行五重评审门禁 (Review)<br>静态评测组 (代码/安全/覆盖率)<br>动态截图验收组 (UI/UX体验审核)<br>Skill: code-review-and-quality, ..."]
+        A3 -->|是| A5["并行五重评审门禁 Review
+        静态评测组 代码/安全/覆盖率
+        动态截图验收组 UI/UX体验审核
+        Skill: code-review-and-quality"]
         A5 --> A6{"五方全票 APPROVED?"}
         
-        A6 -->|"Reject (存在缺陷/标注意见)"| A4
-        A6 -->|"Approve"| A7["5. 自动同步常青与 Ship (Ship)<br>Subagent: technical-writer (同步PRD/tech)<br>Subagent: git-workflow-master (推送代码)<br>移至 done/ 归档, 强制清理 Worktree"]
+        A6 -->|Reject 存在缺陷/标注意见| A4
+        A6 -->|Approve| A7["自动同步常青与 Ship
+        Subagent: technical-writer
+        Subagent: git-workflow-master
+        移至 done/ 归档 强制清理 Worktree"]
     end
 
-    V5 -->|"5. 参阅常青树规范<br>开始手工/辅助拆单"| H1
-    A7 -->|"交割反馈"| UserAccept["5. 人类接收 / 一键并网上线<br>Skill: shipping-and-launch"]
-    UserAccept -.->|"迭代新需求"| H1
-    A8 -->|"手动修复 / 重新提单"| H1
+    V5 -->|参阅常青树规范 开始手工/辅助拆单| H1
+    A7 -->|交割反馈| UserAccept["人类接收 / 一键并网上线
+    Skill: shipping-and-launch"]
+    UserAccept -.->|迭代新需求| H1
+    A8 -->|手动修复 / 重新提单| H1
 
-    %% 样式美化定义
     style V1 fill:#e1f5fe,stroke:#0288d1,stroke-width:2px,color:#000
     style V2 fill:#e1f5fe,stroke:#0288d1,stroke-width:2px,color:#000
     style V3 fill:#e1f5fe,stroke:#0288d1,stroke-width:2px,color:#000
