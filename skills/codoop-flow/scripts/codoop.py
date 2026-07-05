@@ -22,8 +22,25 @@ import argparse
 import sys
 
 from codoop_flow import discover
-from codoop_flow.config import load_config
+from codoop_flow.config import load_config, setup_target
 from codoop_flow.tickets_cli import init_draft, promote, validate_draft
+
+
+def _cmd_setup(args) -> int:
+    try:
+        config, cfg_path = setup_target(
+            args.target_repo,
+            worktree_root=args.worktree_root,
+            config_path=args.config,
+        )
+    except (ValueError, FileExistsError) as e:
+        print(f"error: {e}")
+        return 1
+    print(f"created config: {cfg_path}")
+    print(f"ticket pipeline ready under: {config.tickets_dir}")
+    print("Next: add a ticket to pending/, then in a Claude Code session say")
+    print(f'  "read the codoop-flow skill and run a ticket against {cfg_path}"')
+    return 0
 
 
 def _cmd_discover(args) -> int:
@@ -68,6 +85,12 @@ def _cmd_ticket_promote(args) -> int:
 def main() -> int:
     parser = argparse.ArgumentParser(prog="codoop", description="codoop-flow human CLI")
     sub = parser.add_subparsers(dest="command", required=True)
+
+    p_setup = sub.add_parser("setup", help="onboard a target repo: make ticket dirs + write config")
+    p_setup.add_argument("target_repo", help="path to the target git repo to drive")
+    p_setup.add_argument("--config", default=None, help="where to write codoop_flow.toml (default: ./codoop_flow.toml)")
+    p_setup.add_argument("--worktree-root", default="~/codoop_tickets/worktrees", help="where per-ticket worktrees are created")
+    p_setup.set_defaults(func=_cmd_setup)
 
     p_disc = sub.add_parser("discover", help="launch the discovery design session")
     p_disc.add_argument("--config", default=None, help="path to codoop_flow.toml")

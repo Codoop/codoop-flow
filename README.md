@@ -1,131 +1,108 @@
+<div align="center">
+
 # codoop-flow
 
-**给 AI coding agent 用的工单流水线：挑单 → 写码 → 验证 → 评审 → 归档，一单一闭环。**
+**把"AI 写代码"变成一条有护栏的工单流水线**
+挑单 → 写码 → 验证 → 多重评审 → 归档，一单一闭环
 
-codoop-flow 的核心理念是**"skill 编排 + 确定性护栏"**：
+![Claude Code Plugin](https://img.shields.io/badge/Claude%20Code-plugin-8A63D2)
+![Python](https://img.shields.io/badge/python-3.11%2B-blue)
+![Zero deps](https://img.shields.io/badge/deps-zero-brightgreen)
+![License](https://img.shields.io/badge/license-MIT-green)
 
-- **智力活**（写代码、自愈、评审判断、文档同步）交给会话里的 Claude —— 它本来就擅长；
-- **体力活**（挑单、搬文件夹、管 git worktree、跑测试、卡越界白名单、提交）交给一个不会幻觉的小 CLI 当护栏。
+</div>
 
-它是一个**可迁移的工具**，本身不含任何业务代码。你用一份 `codoop_flow.toml` 把它指向你真正要开发的目标工程，它就在那个工程的 `docs/tickets/` 里流转工单。
+**你只需用自然语言指挥 Claude，脏活累活由脚本护栏兜底。** 智力活（写码、自愈、评审判断、文档同步）交给会话里的 Claude；体力活（挑单、管 git worktree、跑测试、卡越界白名单、提交）交给一个不会幻觉的确定性 CLI。它是可迁移工具，本身不含业务代码——用一份 `codoop_flow.toml` 指向你真正要开发的工程即可。
+
+```
+         你说一句话                          你决定是否 push
+             │                                     ▲
+             ▼                                     │
+  ┌──────────────────────────── Claude 读 SKILL.md 编排 ───────────────────────────┐
+  │                                                                                │
+  │   pick ──▶ build ──▶ verify ──▶ review ──▶ ship docs ──▶ finish               │
+  │  [脚本]   [Claude]   [脚本]    [SubAgent]   [Claude]     [脚本]                 │
+  │   挑单     写码      跑测试     多重评审      同步文档     提交归档                │
+  │  建worktree         卡越界      全票才过                  dev/<id>              │
+  │                        │           │                                          │
+  │                        └─ 失败 ────┴─▶ self-heal 自愈（预算内重试）             │
+  └────────────────────────────────────────────────────────────────────────────┘
+```
 
 ---
 
-## 三个环
+## 安装
 
-| 环 | 谁在干 | 入口 |
-|---|---|---|
-| **探索环** 把想法拆成需求 | 人 + Claude 交互会话 | `codoop.py discover` |
-| **人工提单环** 把需求写成工单 | 人（写 PRD/spec） | `codoop.py ticket init/validate/promote` |
-| **Agent 自动环** 把工单做成代码 | Claude 在会话里自动跑 | `codoop-flow` skill + `codoop_tools.py` |
+在 Claude Code 里：
 
-日常最常用的是**第三个环**：你把工单放进 `pending/`，然后让 Claude 读 skill 自动跑完到 `done/`。
+```
+/plugin marketplace add Codoop/codoop-flow
+/plugin install codoop-flow@codoop-flow
+```
+
+> SSH 报错就改用完整 HTTPS：`/plugin marketplace add https://github.com/Codoop/codoop-flow.git`
+> 本地开发：`claude --plugin-dir /path/to/codoop-flow`
+> 其他 agent（Cursor / Codex / Gemini）见 [`docs/install.md`](./docs/install.md)。
+
+**前提**：目标工程是一个 git 仓库；机器有 `python3`（仅标准库，无第三方依赖）。
 
 ---
 
 ## 快速上手
 
-### 前提
-
-- 目标机器有 `python3`（只用标准库，无第三方依赖）。
-- 你的**目标工程**是一个 git 仓库，且有目录 `docs/tickets/{pending,in_progress,done,failed}/`。
-
-### 1. 安装 skill
-
-**Claude Code（推荐，插件市场）：**
-
-```
-/plugin marketplace add your-org/codoop-flow
-/plugin install codoop-flow@codoop-flow
-```
-
-**本地开发调试：**
+**① 一键接入你的工程**（建好工单目录 + 生成配置）：
 
 ```bash
-git clone https://github.com/your-org/codoop-flow.git
-claude --plugin-dir /path/to/codoop-flow
+python3 <插件目录>/skills/codoop-flow/scripts/codoop.py setup /path/to/your/repo
 ```
 
-其他 agent（Cursor / Codex / Gemini 等）见 [`docs/install.md`](./docs/install.md)——skill 是自包含目录，直接拷 `skills/codoop-flow/` 过去即可。
+**② 放一个工单**到 `你的工程/docs/tickets/pending/ticket_001/`，里面至少有一个 `metadata.json`（[字段说明见下](#工单-metadatajson)）和一份需求文档。
 
-### 2. 写配置
-
-复制样例并改成你的目标工程路径：
-
-```bash
-cp codoop_flow.toml.example codoop_flow.toml
-```
-
-```toml
-# 指向你要开发的目标工程（不是 codoop-flow 自己）
-target_repo = "/path/to/your/target-repo"
-# 每个工单的隔离 worktree 建在哪
-worktree_root = "~/codoop_tickets/worktrees"
-```
-
-### 3. 验证装好了
-
-`$SKILL` = skill 所在目录（插件装完后在插件目录下的 `skills/codoop-flow`）。
-
-```bash
-python3 $SKILL/scripts/codoop_tools.py --config codoop_flow.toml status
-```
-
-能打印出各阶段工单计数（JSON）就说明护栏 CLI 就位、config 正确。
-
----
-
-## 怎么用
-
-### A. 提一个工单
-
-```bash
-# 起草：在 drafts/ 里生成 metadata + 空文档骨架
-python3 $SKILL/scripts/codoop.py ticket init ticket_001 --config codoop_flow.toml --title "add hello module"
-```
-
-然后编辑 `docs/tickets/drafts/ticket_001/` 里的：
-
-- `module_prd.md` —— 纯业务描述（用户故事、验收条件），**不涉及代码**；
-- `spec.md` —— 技术契约（API / Schema / **`files_to_edit` 白名单**）；
-- `plan.md` / `todo.md` —— 执行步骤、原子任务（可选但建议）。
-
-同时改 `metadata.json` 的关键字段（见下方 schema）。
-
-```bash
-# 校验必填文档是否填了实质内容
-python3 $SKILL/scripts/codoop.py ticket validate ticket_001 --config codoop_flow.toml
-# 通过后搬进 pending/，等 Claude 来做
-python3 $SKILL/scripts/codoop.py ticket promote ticket_001 --config codoop_flow.toml
-```
-
-### B. 让 Claude 自动做工单
-
-在 Claude Code 会话里直接说：
+**③ 在 Claude Code 会话里说一句话：**
 
 ```
 读 codoop-flow skill，针对 codoop_flow.toml 跑一轮工单
 ```
 
-Claude 会自动走完：`pick`（挑单+建 worktree）→ 在 worktree 里按 todo 写码 → `verify`（跑测试+卡越界）→ 失败自愈 → 用 Task 派 subagent 多重评审（全票才过）→ 同步常青文档 → `finish`（提交到 `dev/<id>` 分支 + 归档到 done）。
+Claude 就会自动跑完整条流水线，并把结果提交到 `dev/<id>` 分支、归档到 `done/`。**是否 push 由你决定。**
 
-**定时跑整个队列：**
+想让它持续处理整个队列，用 Claude Code 的 `/loop`：
 
 ```
 /loop 5m run the codoop-flow skill against codoop_flow.toml
 ```
 
-`/loop` 单会话单线程，一次只做一单，天然无需锁。
+---
 
-> **push 是人的决定。** `finish` 只在本地 commit 到 `dev/<id>` 分支，是否 push 由你决定。
+## 它是怎么工作的
 
-### C. 探索一个新想法（可选）
+装好后你几乎不用记命令——**skill 是写给 Claude 读的**，你说一句话，Claude 就照着 skill 串起整条链：
+
+1. **Skill 编排**（`SKILL.md`）：Claude 读它，知道该按什么顺序做。
+2. **脚本护栏**（`codoop_tools.py`）：必须 100% 确定、不能幻觉的活——挑单、建隔离 worktree、跑测试、卡"只准改白名单内文件"、提交归档。
+3. **SubAgent 评审**：测试过了之后，Claude 用 Task 工具派出 code-reviewer / security-auditor / test-engineer 等子代理并行评审，**全票才放行**，否则打回自愈重来（UI 工单还会加派两个真看截图的 persona）。
+
+一句话：**动脑的交给 Claude，数数对答案的交给脚本。**
+
+<details>
+<summary>手动提工单（不想让 Claude 代劳时展开）</summary>
+
+`setup` 之后，也可以自己用人面向 CLI 把想法沉淀成工单（`$SKILL` = 插件里的 `skills/codoop-flow` 目录）：
 
 ```bash
-CODOOP_CLAUDE_MODEL=sonnet python3 $SKILL/scripts/codoop.py discover --config codoop_flow.toml "想做个 XX 应用"
+# 起草：在 drafts/ 生成 metadata + 空文档骨架
+python3 $SKILL/scripts/codoop.py ticket init ticket_001 --config codoop_flow.toml --title "add hello module"
+# 编辑 drafts/ticket_001/ 里的 module_prd.md（业务）、spec.md（契约 + files_to_edit 白名单）
+python3 $SKILL/scripts/codoop.py ticket validate ticket_001 --config codoop_flow.toml   # 校验必填文档
+python3 $SKILL/scripts/codoop.py ticket promote  ticket_001 --config codoop_flow.toml   # drafts → pending
 ```
 
-起一个交互式设计会话，Claude 扮演 PM / GTM / UI-UX / Architect / Alignment 多角色帮你把想法打磨成 `docs/backlog/` 里的需求文档，再用上面的 ticket 流程拆单。
+想从零探索一个新想法（多角色设计会话，产出到 `docs/backlog/`）：
+
+```bash
+python3 $SKILL/scripts/codoop.py discover --config codoop_flow.toml "想做个 XX 应用"
+```
+</details>
 
 ---
 
@@ -155,9 +132,10 @@ CODOOP_CLAUDE_MODEL=sonnet python3 $SKILL/scripts/codoop.py discover --config co
 
 ---
 
-## 护栏 CLI（`codoop_tools.py`）
+<details>
+<summary>护栏 CLI 参考（<code>codoop_tools.py</code>，Claude 自动调用，一般不用手敲）</summary>
 
-skill 会自动调用，也可手工调试。所有子命令吃 `--config <toml>`、输出 JSON。
+所有子命令吃 `--config <toml>`、输出 JSON。
 
 | 子命令 | 行为 |
 |---|---|
@@ -166,6 +144,8 @@ skill 会自动调用，也可手工调试。所有子命令吃 `--config <toml>
 | `verify <id>` | 在 worktree 跑测试 + 越界白名单 + (UI) 截图三重硬门禁 |
 | `finish <id> --message` | 排除生成物后 commit 到 `dev/<id>` → 搬到 done → 删 worktree |
 | `fail <id> --report` | 搬到 failed → 写 `healing_report.md` → 删 worktree |
+
+</details>
 
 ---
 
@@ -197,7 +177,42 @@ python3 tests/test_skeleton.py   # 应输出 ALL SKELETON TESTS PASSED
 
 ---
 
+## 兼容的 Agent
+
+skill 是自包含目录，任何有"读文件 + 跑 Bash + 派子代理"能力的 coding agent 都能用。
+
+| Agent | 状态 | 怎么装 |
+|---|---|---|
+| Claude Code | ✅ 一等公民 | 插件市场（见[安装](#安装)） |
+| Cursor / Codex / Gemini | 🟡 通用拷贝 | 拷 `skills/codoop-flow/` 目录，见 [`docs/install.md`](./docs/install.md) |
+
+> 非 Claude 的 agent 若没有等价于 Task 工具（派 subagent）的能力，评审段可能要改成串行。
+
+---
+
+## 常见问题
+
+**`/plugin marketplace add` 报 SSH 错？**
+默认走 SSH 克隆。没配 SSH key 就用完整 HTTPS：`/plugin marketplace add https://github.com/Codoop/codoop-flow.git`。
+
+**`setup` 报 "not a git repository"？**
+目标工程必须先 `git init`。codoop-flow 在你工程的 git 仓库里流转工单。
+
+**Claude 说找不到 skill / 命令？**
+确认插件已 `install`，且 `codoop_flow.toml` 路径正确。手动验证护栏就位：`python3 <插件>/skills/codoop-flow/scripts/codoop_tools.py --config codoop_flow.toml status`。
+
+**工单一直卡在 `failed/`？**
+打开 `failed/<id>/healing_report.md` 看自愈耗尽的原因，通常是测试写得太严或 `files_to_edit` 白名单太窄。
+
+---
+
 ## 深入了解
 
 - [`engineering-design.md`](./engineering-design.md) —— 三环闭环设计蓝图
 - [`docs/install.md`](./docs/install.md) —— 各 coding agent 的安装方式
+
+---
+
+<div align="center">
+MIT License
+</div>

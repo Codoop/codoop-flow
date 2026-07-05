@@ -3,18 +3,16 @@
   "name": "codoop-flow",
   "description": "codoop-flow: in-session orchestration for an AI-coding ticket pipeline (build/verify/review/ship) with a deterministic guardrail CLI.",
   "owner": {
-    "name": "your-name",
-    "url": "https://github.com/your-org"
+    "name": "Codoop",
+    "url": "https://github.com/Codoop"
   },
   "plugins": [
     {
       "name": "codoop-flow",
-      "source": {
-        "source": "github",
-        "repo": "your-org/codoop-flow"
-      },
+      "version": "0.1.0",
+      "source": ".",
       "description": "Drive codoop-flow tickets in-session: pick -> build -> verify -> review -> ship, plus human-facing discover and ticket-lifecycle CLIs.",
-      "homepage": "https://github.com/your-org/codoop-flow",
+      "homepage": "https://github.com/Codoop/codoop-flow",
       "license": "MIT",
       "keywords": ["skills", "agents", "pipeline", "tickets", "review", "ship", "worktree"]
     }

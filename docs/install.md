@@ -14,19 +14,19 @@ codoop-flow 是一个**自包含 skill**:`skills/codoop-flow/` 下同时带了�
 ## Claude Code(推荐:插件市场)
 
 ```
-/plugin marketplace add your-org/codoop-flow
+/plugin marketplace add Codoop/codoop-flow
 /plugin install codoop-flow@codoop-flow
 ```
 
 > SSH 报错?市场默认用 SSH 克隆。没配 SSH key 就用完整 HTTPS:
 > ```
-> /plugin marketplace add https://github.com/your-org/codoop-flow.git
+> /plugin marketplace add https://github.com/Codoop/codoop-flow.git
 > /plugin install codoop-flow@codoop-flow
 > ```
 
 **本地 / 开发**:
 ```bash
-git clone https://github.com/your-org/codoop-flow.git
+git clone https://github.com/Codoop/codoop-flow.git
 claude --plugin-dir /path/to/codoop-flow
 ```
 
@@ -40,7 +40,7 @@ claude --plugin-dir /path/to/codoop-flow
 skill 是自包含目录,任何 agent 都可以直接把它拷进自己的技能/规则目录:
 
 ```bash
-git clone https://github.com/your-org/codoop-flow.git
+git clone https://github.com/Codoop/codoop-flow.git
 # 拷这一个目录即可,它自带 scripts/ 和 references/
 cp -R codoop-flow/skills/codoop-flow  <目标 agent 的技能目录>/
 ```
