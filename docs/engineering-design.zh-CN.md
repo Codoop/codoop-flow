@@ -1,5 +1,7 @@
 # AI Coding 工单流水线工程化落地方案 (三环闭环驱动模型)
 
+[English](./engineering-design.md) · **简体中文**
+
 本方案是专为多端大项目架构设计的 AI Coding 工单落地系统。整体架构由一个中央调度器 `main_scheduler.py` 驱动，定时通过 Mac 的 `launchd` 服务调起。
 
 本设计基于 **Loop Engineering (循环工程)** 思想与 **三环模型 (The Triple-Loop Model)**，将整个系统的生命周期拆解为 **创业探索环 (Venture-Discovery Loop)**、**以人为中心的需求设计环 (Human-Centric Loop)** 与 **以 Agent 为中心的自愈实现环 (Agent-Centric Loop)**，并通过一套**三环动态交互协议**与**常青树文档渐进式披露门禁**实现高效、高可靠的异步编码闭环。
