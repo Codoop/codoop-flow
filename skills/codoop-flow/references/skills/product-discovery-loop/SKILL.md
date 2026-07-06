@@ -8,7 +8,8 @@ disable-model-invocation: true
 
 This skill guides the AI to act as an **Orchestrator** running a decentralized, multi-role collaborative pipeline to discover, validate, and architect products or features. It ensures strict avoidance of assumptions, leverages multi-perspective analysis, and produces production-grade BDD specifications and system architectures.
 
-It is designed to be fully compatible with **Cursor Desktop** and **Claude Code (Co)**.
+It is designed to be compatible with **Codex**, **Claude Code**, **Cursor Desktop**,
+and other coding agents that can read files and write project docs.
 
 ---
 
@@ -16,24 +17,24 @@ It is designed to be fully compatible with **Cursor Desktop** and **Claude Code 
 
 ### 1.1 Human as Director, AI as Orchestrator
 - **Human Director**: The user acts as the ultimate director, decision-maker, and bridge.
-- **Orchestrator Agent**: The main chat agent does not directly claim to be all roles. Instead, it acts as the **Orchestrator/Coordinator**, reading the current state of the design and dispatching specialized sub-agents via the **Task tool (sub-processes)** to prevent context pollution.
+- **Orchestrator Agent**: The main chat agent does not directly claim to be all roles. Instead, it acts as the **Orchestrator/Coordinator**, reading the current state of the design and dispatching specialized sub-agents when the host provides them. If no subagent facility is available, run the same role prompts serially in the main session and keep each role's output clearly labeled to limit context pollution.
 
 ### 1.2 Sub-Agent Context Isolation & Invocation
-To prevent "Context Pollution", the Orchestrator MUST invoke specialized sub-agents (PM, GTM, UI/UX, Architect, Alignment) in isolated environments.
-- **Strict Calling Protocol**: Before spawning a sub-agent, the Orchestrator **MUST locate and read the corresponding prompt file in `../../discovery-agents/`** using file tools:
+To prevent "Context Pollution", the Orchestrator should use isolated specialized sub-agents (PM, GTM, UI/UX, Architect, Alignment) when available, and otherwise execute those roles serially.
+- **Strict Calling Protocol**: Before invoking a role, the Orchestrator **MUST locate and read the corresponding prompt file in `../../discovery-agents/`** using file tools:
   - PM Agent ➔ Read `../../discovery-agents/pm-agent.md`
   - GTM Agent ➔ Read `../../discovery-agents/gtm-agent.md`
   - UI/UX Agent ➔ Read `../../discovery-agents/ui-ux-agent.md`
   - Architect Agent ➔ Read `../../discovery-agents/architect-agent.md`
   - Alignment Agent ➔ Read `../../discovery-agents/alignment-agent.md`
-- **Spawn Task**: After reading, the Orchestrator calls the **Task tool**, passing the exact file contents of the selected agent markdown as the system prompt for that sub-task.
+- **Invoke Role**: After reading, pass the exact file contents of the selected agent markdown as the persona/system context for that role. Use Codex multi-agent tools, Claude Code Task, or another host-native subagent mechanism when available; otherwise run the role serially in this session and require an explicit role verdict.
 
 ---
 
 ## 2. External & Sibling Skills Integration
 
 To achieve high-fidelity output, this loop relies on several specialized sibling skills (`ui-ux-pro-max`, `gsap-skills`, `pm-skills`). 
-- **Rule**: The Orchestrator and spawned sub-agents MUST proactively load, read, and follow these sibling skills.
+- **Rule**: The Orchestrator and invoked role agents MUST proactively load, read, and follow these sibling skills.
 - **Reference Manual**: For specific file paths, relative routing, and configuration metrics of external integrations, refer directly to the sibling [**`README.md`**](README.md) file in this directory.
 
 ---

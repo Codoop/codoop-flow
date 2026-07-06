@@ -3,9 +3,9 @@
 Discovery is inherently human-in-the-loop: the orchestrator agent runs the
 product-discovery-loop skill, halting to ask the human whenever something is
 ambiguous (SNAP). So — unlike the headless Agent-loop work — this launches
-an *interactive* Claude session in the target repo, with the discovery skill
-injected as the system persona and the skills library made readable so the
-orchestrator can load the PM / GTM / UI-UX / Architect / Alignment sub-agents.
+an interactive coding-agent session in the target repo. Claude Code gets the
+discovery skill injected as an appended system prompt; Codex gets a prompt that
+points at the same skill file and an added readable references directory.
 
 codoop-flow only wires the launch (deterministic); the actual multi-role
 drafting, challenge loop, and consistency audit are the AI's + human's work.
@@ -28,37 +28,69 @@ _SKILL_PATH = _DISCOVERY_DIR / "SKILL.md"
 _SKILLS_LIB = _SKILL_ROOT / "references"
 
 
-def build_command(config: Config, initial_idea: str = "") -> list[str]:
-    """Assemble the interactive `claude` command for a discovery session.
+def _agent(agent: str | None) -> str:
+    selected = (agent or os.environ.get("CODOOP_AGENT") or "claude").strip().lower()
+    aliases = {
+        "claude-code": "claude",
+        "codex-cli": "codex",
+    }
+    return aliases.get(selected, selected)
+
+
+def build_command(config: Config, initial_idea: str = "", agent: str | None = None) -> list[str]:
+    """Assemble the interactive command for a discovery session.
 
     Kept separate from launch() so it can be asserted in tests without
-    spawning Claude.
+    spawning an agent.
     """
     if not _SKILL_PATH.exists():
         raise FileNotFoundError(f"discovery skill not found: {_SKILL_PATH}")
 
-    system_prompt = _SKILL_PATH.read_text(encoding="utf-8")
-    cmd = [
-        "claude",
-        "--append-system-prompt", system_prompt,
-        # Let the orchestrator read the sub-agent markdowns + sibling skills.
-        "--add-dir", str(_SKILLS_LIB),
-    ]
-    model = os.environ.get("CODOOP_CLAUDE_MODEL")
-    if model:
-        cmd += ["--model", model]
-    # An interactive session (no -p): the human directs, the agent asks.
-    if initial_idea:
-        cmd.append(initial_idea)
-    return cmd
+    selected = _agent(agent)
+    if selected == "claude":
+        system_prompt = _SKILL_PATH.read_text(encoding="utf-8")
+        cmd = [
+            "claude",
+            "--append-system-prompt", system_prompt,
+            # Let the orchestrator read the sub-agent markdowns + sibling skills.
+            "--add-dir", str(_SKILLS_LIB),
+        ]
+        model = os.environ.get("CODOOP_CLAUDE_MODEL")
+        if model:
+            cmd += ["--model", model]
+        if initial_idea:
+            cmd.append(initial_idea)
+        return cmd
+
+    if selected == "codex":
+        prompt = (
+            "Use the product-discovery-loop skill at "
+            f"{_SKILL_PATH} to run a codoop-flow discovery session. "
+            "Read the relevant discovery-agent prompts from the references "
+            f"directory at {_SKILLS_LIB}. "
+            "Write discovery outputs under docs/backlog/ in this target repo."
+        )
+        if initial_idea:
+            prompt += f"\n\nInitial idea: {initial_idea}"
+        cmd = [
+            "codex",
+            "--cd", str(config.target_repo),
+            "--add-dir", str(_SKILLS_LIB),
+        ]
+        model = os.environ.get("CODOOP_CODEX_MODEL")
+        if model:
+            cmd += ["--model", model]
+        cmd.append(prompt)
+        return cmd
+
+    raise ValueError(f"unsupported discovery agent: {selected}")
 
 
-def launch(config: Config, initial_idea: str = "") -> int:
+def launch(config: Config, initial_idea: str = "", agent: str | None = None) -> int:
     """Start the interactive discovery session in the target repo. Blocks until
-    the human exits Claude. Returns the CLI exit code.
+    the human exits the selected agent. Returns the CLI exit code.
     """
-    cmd = build_command(config, initial_idea)
-    # Discovery writes design docs into the target repo's docs/backlog/.
+    cmd = build_command(config, initial_idea, agent=agent)
     (config.target_repo / "docs" / "backlog").mkdir(parents=True, exist_ok=True)
     proc = subprocess.run(cmd, cwd=str(config.target_repo))
     return proc.returncode

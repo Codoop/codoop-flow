@@ -11,9 +11,9 @@ Covers the parts a human drives directly:
     python codoop.py ticket validate <id> --config <toml>
     python codoop.py ticket promote <id> --config <toml>   # drafts/ -> pending/
 
-The autonomous Agent-Centric loop (build/verify/review/ship) is driven by
-Claude in-session via the codoop-flow skill (skills/codoop-flow/SKILL.md),
-which calls the guardrail CLI codoop_tools.py.
+The autonomous Agent-Centric loop (build/verify/review/ship) is driven by the
+current coding agent in-session via the codoop-flow skill
+(skills/codoop-flow/SKILL.md), which calls the guardrail CLI codoop_tools.py.
 """
 
 from __future__ import annotations
@@ -38,14 +38,14 @@ def _cmd_setup(args) -> int:
         return 1
     print(f"created config: {cfg_path}")
     print(f"ticket pipeline ready under: {config.tickets_dir}")
-    print("Next: add a ticket to pending/, then in a Claude Code session say")
-    print(f'  "read the codoop-flow skill and run a ticket against {cfg_path}"')
+    print("Next: add a ticket to pending/, then in Codex or Claude Code say")
+    print(f'  "use the codoop-flow skill and run a ticket against {cfg_path}"')
     return 0
 
 
 def _cmd_discover(args) -> int:
     config = load_config(args.config)
-    return discover.launch(config, initial_idea=args.idea or "")
+    return discover.launch(config, initial_idea=args.idea or "", agent=args.agent)
 
 
 def _cmd_ticket_init(args) -> int:
@@ -94,6 +94,12 @@ def main() -> int:
 
     p_disc = sub.add_parser("discover", help="launch the discovery design session")
     p_disc.add_argument("--config", default=None, help="path to codoop_flow.toml")
+    p_disc.add_argument(
+        "--agent",
+        choices=("claude", "claude-code", "codex", "codex-cli"),
+        default=None,
+        help="interactive coding agent to launch (default: CODOOP_AGENT or claude)",
+    )
     p_disc.add_argument("idea", nargs="?", default="", help="optional initial idea")
     p_disc.set_defaults(func=_cmd_discover)
 

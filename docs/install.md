@@ -8,7 +8,31 @@ codoop-flow is a **self-contained skill**: under `skills/codoop-flow/` it carrie
 
 ---
 
-## Claude Code (recommended: plugin marketplace)
+## Codex
+
+Install codoop-flow as a Codex plugin from the GitHub marketplace repo:
+
+```bash
+codex plugin marketplace add Codoop/codoop-flow
+codex plugin add codoop-flow@codoop-flow
+```
+
+Then restart/open Codex. The normal workflow is just:
+
+```text
+Use $codoop-flow to set up this repo for codoop-flow.
+Use $codoop-flow to run the next ticket against /path/to/codoop_flow.toml.
+```
+
+For local development without plugin installation, clone and copy the skill:
+
+```bash
+git clone https://github.com/Codoop/codoop-flow.git
+mkdir -p "${CODEX_HOME:-$HOME/.codex}/skills"
+cp -R codoop-flow/skills/codoop-flow "${CODEX_HOME:-$HOME/.codex}/skills/"
+```
+
+## Claude Code
 
 ```
 /plugin marketplace add Codoop/codoop-flow
@@ -27,11 +51,19 @@ git clone https://github.com/Codoop/codoop-flow.git
 claude --plugin-dir /path/to/codoop-flow
 ```
 
-Once installed, just tell Claude: "read the codoop-flow skill and run a ticket against <codoop_flow.toml>", or schedule it with `/loop 5m run the codoop-flow skill against <toml>`.
+Once installed, just tell Claude Code: "read the codoop-flow skill and run a ticket against <codoop_flow.toml>", or schedule it with `/loop 5m run the codoop-flow skill against <toml>`.
+
+For the discovery loop, `--agent claude-code` and `--agent claude` both launch
+the local `claude` command:
+
+```bash
+python3 /path/to/codoop-flow/skills/codoop-flow/scripts/codoop.py \
+  discover --agent claude-code --config /path/to/codoop_flow.toml "an idea"
+```
 
 ---
 
-## Generic copy (Cursor / Codex / Gemini / others)
+## Generic copy (Cursor / Gemini / others)
 
 The skill is a self-contained directory; any agent can copy it into its own skills/rules directory:
 
@@ -46,7 +78,7 @@ Where each agent expects it (check their own docs, may change across versions):
 | Agent | Where | How to trigger |
 |---|---|---|
 | Cursor | Put `SKILL.md` in `.cursor/rules/`, or have the agent reference the whole `skills/codoop-flow/` | Reference the rule in conversation |
-| Codex / others | The skill is plain Markdown; feed `SKILL.md`'s content as system prompt / instructions | Just talk to it |
+| Other agents | The skill is plain Markdown; feed `SKILL.md`'s content as system prompt / instructions | Just talk to it |
 | Gemini CLI | Put it in its skills directory | Auto-discovered |
 
 **Key point**: after copying, make sure `skills/codoop-flow/scripts/` and `references/` stay in the same parent directory as `SKILL.md` — all paths in SKILL.md are relative to itself (`$SKILL/scripts/...`, `$SKILL/references/...`), so splitting them apart breaks the CLI and review personas.
@@ -56,9 +88,10 @@ Where each agent expects it (check their own docs, may change across versions):
 ## Verify the install
 
 ```bash
+codex plugin list
 python3 <skill-path>/scripts/codoop_tools.py --config <toml> status
 ```
 
 If it prints ticket counts per stage (JSON), the guardrail CLI is in place and the config is correct.
 
-> Note: if a non-Claude agent lacks an equivalent to Claude Code's **Task tool (dispatching sub-agents)**, the skill's "parallel multi-review" step may need to be rewritten (serial review or another mechanism).
+> Note: if the host agent lacks a subagent tool, run the review personas serially in the same session.

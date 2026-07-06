@@ -1,6 +1,6 @@
 ---
 name: codoop-flow
-description: Drive the codoop-flow Agent-Centric ticket pipeline in-session. Use when the user asks to run codoop-flow tickets, process the pending queue, or work a specific ticket through build/verify/review/ship. Orchestrates a deterministic guardrail CLI (scripts/codoop_tools.py) plus your own coding + review subagents.
+description: Drive the codoop-flow Agent-Centric ticket pipeline in-session from Codex, Claude Code, or another coding agent. Use when the user asks to run codoop-flow tickets, process the pending queue, or work a specific ticket through build/verify/review/ship. Orchestrates a deterministic guardrail CLI (scripts/codoop_tools.py) plus the current agent's coding, review, and self-healing work.
 ---
 
 # codoop-flow orchestration
@@ -27,7 +27,7 @@ $SKILL/
 │   ├── codoop.py                  human CLI (discover + ticket lifecycle)
 │   └── codoop_flow/               deterministic modules the CLIs import
 └── references/
-    ├── agents/                    review + doc personas (read into Task subagents)
+    ├── agents/                    review + doc personas
     ├── skills/                    incremental-implementation / debugging / tdd / discovery
     └── discovery-agents/          sub-agents for the discovery loop
 ```
@@ -42,6 +42,19 @@ it by absolute path with your launch Python.
 - A `codoop_flow.toml` pointing at the target repo. All CLI calls take
   `--config <path>`. Ask the user for the path if it isn't obvious; reuse it for
   every call in the run.
+
+## Setup a target repo
+
+If the user asks to onboard, install, set up, or initialize codoop-flow for a
+target project, run:
+
+```
+python3 $SKILL/scripts/codoop.py setup <target-repo> --config <target-repo>/codoop_flow.toml
+```
+
+This creates `docs/tickets/{pending,in_progress,done,failed}/` in the target
+repo and writes `codoop_flow.toml`. After setup, tell the user to add or draft a
+ticket, then run the normal loop below against that config.
 
 ## The loop (one ticket, end to end)
 
@@ -83,10 +96,12 @@ Exit 0 / `ok:true` = tests passed AND all edits were in-scope AND (for
 - Budget: retry up to the ticket's `max_healing_attempts` (default 3). If still
   failing, go to **Fail**.
 
-### 5. Review (your subagents) — after verify passes
-Dispatch reviewers **in parallel** via the Task tool. Each adopts a persona from
-`$SKILL/references/agents/` and reviews `git diff` in the worktree. Approval must
-be **unanimous**; any Critical/Important defect = REJECT.
+### 5. Review (your reviewers) — after verify passes
+Run the review personas from `$SKILL/references/agents/` against `git diff` in
+the worktree. Prefer parallel subagents when the host provides them (for example
+Codex multi-agent tools or Claude Code Task). If no subagent facility is
+available, perform the same reviews serially in this session. Approval must be
+**unanimous**; any Critical/Important defect = REJECT.
 
 Always run these three (static group):
 - `code-reviewer` → `$SKILL/references/agents/code-reviewer.md`
@@ -98,11 +113,10 @@ the `screenshot_dir` to actually inspect the rendered screens:
 - `evidence-collector` → `$SKILL/references/agents/testing-evidence-collector.md`
 - `reality-checker` → `$SKILL/references/agents/testing-reality-checker.md`
 
-For each subagent: read its markdown, pass it as the persona/system context to
-the Task, hand it the diff (and screenshot dir for the UI two), and require a
-verdict. If **any** reviewer rejects, collect the findings and go back to
-**Self-heal** (still within the healing budget) to fix them, then re-verify and
-re-review.
+For each reviewer: read its markdown, use it as the review persona, hand it the
+diff (and screenshot dir for the UI two), and require a verdict. If **any**
+reviewer rejects, collect the findings and go back to **Self-heal** (still
+within the healing budget) to fix them, then re-verify and re-review.
 
 ### 6. Ship living docs (your work) — after unanimous approval
 Before finishing, sync the target repo's living docs inside the worktree (only
@@ -133,6 +147,8 @@ Report back so the human can intervene.
 
 The same package ships a human CLI for the other two loops (design §2 / §4):
 ```
+# One-shot target repo setup:
+python3 $SKILL/scripts/codoop.py setup <repo> --config <repo>/codoop_flow.toml
 # Venture-Discovery: interactive multi-role design session -> docs/backlog/
 python3 $SKILL/scripts/codoop.py discover --config <toml> "an idea"
 # Human-Centric ticket lifecycle:
@@ -143,20 +159,22 @@ python3 $SKILL/scripts/codoop.py ticket promote  <id> --config <toml>
 
 ## Running periodically
 
-To keep working the queue, use Claude Code's `/loop`:
+To keep working the queue, use the host agent's scheduler/loop facility. In
+Claude Code, for example:
 ```
 /loop 5m run the codoop-flow skill against <toml>
 ```
-`/loop` is single-session and single-threaded, so exactly one ticket is worked
-at a time — no locks needed. When you have a live session, prefer this over any
-external scheduler.
+In Codex, use a recurring automation or explicitly ask Codex to run the skill
+again against the same config. The guardrail CLI only lets one `in_progress`
+ticket run at a time, so repeated invocations resume the active ticket instead
+of double-picking.
 
 ## Guardrails recap (why the split)
 
 | Deterministic → `scripts/codoop_tools.py` | Intelligent → you (in-session) |
 |---|---|
 | pick / move folders / worktree lifecycle | write code, self-heal |
-| run tests + edit-scope whitelist gate | review judgment (via Task subagents) |
+| run tests + edit-scope whitelist gate | review judgment (subagents if available, serial otherwise) |
 | commit / archive done\|failed | living-doc sync, commit message |
 
 Trust the tool for the deterministic parts; never re-derive them yourself.

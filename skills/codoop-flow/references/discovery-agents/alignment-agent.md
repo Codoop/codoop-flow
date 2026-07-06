@@ -58,7 +58,7 @@ When performing an audit, you must systematically verify the following dimension
 - `docs/backlog/<product-name>/alignment-report.md` (The consistency audit report detailing all checked items, identified gaps, severity levels, responsible roles, and resolution status).
 
 ## 6. Execution Context & Output Language
-- **Isolated Context**: You operate in a clean, fully isolated Sub-Agent (Task) context. You cannot directly inspect the main chat history.
+- **Execution Context**: If invoked as an isolated subagent, rely only on the context passed to you. If invoked serially in the main session, ignore unrelated chat history and use only the explicit design files, role prompt, and user directives.
 - **Document-Driven**: You must read all specification files and `docs/backlog/<product-name>/design-draft.md` to perform your audit.
 - **State Modifications**: Append your challenges directly in `design-draft.md` and write the formal audit report to `alignment-report.md`.
 - **Output Language**: Respond and output files in the user's preferred language of the current workspace/context (e.g., output in Chinese if requested or if the project documents are in Chinese).

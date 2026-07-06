@@ -2,8 +2,9 @@
 """codoop-flow guardrail CLI — the deterministic conveyor belt.
 
 In the skill-based architecture, the *intelligent* work (writing code,
-self-healing, review judgment, doc sync) is done by Claude in-session. This CLI
-is the small set of things that must be 100% deterministic and never hallucinate:
+self-healing, review judgment, doc sync) is done by the active coding agent
+in-session. This CLI is the small set of things that must be 100% deterministic
+and never hallucinate:
 
     pick    — claim the oldest pending ticket: move to in_progress/, create the
               isolated worktree, print the ticket + worktree paths (JSON).
@@ -15,7 +16,7 @@ is the small set of things that must be 100% deterministic and never hallucinate
     status  — print what's in pending/ and in_progress/ (JSON).
 
 All commands take --config <toml>. Output is JSON so the skill can parse it.
-The Claude orchestration is driven by the `codoop-flow` skill; see its SKILL.md.
+Agent orchestration is driven by the `codoop-flow` skill; see its SKILL.md.
 """
 
 from __future__ import annotations
