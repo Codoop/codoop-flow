@@ -31,7 +31,15 @@
 **三阶段工作流程，人类全程参与决策**：
 
 - **触发点**：用户从第一环（Venture-Discovery）生成的 `docs/backlog/` 中梳理出一个工单想法
-- **操作**：用户在会话里说 `/skill codoop-ticket draft <ticket_id>`
+- **操作**：用户在会话里自然语言调用
+  ```
+  /skill codoop-ticket 帮我设计用户搜索功能的工单
+  ```
+  或者
+  ```
+  /skill codoop-ticket
+  我想为电商平台设计一个高级搜索功能模块
+  ```
 
 **第一阶段：需求设计 (module_prd.md)**
 1. Skill 与用户讨论工单范围、目标、依赖
@@ -227,7 +235,7 @@ python codoop.py ticket update-metadata <ticket_id>
 ```yaml
 ---
 name: codoop-ticket
-description: Draft work tickets with intelligent PRD, spec, and plan guidance. Use when designing incremental features ready for implementation. Guides PM and Architect agents through structured ticket design, outputting module_prd.md, spec.md, plan.md, and todo.md.
+description: 设计工单（PRD、规格、计划）。用户用自然语言描述要做什么功能，codoop-ticket 会通过三个阶段帮助设计完整的工单文档。最终产出 module_prd.md、spec.md、plan.md、todo.md 和自动推断的 metadata.json。
 ---
 ```
 
@@ -512,41 +520,49 @@ description: Draft work tickets with intelligent PRD, spec, and plan guidance. U
 ## 🎯 工单设计完整流程示例
 
 ```
-用户调用：
-/skill codoop-ticket draft ticket_001 --title "用户搜索功能"
+用户调用（自然语言）：
+/skill codoop-ticket 
+我想为电商平台设计用户搜索功能，需要支持关键词、分类、价格范围过滤
 
 【第一阶段】需求设计 (module_prd.md)
-1. codoop-ticket 初始化工单骨架（tickets_cli init）
-2. 与用户讨论需求，读取 docs/backlog/ 产品文档
-3. PM agent 撰写 module_prd.md
-4. 用户 review，提供反馈直到满意
+1. codoop-ticket 解析用户输入，生成工单标题和初始骨架
+2. 与用户讨论需求细节：用户故事、业务流程、验收条件
+3. codoop-ticket 读取 docs/backlog/ 中相关的产品规范、设计规范
+4. PM agent 基于讨论和第一环产出撰写 module_prd.md（纯业务）
+5. 用户 review，提供反馈直到满意
                           ↓ 用户确认 OK
 
 【第二阶段】技术规格 (spec.md)
-5. 加载 /skill spec-driven-development
-6. 基于 module_prd.md 生成 spec.md（包含各模块部分：## Backend、## Web 等）
-7. 用户 review，提供反馈直到满意
+6. codoop-ticket 加载 /skill spec-driven-development
+7. spec-driven-development 基于 module_prd.md 设计 spec.md
+   - API 接口设计（后端、Web、移动端各端）
+   - 数据库字段和数据模型
+   - UI 交互流程
+   - files_to_edit 编辑范围白名单
+8. 用户 review spec.md，提供反馈直到满意
                           ↓ 用户确认 OK
 
 【第三阶段】任务分解 (plan.md + todo.md)
-8. 加载 /skill planning-and-task-breakdown
-9. 基于 spec.md 分解任务生成 plan.md + todo.md
-10. 用户参考 /skill definition-of-done 检查完成标准
-11. 用户 review，提供反馈直到满意
+9. codoop-ticket 加载 /skill planning-and-task-breakdown
+10. planning-and-task-breakdown 基于 spec.md 分解实现任务
+    - plan.md：实现步骤（Step 1、Step 2 等）
+    - todo.md：原子任务清单（≤100 行代码/任务）
+11. 用户参考 /skill definition-of-done 检查完成标准
+12. 用户 review 任务分解，提供反馈直到满意
                           ↓ 用户确认 OK
 
 【元数据推断】自动更新 metadata.json（AI）
-12. codoop-ticket 调用 tickets_cli update-metadata
+13. codoop-ticket 自动调用 tickets_cli update-metadata
     - 从 spec.md 提取 modules（## Backend → backend、## Web → web）
     - 从 spec.md 提取 files_to_edit（## Editable Files 部分）
     - 生成 test_command 默认值
-13. 显示推断结果，用户 review 并确认或修改
+14. 显示推断结果给用户，用户 review 并确认或修改
                           ↓ 用户确认 OK
 
 【最终化】验证与发布
-14. codoop-ticket 调用 tickets_cli validate（检查必需字段）
-15. codoop-ticket 调用 tickets_cli promote（移至 pending/）
-16. 工单完成，等待第三环 codoop-flow skill pick
+15. codoop-ticket 调用 tickets_cli validate（检查必需字段）
+16. codoop-ticket 调用 tickets_cli promote（移至 pending/）
+17. 工单完成，等待第三环 codoop-flow skill pick
 
 最终工单在：docs/tickets/pending/ticket_001/
 ├── metadata.json      （自动推断的模块、测试命令、编辑范围）
