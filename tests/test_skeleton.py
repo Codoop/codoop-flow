@@ -249,38 +249,43 @@ def test_promote_blocks_incomplete(root: Path, worktrees: Path) -> None:
     _check(not (cfg.pending_dir / "ticket_011").exists(), "did not reach pending/")
 
 
-def test_discover_claude_command_build(root: Path, worktrees: Path) -> None:
-    print("[test] discover command assembly for Claude (no spawn)")
-    from codoop_flow import discover
-    cfg = _config_obj(root, worktrees)
-    cmd = discover.build_command(cfg, initial_idea="a todo app", agent="claude")
-    _check(cmd[0] == "claude", "invokes claude")
-    _check("--append-system-prompt" in cmd, "injects discovery skill")
-    _check(cmd[-1] == "a todo app", "initial idea passed")
-    idx = cmd.index("--append-system-prompt")
-    _check("Product Discovery" in cmd[idx + 1], "system prompt is the discovery skill")
-
-
-def test_discover_codex_command_build(root: Path, worktrees: Path) -> None:
-    print("[test] discover command assembly for Codex (no spawn)")
-    from codoop_flow import discover
-    cfg = _config_obj(root, worktrees)
-    cmd = discover.build_command(cfg, initial_idea="a todo app", agent="codex")
-    _check(cmd[0] == "codex", "invokes codex")
-    _check("--cd" in cmd and str(root) in cmd, "sets Codex working root")
-    _check("--add-dir" in cmd, "lets Codex read bundled references")
-    _check("product-discovery-loop" in cmd[-1], "prompt points at discovery skill")
-    _check("a todo app" in cmd[-1], "initial idea passed in prompt")
-
-
-def test_discover_agent_aliases(root: Path, worktrees: Path) -> None:
-    print("[test] discover command aliases")
-    from codoop_flow import discover
-    cfg = _config_obj(root, worktrees)
-    _check(discover.build_command(cfg, agent="claude-code")[0] == "claude",
-           "claude-code aliases to claude CLI")
-    _check(discover.build_command(cfg, agent="codex-cli")[0] == "codex",
-           "codex-cli aliases to codex CLI")
+# TODO: These tests were for the old subprocess launcher (discover.py).
+# After refactoring to in-session skill mode (Phase 1), the discovery flow
+# is now orchestrated within the SKILL.md and no longer uses subprocess.
+# These tests can be removed or replaced with tests for the SKILL validation.
+#
+# def test_discover_claude_command_build(root: Path, worktrees: Path) -> None:
+#     print("[test] discover command assembly for Claude (no spawn)")
+#     from codoop_flow import discover
+#     cfg = _config_obj(root, worktrees)
+#     cmd = discover.build_command(cfg, initial_idea="a todo app", agent="claude")
+#     _check(cmd[0] == "claude", "invokes claude")
+#     _check("--append-system-prompt" in cmd, "injects discovery skill")
+#     _check(cmd[-1] == "a todo app", "initial idea passed")
+#     idx = cmd.index("--append-system-prompt")
+#     _check("Product Discovery" in cmd[idx + 1], "system prompt is the discovery skill")
+#
+#
+# def test_discover_codex_command_build(root: Path, worktrees: Path) -> None:
+#     print("[test] discover command assembly for Codex (no spawn)")
+#     from codoop_flow import discover
+#     cfg = _config_obj(root, worktrees)
+#     cmd = discover.build_command(cfg, initial_idea="a todo app", agent="codex")
+#     _check(cmd[0] == "codex", "invokes codex")
+#     _check("--cd" in cmd and str(root) in cmd, "sets Codex working root")
+#     _check("--add-dir" in cmd, "lets Codex read bundled references")
+#     _check("product-discovery-loop" in cmd[-1], "prompt points at discovery skill")
+#     _check("a todo app" in cmd[-1], "initial idea passed in prompt")
+#
+#
+# def test_discover_agent_aliases(root: Path, worktrees: Path) -> None:
+#     print("[test] discover command aliases")
+#     from codoop_flow import discover
+#     cfg = _config_obj(root, worktrees)
+#     _check(discover.build_command(cfg, agent="claude-code")[0] == "claude",
+#            "claude-code aliases to claude CLI")
+#     _check(discover.build_command(cfg, agent="codex-cli")[0] == "codex",
+#            "codex-cli aliases to codex CLI")
 
 
 def main() -> int:
@@ -296,9 +301,10 @@ def main() -> int:
         test_status_reports_counts,
         test_ticket_lifecycle,
         test_promote_blocks_incomplete,
-        test_discover_claude_command_build,
-        test_discover_codex_command_build,
-        test_discover_agent_aliases,
+        # TODO: discover tests removed after refactoring to in-session skill mode
+        # test_discover_claude_command_build,
+        # test_discover_codex_command_build,
+        # test_discover_agent_aliases,
     ]
     with tempfile.TemporaryDirectory() as td:
         base = Path(td)

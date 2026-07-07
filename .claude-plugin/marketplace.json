@@ -8,6 +8,15 @@
   },
   "plugins": [
     {
+      "name": "codoop-discover",
+      "version": "0.1.0",
+      "source": "skills/codoop-discover/",
+      "description": "Venture-Discovery Loop: collaborative product discovery with multi-role expert agents (PM, GTM, UX/UI, Architect). Generates comprehensive backlog documentation.",
+      "homepage": "https://github.com/Codoop/codoop-flow",
+      "license": "MIT",
+      "keywords": ["discovery", "product", "design", "backlog", "agents"]
+    },
+    {
       "name": "codoop-flow",
       "version": "0.1.0",
       "source": ".",

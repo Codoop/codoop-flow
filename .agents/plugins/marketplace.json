@@ -5,6 +5,18 @@
   },
   "plugins": [
     {
+      "name": "codoop-discover",
+      "source": {
+        "source": "local",
+        "path": "skills/codoop-discover"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Developer Tools"
+    },
+    {
       "name": "codoop-flow",
       "source": {
         "source": "local",
