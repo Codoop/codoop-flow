@@ -368,9 +368,49 @@ skills/
 
 ---
 
+## 额外发现：第二环工具的位置
+
+在 `skills/codoop-flow/scripts/` 中，发现存在大量第二环（Human-Centric Loop）相关的工具和库：
+
+### 第二环工具
+
+- **codoop.py** — 人类 CLI（包含 ticket init/validate/promote 等命令）
+- **codoop_flow/tickets_cli.py** — 工单生命周期管理（drafts → pending 流转）
+
+### 第三环工具
+
+- **codoop_tools.py** — 第三环守栏 CLI（pick/verify/finish/fail）
+- **codoop_flow/verify.py** — 测试验证
+- **codoop_flow/worktree.py** — git worktree 管理
+
+### 全局工具
+
+- **codoop_flow/config.py** — 配置加载
+- **codoop_flow/ticket.py** — 工单数据结构
+- **codoop_flow/gitutil.py** — git 工具
+- **codoop_flow/ignore.py** — .gitignore 配置
+
+### 建议
+
+是否应该：
+1. **将第二环工具迁移到 `codoop-ticket` skill 中**？
+   - codoop-ticket 目前只有 SKILL.md 和 README.md，可以添加 scripts/
+   - codoop.py 的 `ticket` 子命令应该属于 codoop-ticket
+
+2. **保留全局工具在 codoop-flow 中**？
+   - config.py、ticket.py、gitutil.py 都被第二和第三环共享
+   - 可以保留在 codoop-flow/scripts/codoop_flow/ 作为公共库
+
+3. **setup 和 install 命令的位置**？
+   - 这两个是全局初始化工具
+   - 应该放在 codoop-flow 或者单独的顶层脚本中
+
+---
+
 ## 待讨论的问题
 
 1. **时机** — 是否现在就提升，还是等待其他工作完成？
 2. **其他 24 个 skills** — source/agent-skills-main/ 中的其他 24 个通用工程 skills 是否也应该提升到顶层？
 3. **文档充实** — 新提升的 3 个 skills 是否需要新的 README.md 说明独立使用场景？
+4. **第二环工具迁移** — 是否应该将 codoop.py 和 tickets_cli.py 迁移到 codoop-ticket skill 中？
 
