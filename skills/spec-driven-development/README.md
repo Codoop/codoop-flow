@@ -1,55 +1,55 @@
 # Spec-Driven Development
 
-设计技术规格（Spec），在编码前明确系统契约和实现细节。
+Design technical specifications (Spec) before coding. Establish the contract and implementation details upfront.
 
-## 使用方式
+## How to Use
 
-### 独立调用（生成完整规格）
+### Standalone Invocation (Generate Complete Spec)
 
-当你有明确的业务需求（PRD），需要设计技术规格时：
+When you have clear business requirements (PRD) and need to design technical specifications:
 
 ```
 /skill spec-driven-development
-基于用户搜索功能的业务需求，设计后端 API、数据库和前端交互规格
+Based on the user search feature requirements, design backend APIs, database schema, and frontend interaction details.
 ```
 
-### 作为工单编排的第二阶段
+### As Phase 2 of Codoop-Ticket Orchestration
 
-`codoop-ticket` skill 会在第二阶段自动调用此 skill：
+The `codoop-ticket` skill automatically calls this skill in phase 2:
 
 ```
-【第二阶段】技术规格 (spec.md)
-6. codoop-ticket 加载 /skill spec-driven-development
-7. 基于 module_prd.md 设计 spec.md
-8. 用户 review 并确认
+【Phase 2】Technical Spec (spec.md)
+6. codoop-ticket loads /skill spec-driven-development
+7. Design spec.md based on module_prd.md
+8. User reviews and confirms
 ```
 
-## 规格设计的关键产出
+## Key Outputs of Spec Design
 
-**spec.md** 应包含：
+**spec.md** should include:
 
-- **Objective** — 技术目标、成功标准
-- **Commands** — 构建、测试、开发的完整命令
-- **Project Structure** — 文件组织和目录布局
-- **Code Style** — 代码风格示例和约定
-- **Testing Strategy** — 测试框架、覆盖率要求
-- **Boundaries** — Always / Ask First / Never 的操作边界
+- **Objective** — Technical goals and success criteria
+- **Commands** — Complete build, test, and dev commands
+- **Project Structure** — Directory layout and file organization
+- **Code Style** — Code style examples and conventions
+- **Testing Strategy** — Testing framework and coverage requirements
+- **Boundaries** — Always / Ask First / Never operation boundaries
 
-对于工单编排场景，特别需要包含：
+For ticket orchestration scenarios, particularly important to include:
 
-- **API Contract** — 各端（Backend/Web/Mobile/Desktop）的接口定义
-- **Data Schema** — 数据库字段变更和模型设计
-- **UI Interactions** — 前端交互流程和状态管理
-- **Editable Files** — `files_to_edit` 白名单（供第三环使用）
+- **API Contract** — Interface definitions for each platform (Backend/Web/Mobile/Desktop)
+- **Data Schema** — Database field changes and data model design
+- **UI Interactions** — Frontend interaction flows and state management
+- **Editable Files** — `files_to_edit` whitelist (for Phase 3 use)
 
-## 与 planning-and-task-breakdown 的关系
+## Relationship with planning-and-task-breakdown
 
-此 skill 的输出（spec.md）是 `planning-and-task-breakdown` skill 的输入。spec 定义了"要建什么"，plan 定义了"怎么建"。
+The output of this skill (spec.md) is the input to `planning-and-task-breakdown` skill. Spec defines "what to build", plan defines "how to build it".
 
-## 最佳实践
+## Best Practices
 
-1. **表格化关键信息** — 用表格而非段落描述接口、字段、命令
-2. **包含代码示例** — 展示实际的代码片段，而非概念性描述
-3. **明确边界** — Boundaries 部分要清晰，避免后续实现时的歧义
-4. **与团队风格对齐** — Code Style 要反映项目的现有约定
+1. **Use tables for key information** — Use tables rather than paragraphs to describe APIs, fields, commands
+2. **Include code examples** — Show actual code snippets, not just conceptual descriptions
+3. **Clear boundaries** — Make Boundaries section explicit to avoid ambiguity during implementation
+4. **Align with team style** — Code Style should reflect the project's existing conventions
 

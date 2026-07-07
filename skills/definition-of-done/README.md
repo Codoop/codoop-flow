@@ -1,65 +1,65 @@
 # Definition of Done
 
-项目级的完成标准检查清单。
+Project-level completion standard checklist.
 
-## 快速开始
+## Quick Start
 
-在任务声称"完成"前，运行完成标准检查清单：
+Before a task claims to be "done", run the Definition of Done checklist:
 
 ```
 /skill definition-of-done
 ```
 
-## 什么是完成标准？
+## What is a Definition of Done?
 
-完成标准是**项目级的质量底线**，不同于每个任务各不相同的验收条件：
+A Definition of Done is a **project-level quality baseline**, different from per-task acceptance criteria:
 
-- **验收条件**："这个功能做对了吗？"（因任务而异）
-- **完成标准**："这能安心交付吗？"（固定不变）
+- **Acceptance Criteria**: "Did we build this correctly?" (varies per task)
+- **Definition of Done**: "Can we confidently ship this?" (fixed and consistent)
 
-## 完成标准的 5 个维度
+## 5 Dimensions of Definition of Done
 
-### 1. 正确性（Correctness）
-✅ 验收条件满足 + 无回归 + 边界情况处理
+### 1. Correctness
+✅ All acceptance criteria met + no regressions + edge cases handled
 
-### 2. 质量（Quality）
-✅ 代码清晰 + 无重复 + 无死代码
+### 2. Quality
+✅ Code is clear + no duplication + no dead code
 
-### 3. 集成（Integration）
-✅ 与系统协作 + 兼容性 + 配置正确
+### 3. Integration
+✅ Works with the rest of the system + backward compatible + config correct
 
-### 4. 文档（Documentation）
-✅ API 文档 + 架构决策 + 当前状态描述
+### 4. Documentation
+✅ APIs documented + architectural decisions recorded + current state described
 
-### 5. 可交付性（Ship-readiness）
-✅ 安全审查 + 可观测性 + 回滚方案 + 人工批准
+### 5. Ship-readiness
+✅ Security reviewed + observability in place + rollback path exists + human approval
 
-## 使用方式
+## How to Use
 
-### 在工单编排中
+### Within Ticket Orchestration
 
-`codoop-ticket` 在第三阶段会提示用户参考此 skill：
-
-```
-11. 用户参考 /skill definition-of-done 检查完成标准
-```
-
-### 独立检查
-
-当任何开发完成时：
+`codoop-ticket` prompts users to reference this skill in phase 3:
 
 ```
-我完成了用户搜索功能的实现，请用 /skill definition-of-done 帮我检查是否符合完成标准
+11. User references /skill definition-of-done to check completion standards
 ```
 
-## 关键原则
+### Independent Check
 
-1. **固定不变** — 完成标准一旦定义，就是项目的质量底线，不因时间压力而改动
-2. **无例外** — 没有"这次可以跳过测试"或"这次先不写文档"
-3. **可重复** — 每个任务都用同样的标准，确保一致的质量
+When any development is complete:
 
-## 与其他 skills 的关系
+```
+I've completed the user search feature implementation. Use /skill definition-of-done to verify it meets our completion standards.
+```
 
-- **planning-and-task-breakdown** — 分解出的每个任务完成后都需要满足此标准
-- **spec-driven-development** — spec 中定义的需求 + 此标准 = 真正的"完成"
+## Key Principles
+
+1. **Fixed and Unchanging** — Once defined, DoD is the project's quality floor. Time pressure doesn't override it.
+2. **No Exceptions** — There's no "this time we can skip tests" or "we'll document this later".
+3. **Repeatable** — Every task uses the same standard, ensuring consistent quality.
+
+## Relationship with Other Skills
+
+- **planning-and-task-breakdown** — Each task it breaks down must meet this standard upon completion
+- **spec-driven-development** — Spec requirements + this standard = true "done"
 

@@ -1,44 +1,44 @@
 # Planning and Task Breakdown
 
-将技术规格分解为可实施的、有序的任务清单。
+Break down technical specs into implementable, ordered task lists.
 
-## 使用方式
+## How to Use
 
-### 独立调用（生成完整计划）
+### Standalone Invocation (Generate Complete Plan)
 
-当你有技术规格（spec.md），需要分解成实现任务时：
+When you have a technical spec (spec.md) and need to break it into implementation tasks:
 
 ```
 /skill planning-and-task-breakdown
-基于搜索功能的技术规格，分解成实现计划和原子任务清单
+Based on the search feature technical spec, break it down into implementation plan and atomic tasks.
 ```
 
-### 作为工单编排的第三阶段
+### As Phase 3 of Codoop-Ticket Orchestration
 
-`codoop-ticket` skill 会在第三阶段自动调用此 skill：
+The `codoop-ticket` skill automatically calls this skill in phase 3:
 
 ```
-【第三阶段】任务分解 (plan.md + todo.md)
-9. codoop-ticket 加载 /skill planning-and-task-breakdown
-10. 基于 spec.md 分解实现任务
-11. 用户 review 并确认
+【Phase 3】Task Breakdown (plan.md + todo.md)
+9. codoop-ticket loads /skill planning-and-task-breakdown
+10. Break down implementation tasks based on spec.md
+11. User reviews and confirms
 ```
 
-## 任务分解的关键产出
+## Key Outputs of Task Breakdown
 
-### plan.md — 实现计划
+### plan.md — Implementation Plan
 
-按依赖关系和执行顺序组织的步骤：
+Steps organized by dependencies and execution order:
 
 ```markdown
 # Implementation Plan: [Feature Name]
 
 ## Overview
-[一句话总结要建什么]
+[One-line summary of what we're building]
 
 ## Architecture Decisions
-- [决策 1 及其理由]
-- [决策 2 及其理由]
+- [Decision 1 and rationale]
+- [Decision 2 and rationale]
 
 ## Task List
 
@@ -47,20 +47,20 @@
 - Task 2: ...
 
 ### Checkpoint: Foundation
-- [ ] 测试通过
-- [ ] 构建成功
+- [ ] All tests pass
+- [ ] Build succeeds
 
 ### Phase 2: Core Features
 - Task 3: ...
 - Task 4: ...
 
 ### Checkpoint: Core Features
-- [ ] 端到端流程工作
+- [ ] End-to-end flow works
 ```
 
-### todo.md — 原子任务清单
+### todo.md — Atomic Task List
 
-每个任务 ≤100 行代码，有明确的验收条件：
+Each task ≤100 lines of code with clear acceptance criteria:
 
 ```markdown
 ## Task 1: Create search API endpoint
@@ -88,55 +88,55 @@
 **Estimated scope:** Small (1-2 files)
 ```
 
-## 核心设计原则
+## Core Design Principles
 
-### 1. 垂直切片（Vertical Slicing）
+### 1. Vertical Slicing
 
-❌ **横向分割** — 分层实现（先数据库，再 API，再 UI）
+❌ **Horizontal Slicing** — Layer-by-layer implementation (DB first, then API, then UI)
 ```
-Task 1: 整个数据库 schema
-Task 2: 所有 API 端点
-Task 3: 所有 UI 组件
-```
-
-✅ **垂直切片** — 端到端功能（每个任务都能交付价值）
-```
-Task 1: 搜索 API + 搜索框 UI（用户能搜索）
-Task 2: 搜索结果列表 + 数据库查询优化（用户能看到结果）
-Task 3: 过滤功能 + 前端状态管理（用户能过滤）
+Task 1: Entire database schema
+Task 2: All API endpoints
+Task 3: All UI components
 ```
 
-### 2. 任务大小指南
+✅ **Vertical Slicing** — End-to-end features (each task delivers value)
+```
+Task 1: Search API + search box UI (user can search)
+Task 2: Results list + DB query optimization (user can see results)
+Task 3: Filter feature + frontend state management (user can filter)
+```
 
-| 大小 | 文件数 | 时间 | 何时拆分 |
+### 2. Task Sizing Guidelines
+
+| Size | Files | Time | When to Split |
 |-----|-------|------|--------|
-| XS | 1 | < 30 min | 单函数或配置 |
-| S | 1-2 | 30 min - 1h | 单个组件或端点 |
-| **M** | 3-5 | 1-2h | **推荐范围** |
-| L | 5-8 | 2-4h | 多组件协作 |
-| XL | 8+ | 4h+ | ❌ **拆分** |
+| XS | 1 | < 30 min | Single function or config |
+| S | 1-2 | 30 min - 1h | Single component or endpoint |
+| **M** | 3-5 | 1-2h | **Recommended range** |
+| L | 5-8 | 2-4h | Multi-component work |
+| XL | 8+ | 4h+ | ❌ **Split into smaller tasks** |
 
-### 3. 检查点（Checkpoints）
+### 3. Checkpoints
 
-每 2-3 个任务后设置检查点，确保系统仍可运行：
+Set a checkpoint after every 2-3 tasks to ensure the system still works:
 
 ```markdown
 ## Checkpoint: After Tasks 1-3
 
-- [ ] 所有测试通过
-- [ ] 构建无错误
-- [ ] 端到端流程可用
-- [ ] 与用户确认后再继续
+- [ ] All tests pass
+- [ ] Build succeeds
+- [ ] End-to-end flow works
+- [ ] Confirm with user before continuing
 ```
 
-## 与 definition-of-done 的关系
+## Relationship with definition-of-done
 
-此 skill 分解出的每个任务，完成后都需要满足 `/skill definition-of-done` 中定义的标准。参考那个 skill 了解 Correctness、Quality、Integration、Documentation、Ship-readiness 的详细要求。
+Each task broken down by this skill must meet the standards defined in `/skill definition-of-done` after completion. Refer to that skill for detailed requirements on Correctness, Quality, Integration, Documentation, and Ship-readiness.
 
-## 最佳实践
+## Best Practices
 
-1. **明确依赖** — 清晰标注哪些任务必须按顺序、哪些可并行
-2. **验收条件具体** — "测试通过"不够，要说明测试类型和覆盖率
-3. **包含风险识别** — Risks 和 Mitigations 部分要列出已知陷阱
-4. **估算保守** — 如果不确定是否能 1-2 小时内完成，拆分任务
+1. **Make dependencies explicit** — Clearly mark which tasks must be sequential vs parallel
+2. **Specific acceptance criteria** — "Tests pass" is not enough; specify test types and coverage
+3. **Include risk identification** — List known pitfalls in Risks and Mitigations
+4. **Conservative estimates** — If unsure a task fits in 1-2 hours, split it further
 
