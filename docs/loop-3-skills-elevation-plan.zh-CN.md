@@ -390,27 +390,151 @@ skills/
 - **codoop_flow/gitutil.py** — git 工具
 - **codoop_flow/ignore.py** — .gitignore 配置
 
-### 建议
+### 建议方案：分离第二环工具
 
-是否应该：
-1. **将第二环工具迁移到 `codoop-ticket` skill 中**？
-   - codoop-ticket 目前只有 SKILL.md 和 README.md，可以添加 scripts/
-   - codoop.py 的 `ticket` 子命令应该属于 codoop-ticket
+**目标：** 让每个 Loop skill 只包含自己环节需要的工具和配置。
 
-2. **保留全局工具在 codoop-flow 中**？
-   - config.py、ticket.py、gitutil.py 都被第二和第三环共享
-   - 可以保留在 codoop-flow/scripts/codoop_flow/ 作为公共库
+#### 方案 A：保守方案（推荐）
 
-3. **setup 和 install 命令的位置**？
-   - 这两个是全局初始化工具
-   - 应该放在 codoop-flow 或者单独的顶层脚本中
+```
+skills/codoop-flow/scripts/
+├── codoop_tools.py                    (保留，第三环专用 CLI)
+└── codoop_flow/                       (保留，共享库 + 第三环工具)
+    ├── config.py                      (共享)
+    ├── ticket.py                      (共享)
+    ├── gitutil.py                     (共享)
+    ├── ignore.py                      (共享)
+    ├── verify.py                      (第三环)
+    ├── worktree.py                    (第三环)
+    └── __init__.py
+
+skills/codoop-ticket/scripts/          ← 新增
+├── codoop-ticket.py                   (改名自 codoop.py，移除 setup/install)
+└── codoop_flow/                       (符号链接到 codoop-flow 的 codoop_flow/)
+    └── tickets_cli.py                 (从 codoop-flow 的 codoop_flow/ 复制)
+```
+
+**具体改动：**
+
+1. **codoop-ticket/scripts/codoop-ticket.py**
+   - 从 codoop.py 移除 `setup` 和 `install` 子命令
+   - 只保留 `ticket` 子命令（init/validate/promote/update-metadata）
+   - 更新导入路径指向符号链接或复制的 codoop_flow/
+
+2. **codoop-flow/scripts/codoop_flow/tickets_cli.py**
+   - 保留一份在 codoop-flow 中（向后兼容）
+   - 在 codoop-ticket 中创建符号链接或复制
+
+3. **setup 和 install 命令保留在 codoop-flow 中**
+   - setup：初始化项目结构（全局，适合放在 codoop-flow）
+   - install：安装 skills（全局，适合放在顶层脚本）
+
+#### 共享库的处理
+
+```
+codoop_flow/ 模块中的共享部分：
+- config.py
+- ticket.py
+- gitutil.py
+- ignore.py
+
+方案 1（推荐）：保留在 codoop-flow/scripts/codoop_flow/ 中
+- codoop-ticket 通过相对路径 (../../codoop-flow/scripts/codoop_flow/) 导入
+- 避免重复代码
+
+方案 2：复制到 codoop-ticket/scripts/codoop_flow/ 中
+- 完全独立，但会有代码重复
+- 如果两个 skill 有更新，需要同步
+```
+
+#### 迁移步骤
+
+1. 在 `skills/codoop-ticket/scripts/` 中创建 codoop-ticket.py
+   - 从 codoop-flow/scripts/codoop.py 复制
+   - 删除 setup 和 install 命令
+   - 更新导入路径
+
+2. 创建符号链接或复制 tickets_cli.py
+   ```bash
+   ln -s ../../codoop-flow/scripts/codoop_flow codoop-ticket/scripts/codoop_flow
+   ```
+
+3. 更新 codoop-flow 中的 codoop.py
+   - 保留 setup 和 install 命令
+   - 保留 ticket 子命令（向后兼容）或删除（如果用户应该使用 codoop-ticket 代替）
+
+4. 更新 SKILL.md 文档
+   - codoop-ticket 的 SKILL.md：说明如何运行 `python codoop-ticket.py`
+   - codoop-flow 的 SKILL.md：不需要提及 codoop.py 的 ticket 子命令
+
+---
+
+### 迁移影响与优缺点
+
+**优点：**
+- 清晰的关注点分离：codoop-flow 只处理第三环，codoop-ticket 处理第二环
+- 用户能直接找到相关工具（想要设计工单→找 codoop-ticket）
+- 降低 codoop-flow skill 的复杂性
+
+**缺点：**
+- 增加了迁移工作量（但相对不大）
+- 需要维护 codoop_flow/ 公共库的一致性
+- 如果符号链接方案不可行（Windows），需要复制或其他方案
+
+**建议：** 这个迁移可以在提升 3 个 sub-skills 后进行，作为第二个改造阶段
+
+---
+
+## 整体改造规划（分阶段）
+
+### 阶段 1：第三环 Sub-Skills 和 Personas 提升（本文档重点）
+
+**工作量：** ~36 分钟
+
+**改动：**
+1. 复制 3 个 sub-skills 到 `skills/`
+2. 复制 3 个 review personas 到 `skills/_shared/agents/`
+3. 删除 `references/` 目录
+4. 更新 codoop-flow SKILL.md 中的路径引用
+5. 更新 manifests 和安装文档
+
+**产出：**
+- 3 个独立可调用的 skills
+- 3 个独立可调用的 review personas
+- 第三环代码结构更清晰
+
+---
+
+### 阶段 2：第二环工具分离（后续）
+
+**工作量：** ~20-30 分钟
+
+**改动：**
+1. 在 `skills/codoop-ticket/scripts/` 中创建 codoop-ticket.py（从 codoop.py 派生）
+2. 设置共享库的访问方式（符号链接或复制）
+3. 更新 codoop-ticket SKILL.md 增加 CLI 使用说明
+4. 更新 codoop-flow SKILL.md 移除 ticket 相关内容
+
+**产出：**
+- codoop-ticket 成为完整的第二环 skill（包括 CLI 工具）
+- codoop-flow 专注于第三环
+
+---
+
+### 阶段 3：其他 24 个 Universal Skills 提升（可选，单独讨论）
+
+**涉及范围：** source/agent-skills-main/ 中的其他 24 个通用工程 skills
+
+**决策点：**
+- 这些 skills 是否应该作为项目的一部分？
+- 还是保留在 source/ 作为参考库？
 
 ---
 
 ## 待讨论的问题
 
-1. **时机** — 是否现在就提升，还是等待其他工作完成？
-2. **其他 24 个 skills** — source/agent-skills-main/ 中的其他 24 个通用工程 skills 是否也应该提升到顶层？
-3. **文档充实** — 新提升的 3 个 skills 是否需要新的 README.md 说明独立使用场景？
-4. **第二环工具迁移** — 是否应该将 codoop.py 和 tickets_cli.py 迁移到 codoop-ticket skill 中？
+1. **阶段 1 执行** — 是否现在就执行第一阶段（3 个 sub-skills + 3 个 review personas 提升）？
+2. **阶段 2 时机** — 第二环工具分离是否在阶段 1 后立即进行，还是保留到后续？
+3. **其他 24 个 skills** — 是否需要单独的改造计划评估这些通用工程 skills 的提升？
+4. **向后兼容** — codoop-flow 中是否保留原有的 setup/install/ticket 命令用于向后兼容，还是完全迁移？
 
