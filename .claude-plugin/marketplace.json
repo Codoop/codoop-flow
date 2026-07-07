@@ -9,7 +9,7 @@
   "plugins": [
     {
       "name": "codoop-discover",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "source": "skills/codoop-discover/",
       "description": "Venture-Discovery Loop: collaborative product discovery with multi-role expert agents (PM, GTM, UX/UI, Architect). Generates comprehensive backlog documentation.",
       "homepage": "https://github.com/Codoop/codoop-flow",
@@ -18,7 +18,7 @@
     },
     {
       "name": "codoop-ticket",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "source": "skills/codoop-ticket/",
       "description": "Human-Centric Loop: design work tickets in-session with three-stage workflow (PRD -> Spec -> Plan). Auto-infers metadata. Integrates Phase 1 backlog and calls spec-driven-development and planning-and-task-breakdown skills.",
       "homepage": "https://github.com/Codoop/codoop-flow",
@@ -27,7 +27,7 @@
     },
     {
       "name": "spec-driven-development",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "source": "skills/spec-driven-development/",
       "description": "Design technical specifications before coding. Create APIs, data schemas, and UI contracts. Standalone or as Phase 2 of codoop-ticket workflow.",
       "homepage": "https://github.com/Codoop/codoop-flow",
@@ -36,7 +36,7 @@
     },
     {
       "name": "planning-and-task-breakdown",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "source": "skills/planning-and-task-breakdown/",
       "description": "Break down specs into ordered, implementable tasks. Vertical-slice planning with task sizing guidelines. Standalone or as Phase 3 of codoop-ticket workflow.",
       "homepage": "https://github.com/Codoop/codoop-flow",
@@ -45,7 +45,7 @@
     },
     {
       "name": "definition-of-done",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "source": "skills/definition-of-done/",
       "description": "Project-level completion standards (Correctness, Quality, Integration, Documentation, Ship-readiness). Reference during implementation to ensure consistent quality.",
       "homepage": "https://github.com/Codoop/codoop-flow",
@@ -54,7 +54,7 @@
     },
     {
       "name": "incremental-implementation",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "source": "skills/incremental-implementation/",
       "description": "Split large code changes into small, verifiable vertical slices. Each slice: implement -> test -> verify -> commit. Core discipline for Loop 3 build phase.",
       "homepage": "https://github.com/Codoop/codoop-flow",
@@ -63,7 +63,7 @@
     },
     {
       "name": "debugging-and-error-recovery",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "source": "skills/debugging-and-error-recovery/",
       "description": "Systematic root-cause analysis and self-healing for test failures. Denoise error logs, classify errors, inject debug prompts. Core discipline for Loop 3 debug phase.",
       "homepage": "https://github.com/Codoop/codoop-flow",
@@ -72,7 +72,7 @@
     },
     {
       "name": "test-driven-development",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "source": "skills/test-driven-development/",
       "description": "Red-Green-Refactor cycle: write tests first, implement minimal code, then refactor. Covers happy path, boundary values, and error cases.",
       "homepage": "https://github.com/Codoop/codoop-flow",
@@ -81,7 +81,7 @@
     },
     {
       "name": "codoop-flow",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "source": ".",
       "description": "Drive codoop-flow tickets in-session: pick -> build -> verify -> review -> ship, plus human-facing discover and ticket-lifecycle CLIs.",
       "homepage": "https://github.com/Codoop/codoop-flow",
