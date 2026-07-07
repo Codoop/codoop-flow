@@ -102,25 +102,25 @@ skills/
 ├── codoop-flow/
 └── _shared/
     └── agents/
-        ├── product-sprint-prioritizer.md (复用，Discovery 的 PM)
+        ├── product-sprint-prioritizer.md (复用 Discovery PM)
         ├── sales-offer-lead-gen-strategist.md
         ├── design-ux-architect.md
         ├── design-ui-designer.md
-        ├── engineering-backend-architect.md
+        ├── engineering-backend-architect.md (复用 Discovery Architect)
         ├── engineering-software-architect.md
-        ├── alignment-agent.md
-        ├── ticket-pm.md (新增，工单轻量版 PM)
-        └── ticket-architect.md (新增，工单轻量版架构师)
+        └── alignment-agent.md
 ```
+
+**注**：直接复用 Discovery 的 agents，但在 codoop-ticket SKILL.md 中明确指引工单范围，agents 根据需要主动确认是否需要商业模式/GTM 讨论。
 
 **具体操作**：
 
 1. 创建 `skills/codoop-ticket/` 目录
-2. 新建 `SKILL.md`（工单编排的主逻辑）
+2. 新建 `SKILL.md`（工单编排的主逻辑，明确指引工单设计范围）
 3. 新建 `README.md`（用户指南）
-4. 在 `skills/_shared/agents/` 中新增：
-   - `ticket-pm.md`（工单轻量版 PM persona）
-   - `ticket-architect.md`（工单轻量版架构师 persona）
+4. **不新增 personas** — 直接复用 `skills/_shared/agents/` 中的：
+   - `product-sprint-prioritizer.md`（PM agent）
+   - `engineering-backend-architect.md` + `engineering-software-architect.md`（Architect agents）
 
 ### Phase 2.1 — 创建轻量工单 Personas
 
@@ -188,19 +188,33 @@ description: Draft work tickets with intelligent PRD, spec, and plan guidance. U
 - 不需要多个角色协作辩论（只有 PM + Architect）
 - 重点是"快速精准"而非"全局论证"
 
-### Phase 2.3 — Sub-Agent 轻量 Personas 设计（放在 _shared/agents/）
+### Phase 2.3 — 直接复用 Agents，工单范围通过 SKILL.md 指引
 
-**ticket-pm.md 应该包含**（`skills/_shared/agents/ticket-pm.md`）：
-- 工单 PRD 的快速模板（业务需求、用户故事、验收标准）
-- 强调"这个工单解决什么问题"，不需要 OST 或商业模式
-- 示例：电商系统添加"优惠券功能"的工单 PRD（几百字，不是几千字）
-- 与 Discovery 的 `product-sprint-prioritizer.md` 的关键区别：工单尺度 vs 全局论证
+**不需要新建 personas，直接复用**：
+- `product-sprint-prioritizer.md`（PM agent）
+- `engineering-backend-architect.md` + `engineering-software-architect.md`（Architect agents）
 
-**ticket-architect.md 应该包含**（`skills/_shared/agents/ticket-architect.md`）：
-- 工单契约定义（API 端点、DB 字段变更、权限范围）
-- 强调"这个工单改什么代码，改什么数据"，不需要全栈架构论证
-- 示例：优惠券功能的 spec（新增哪些 API、哪些 DB 字段、白名单限制）
-- 与 Discovery 的 `engineering-backend-architect.md` 的关键区别：增量设计 vs 全局架构
+**SKILL.md 中的关键指引**（工单范围上下文）：
+
+在调用 PM agent 之前，SKILL.md 需要明确告诉它：
+```
+这是一个工单设计阶段，我们的目标是为"<module_name>"模块设计 PRD。
+聚焦在这个模块的业务需求、用户故事、验收标准。
+如果涉及商业模式、GTM 策略或跨模块影响，请主动确认用户是否需要讨论。
+```
+
+在调用 Architect agent 之前，SKILL.md 需要明确告诉它：
+```
+这是一个工单设计的技术规格阶段，基于已有的系统架构（见 docs/backlog/architecture/）。
+聚焦在"<module_name>"模块的：API 接口设计、DB 字段变更、各端实现细节。
+如果涉及全局架构变更、性能重构等超出工单范围的事项，请主动确认用户。
+```
+
+**优点**：
+- ✅ 复用已验证的高质量 agents
+- ✅ 保持思维框架一致
+- ✅ agents 智能识别"超出范围"的决策点，主动找用户确认
+- ✅ 减少维护负担
 
 ### Phase 2.4 — 插件 manifest 注册
 
@@ -301,10 +315,10 @@ description: Draft work tickets with intelligent PRD, spec, and plan guidance. U
    - 还是通过文本描述 + 指引用户？
    - **建议**：直接 include 或清晰引用，让编排流程无缝衔接
 
-3. **ticket-pm 和 ticket-architect personas 的设计粒度**（都放在 _shared/agents/）：
-   - 相比 Discovery 版本（product-sprint-prioritizer、engineering-backend-architect），应该如何精简？
-   - 是否需要明确工单范围限制（"只涉及 module X，不考虑全局"）？
-   - **建议**：精简到工单尺度，强调"增量、小范围"的设计原则
+3. **SKILL.md 中的工单范围指引**：
+   - 如何在调用 PM 和 Architect agents 时，明确告诉它们"我们在做工单设计，不是全局设计"？
+   - 是否需要自动检测"超出范围"的决策点（如商业模式变更、全局架构影响）并找用户确认？
+   - **建议**：在 SKILL.md 中提供明确的上下文范围说明，让 agents 能主动识别并确认超出范围的项目
 
 4. **人类确认的触发方式**：
    - 每个阶段完成后，SKILL 如何让用户确认？
@@ -325,8 +339,6 @@ description: Draft work tickets with intelligent PRD, spec, and plan guidance. U
 - 📝 **新增**：
   - `skills/codoop-ticket/SKILL.md`
   - `skills/codoop-ticket/README.md`
-  - `skills/_shared/agents/ticket-pm.md` (工单轻量版 PM)
-  - `skills/_shared/agents/ticket-architect.md` (工单轻量版架构师)
 
 - ✏️ **修改**：
   - `.claude-plugin/marketplace.json` （添加 codoop-ticket 条目）
