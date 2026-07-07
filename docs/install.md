@@ -19,6 +19,19 @@ Each skill is **self-contained**: it carries the orchestration guide (`SKILL.md`
 
 ---
 
+## One-shot install (all 6 skills)
+
+Clone the repo once, then run:
+
+```bash
+git clone https://github.com/Codoop/codoop-flow.git
+bash codoop-flow/scripts/install-skills.sh
+```
+
+This copies all 6 skills to `~/.codex/skills/` and `~/.claude/skills/`. Re-running updates skills in-place. Use `--agent codex` or `--agent claude` to target one agent. Use `--dry-run` to preview.
+
+---
+
 ## Codex
 
 Install codoop-flow as a Codex plugin from the GitHub marketplace repo:
@@ -35,12 +48,11 @@ Use $codoop-flow to set up this repo for codoop-flow.
 Use $codoop-flow to run the next ticket against /path/to/codoop_flow.toml.
 ```
 
-For local development without plugin installation, clone and copy the skill:
+For local development without plugin installation, clone and use the install script:
 
 ```bash
 git clone https://github.com/Codoop/codoop-flow.git
-mkdir -p "${CODEX_HOME:-$HOME/.codex}/skills"
-cp -R codoop-flow/skills/codoop-flow "${CODEX_HOME:-$HOME/.codex}/skills/"
+bash codoop-flow/scripts/install-skills.sh --agent codex
 ```
 
 ## Claude Code
@@ -103,23 +115,28 @@ Or schedule continuously with:
 
 ## Generic copy (Cursor / Gemini / others)
 
-The skill is a self-contained directory; any agent can copy it into its own skills/rules directory:
+Each skill is a self-contained directory; any agent can copy all six into its own skills/rules directory:
 
 ```bash
 git clone https://github.com/Codoop/codoop-flow.git
-# copy just this one directory — it brings its own scripts/ and references/
-cp -R codoop-flow/skills/codoop-flow  <the agent's skills directory>/
+# Copy all 6 skills — each brings its own SKILL.md
+for skill in codoop-discover codoop-ticket spec-driven-development \
+             planning-and-task-breakdown definition-of-done codoop-flow; do
+  cp -R "codoop-flow/skills/$skill"  <the agent's skills directory>/
+done
+# _shared is referenced by codoop-discover via relative path
+cp -R codoop-flow/skills/_shared <the agent's skills directory>/
 ```
 
 Where each agent expects it (check their own docs, may change across versions):
 
 | Agent | Where | How to trigger |
 |---|---|---|
-| Cursor | Put `SKILL.md` in `.cursor/rules/`, or have the agent reference the whole `skills/codoop-flow/` | Reference the rule in conversation |
-| Other agents | The skill is plain Markdown; feed `SKILL.md`'s content as system prompt / instructions | Just talk to it |
-| Gemini CLI | Put it in its skills directory | Auto-discovered |
+| Cursor | Put each `SKILL.md` in `.cursor/rules/`, or point the agent at `skills/` | Reference the rule in conversation |
+| Other agents | The skills are plain Markdown; feed each `SKILL.md`'s content as system prompt / instructions | Just talk to it |
+| Gemini CLI | Put them in its skills directory | Auto-discovered |
 
-**Key point**: after copying, make sure `skills/codoop-flow/scripts/` and `references/` stay in the same parent directory as `SKILL.md` — all paths in SKILL.md are relative to itself (`$SKILL/scripts/...`, `$SKILL/references/...`), so splitting them apart breaks the CLI and review personas.
+**Key point**: after copying, make sure `scripts/` and `references/` etc. stay in the same parent directory as each skill's `SKILL.md` — all paths in SKILL.md are relative to itself (`$SKILL/scripts/...`, `$SKILL/references/...`), so splitting them apart breaks the CLI and review personas.
 
 ---
 

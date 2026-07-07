@@ -21,6 +21,19 @@ codoop-flow 包含**六个独立 skill**，分别应对 AI 驱动开发的不同
 
 ---
 
+## 一键安装（全部 6 个 skill）
+
+克隆一次，然后运行：
+
+```bash
+git clone https://github.com/Codoop/codoop-flow.git
+bash codoop-flow/scripts/install-skills.sh
+```
+
+这会把所有 6 个 skill 复制到 `~/.codex/skills/` 和 `~/.claude/skills/`。再跑一次就是原地更新。用 `--agent codex` 或 `--agent claude` 只装到某一个 agent。用 `--dry-run` 预览但不实际复制。
+
+---
+
 ## Codex
 
 从 GitHub marketplace 仓库安装 codoop-flow Codex 插件：
@@ -37,12 +50,11 @@ codex plugin add codoop-flow@codoop-flow
 使用 $codoop-flow，针对 /path/to/codoop_flow.toml 跑下一张工单。
 ```
 
-本地开发时也可以不走插件安装，改为克隆并复制 skill：
+本地开发时也可以不走插件安装，改为克隆并用安装脚本：
 
 ```bash
 git clone https://github.com/Codoop/codoop-flow.git
-mkdir -p "${CODEX_HOME:-$HOME/.codex}/skills"
-cp -R codoop-flow/skills/codoop-flow "${CODEX_HOME:-$HOME/.codex}/skills/"
+bash codoop-flow/scripts/install-skills.sh --agent codex
 ```
 
 ## Claude Code
@@ -105,25 +117,28 @@ claude --plugin-dir /path/to/codoop-flow
 
 ## 通用拷贝(Cursor / Gemini / 其他)
 
-skill 是自包含目录,任何 agent 都可以直接把它拷进自己的技能/规则目录:
+每个 skill 都是自包含目录，任何 agent 都可以把全部 6 个拷进自己的技能/规则目录:
 
 ```bash
 git clone https://github.com/Codoop/codoop-flow.git
-# 拷这一个目录即可,它自带 scripts/ 和 references/
-cp -R codoop-flow/skills/codoop-flow  <目标 agent 的技能目录>/
+# 拷全部 6 个 skill — 每个都自带 SKILL.md
+for skill in codoop-discover codoop-ticket spec-driven-development \
+             planning-and-task-breakdown definition-of-done codoop-flow; do
+  cp -R "codoop-flow/skills/$skill"  <目标 agent 的技能目录>/
+done
+# _shared 被 codoop-discover 用相对路径引用
+cp -R codoop-flow/skills/_shared <目标 agent 的技能目录>/
 ```
 
 各 agent 的落脚点(参考各自文档,可能随版本变化):
 
 | Agent | 放哪 | 怎么触发 |
 |---|---|---|
-| Cursor | 把 `SKILL.md` 放进 `.cursor/rules/`,或让 agent 引用整个 `skills/codoop-flow/` | 在对话里引用规则 |
-| 其他 agent | skill 是纯 Markdown,把 `SKILL.md` 内容作为 system prompt / instructions 喂进去 | 直接对话 |
+| Cursor | 每个 `SKILL.md` 放进 `.cursor/rules/`，或让 agent 引用整个 `skills/` | 在对话里引用规则 |
+| 其他 agent | skill 是纯 Markdown，把每个 `SKILL.md` 内容作为 system prompt / instructions 喂进去 | 直接对话 |
 | Gemini CLI | 放进其 skills 目录 | 自动发现 |
 
-**关键**:拷完后确保 `skills/codoop-flow/scripts/` 和 `references/` 跟 `SKILL.md`
-保持在同一父目录下——SKILL.md 里所有路径都是相对自己(`$SKILL/scripts/...`、
-`$SKILL/references/...`),拆开就找不到 CLI 和评审 persona 了。
+**关键**:拷完后确保 `scripts/` 和 `references/` 等跟各 `SKILL.md` 保持在同一父目录下——SKILL.md 里所有路径都是相对自己的(`$SKILL/scripts/...`、`$SKILL/references/...`),拆开就找不到 CLI 和评审 persona 了。
 
 ---
 

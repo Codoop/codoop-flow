@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import argparse
 import sys
+from pathlib import Path
 
 from codoop_flow.config import load_config, setup_target
 from codoop_flow.tickets_cli import init_draft, promote, validate_draft, update_metadata_from_docs, write_metadata
@@ -87,6 +88,20 @@ def _cmd_ticket_update_metadata(args) -> int:
     return 0
 
 
+def _cmd_install(args) -> int:
+    import subprocess
+    install_sh = Path(__file__).parents[3] / "scripts" / "install-skills.sh"
+    if not install_sh.exists():
+        print(f"error: install script not found: {install_sh}", file=sys.stderr)
+        return 1
+    cmd = ["bash", str(install_sh)]
+    if getattr(args, "agent", None):
+        cmd += ["--agent", args.agent]
+    if getattr(args, "dry_run", False):
+        cmd += ["--dry-run"]
+    return subprocess.run(cmd).returncode
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(prog="codoop", description="codoop-flow human CLI")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -96,6 +111,13 @@ def main() -> int:
     p_setup.add_argument("--config", default=None, help="where to write codoop_flow.toml (default: ./codoop_flow.toml)")
     p_setup.add_argument("--worktree-root", default="~/codoop_tickets/worktrees", help="where per-ticket worktrees are created")
     p_setup.set_defaults(func=_cmd_setup)
+
+    p_install = sub.add_parser("install", help="copy all 6 skills to global agent paths")
+    p_install.add_argument("--agent", choices=["codex", "claude", "all"],
+                          help="target agent (default: auto-detect both)")
+    p_install.add_argument("--dry-run", action="store_true",
+                          help="preview without copying")
+    p_install.set_defaults(func=_cmd_install)
 
     p_ticket = sub.add_parser("ticket", help="ticket lifecycle (draft -> pending)")
     tsub = p_ticket.add_subparsers(dest="ticket_command", required=True)
