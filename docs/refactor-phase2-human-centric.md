@@ -98,21 +98,29 @@ skills/
 ├── codoop-discover/
 ├── codoop-ticket/          (← 新增，第二环 Human-Centric)
 │   ├── SKILL.md
-│   ├── README.md
-│   └── agents/
-│       ├── ticket-pm.md (轻量工单 PM persona)
-│       └── ticket-architect.md (轻量工单架构师 persona)
+│   └── README.md
 ├── codoop-flow/
 └── _shared/
     └── agents/
+        ├── product-sprint-prioritizer.md (复用，Discovery 的 PM)
+        ├── sales-offer-lead-gen-strategist.md
+        ├── design-ux-architect.md
+        ├── design-ui-designer.md
+        ├── engineering-backend-architect.md
+        ├── engineering-software-architect.md
+        ├── alignment-agent.md
+        ├── ticket-pm.md (新增，工单轻量版 PM)
+        └── ticket-architect.md (新增，工单轻量版架构师)
 ```
 
 **具体操作**：
 
 1. 创建 `skills/codoop-ticket/` 目录
-2. 新建 `ticket-pm.md` 和 `ticket-architect.md`（轻量版 personas）
-3. 新建 `SKILL.md`（工单编排的主逻辑）
-4. 新建 `README.md`（用户指南）
+2. 新建 `SKILL.md`（工单编排的主逻辑）
+3. 新建 `README.md`（用户指南）
+4. 在 `skills/_shared/agents/` 中新增：
+   - `ticket-pm.md`（工单轻量版 PM persona）
+   - `ticket-architect.md`（工单轻量版架构师 persona）
 
 ### Phase 2.1 — 创建轻量工单 Personas
 
@@ -180,17 +188,19 @@ description: Draft work tickets with intelligent PRD, spec, and plan guidance. U
 - 不需要多个角色协作辩论（只有 PM + Architect）
 - 重点是"快速精准"而非"全局论证"
 
-### Phase 2.3 — Sub-Agent 轻量 Personas 设计
+### Phase 2.3 — Sub-Agent 轻量 Personas 设计（放在 _shared/agents/）
 
-**ticket-pm.md 应该包含**：
+**ticket-pm.md 应该包含**（`skills/_shared/agents/ticket-pm.md`）：
 - 工单 PRD 的快速模板（业务需求、用户故事、验收标准）
 - 强调"这个工单解决什么问题"，不需要 OST 或商业模式
 - 示例：电商系统添加"优惠券功能"的工单 PRD（几百字，不是几千字）
+- 与 Discovery 的 `product-sprint-prioritizer.md` 的关键区别：工单尺度 vs 全局论证
 
-**ticket-architect.md 应该包含**：
-- 工单契约定义（API 端点、DB 表、权限范围）
+**ticket-architect.md 应该包含**（`skills/_shared/agents/ticket-architect.md`）：
+- 工单契约定义（API 端点、DB 字段变更、权限范围）
 - 强调"这个工单改什么代码，改什么数据"，不需要全栈架构论证
 - 示例：优惠券功能的 spec（新增哪些 API、哪些 DB 字段、白名单限制）
+- 与 Discovery 的 `engineering-backend-architect.md` 的关键区别：增量设计 vs 全局架构
 
 ### Phase 2.4 — 插件 manifest 注册
 
@@ -291,8 +301,8 @@ description: Draft work tickets with intelligent PRD, spec, and plan guidance. U
    - 还是通过文本描述 + 指引用户？
    - **建议**：直接 include 或清晰引用，让编排流程无缝衔接
 
-3. **ticket-pm 和 ticket-architect personas 的设计粒度**：
-   - 相比 Discovery 版本，应该如何精简？
+3. **ticket-pm 和 ticket-architect personas 的设计粒度**（都放在 _shared/agents/）：
+   - 相比 Discovery 版本（product-sprint-prioritizer、engineering-backend-architect），应该如何精简？
    - 是否需要明确工单范围限制（"只涉及 module X，不考虑全局"）？
    - **建议**：精简到工单尺度，强调"增量、小范围"的设计原则
 
@@ -315,8 +325,8 @@ description: Draft work tickets with intelligent PRD, spec, and plan guidance. U
 - 📝 **新增**：
   - `skills/codoop-ticket/SKILL.md`
   - `skills/codoop-ticket/README.md`
-  - `skills/codoop-ticket/agents/ticket-pm.md`
-  - `skills/codoop-ticket/agents/ticket-architect.md`
+  - `skills/_shared/agents/ticket-pm.md` (工单轻量版 PM)
+  - `skills/_shared/agents/ticket-architect.md` (工单轻量版架构师)
 
 - ✏️ **修改**：
   - `.claude-plugin/marketplace.json` （添加 codoop-ticket 条目）
