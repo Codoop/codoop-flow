@@ -1,37 +1,70 @@
-# 三环架构重构计划：独立运行设计
+# 三环架构重构计划：文件系统协作 + 代码独立
 
 ## 核心需求
 
-**每个环（Loop）都应该能够抛开其他两个环独立运行。**
+**三个环通过文件系统协作，代码上完全独立。**
 
-这意味着：
-- Loop 1（Venture-Discovery）可单独使用 ✅ （已独立，只需 codoop-discover skill）
-- Loop 2（Human-Centric）可单独使用 ❌ （当前依赖 codoop-flow 的工具库）
-- Loop 3（Agent-Centric）可单独使用 ⚠️ （有部分共享依赖）
+- Loop 1 → 独立输出到 `docs/backlog/`
+- Loop 2 → 读 `docs/backlog/`，独立输出到 `docs/tickets/pending/`
+- Loop 3 → 读 `docs/tickets/pending/`，独立输出到 `docs/tickets/done/`
+
+**每个环都应该有自己的 CLI 和配置库，无任何代码耦合。**
+
+现状：
+- Loop 1 ✅ 已独立
+- Loop 2 ❌ CLI 和库混在 codoop-flow 中
+- Loop 3 ❌ CLI 和库混在 codoop-flow 中
 
 ---
 
 ## 问题分析
 
-### 当前架构问题
+### 当前架构的耦合问题
 
-所有工具都集中在 `skills/codoop-flow/scripts/codoop_flow/`：
+所有工具都集中在 `skills/codoop-flow/scripts/codoop_flow/` 中：
 
 ```
 codoop_flow/
 ├── config.py           ← 配置（被 Loop 2 和 Loop 3 共用）
 ├── ticket.py           ← 工单数据结构（被 Loop 2 和 Loop 3 共用）
-├── tickets_cli.py      ← Loop 2 CLI 工具（工单设计）
+├── tickets_cli.py      ← Loop 2 CLI 工具
 ├── gitutil.py          ← git 工具（被 Loop 2 和 Loop 3 共用）
 ├── ignore.py           ← .gitignore 工具（被 Loop 2 和 Loop 3 共用）
-├── verify.py           ← Loop 3 工具（验证）
-└── worktree.py         ← Loop 3 工具（worktree 管理）
+├── verify.py           ← Loop 3 工具
+└── worktree.py         ← Loop 3 工具
 ```
 
 **问题：**
-1. Loop 2 用户无法独立使用，必须依赖 codoop-flow skill 中的工具
-2. Loop 3 用户无法独立使用，必须依赖 codoop-flow skill 中的工具
-3. 代码混在一起，关注点混杂
+1. Loop 2 的 CLI（codoop.py）混在 codoop-flow 中，用户无法单独使用 Loop 2
+2. Loop 3 的 CLI（codoop_tools.py）和 Loop 2 共享同一个 codoop_flow/ 库
+3. 无法清晰地：
+   - 给 Loop 2 用户一个独立的工具集
+   - 给 Loop 3 用户一个独立的工具集
+   - 三个环各自进化而不影响其他环
+
+### 设计理念：文件系统协作
+
+三个环不通过代码调用，而通过文件系统来协作：
+
+```
+Loop 1 (codoop-discover)
+  ↓ 输出文档
+docs/backlog/
+  ↑ Loop 2 读入
+Loop 2 (codoop-ticket CLI)
+  ↓ 输出文档
+docs/tickets/pending/
+  ↑ Loop 3 读入
+Loop 3 (codoop-flow CLI)
+  ↓ 输出代码 + 文档
+docs/tickets/done/
+```
+
+**意义：**
+- 三个环的代码库可以完全独立
+- 不需要任何跨环的函数调用或导入
+- 用户可以只安装自己需要的环
+- 易于维护、测试、演进
 
 ---
 
@@ -39,34 +72,47 @@ codoop_flow/
 
 ### 架构原则
 
-1. **独立性** — 每个环可以完全独立运行，无需其他环的代码
-2. **最小共享** — 只在必要时共享工具（如 config.py）
+1. **代码独立** — 每个环的 CLI 和库完全独立，无任何 import 依赖
+2. **文件系统协作** — 三个环通过读写共同的目录结构来协作
 3. **清晰定位** — 每个 skill 的 scripts/ 中只包含该环所需的工具
-4. **一致性** — 三个环使用相同的配置格式和工单结构
+4. **一致性** — 同一对象（Config、Ticket）在各环中定义方式相同
+
+### 关键点：不能有 import 跨环代码
+
+```
+❌ 不允许的：
+skills/codoop-ticket/scripts/... 
+  import from skills/codoop-flow/scripts/
+
+✅ 允许的：
+skills/codoop-ticket/scripts/codoop_flow_lib/config.py
+skills/codoop-flow/scripts/codoop_flow_lib/config.py
+（两个独立的、定义相同的文件）
+```
 
 ### 目标结构
 
 ```
 skills/
-├── codoop-discover/               (Loop 1 - 已独立)
+├── codoop-discover/               (Loop 1 - 已独立 ✓)
 │   ├── SKILL.md
 │   └── README.md
 │
-├── codoop-ticket/                 (Loop 2 - 需要重构)
+├── codoop-ticket/                 (Loop 2 - 独立 CLI + 库)
 │   ├── SKILL.md
 │   ├── README.md
 │   ├── scripts/
-│   │   ├── codoop-ticket.py       ← 第二环 CLI（ticket init/validate/promote）
-│   │   └── codoop_flow_lib/       ← Loop 2 专用库
-│   │       ├── config.py          (共用配置模块)
-│   │       ├── ticket.py          (共用工单结构)
-│   │       ├── tickets_cli.py     (Loop 2 工单管理)
-│   │       ├── gitutil.py         (共用 git 工具)
-│   │       ├── ignore.py          (共用 ignore 工具)
+│   │   ├── codoop-ticket.py       ← Loop 2 专用 CLI
+│   │   └── codoop_lib_v1/         ← Loop 2 独立库（版本化）
+│   │       ├── config.py
+│   │       ├── ticket.py
+│   │       ├── tickets_cli.py
+│   │       ├── gitutil.py
+│   │       ├── ignore.py
 │   │       └── __init__.py
-│   └── specs/                     ← SKILL 文档引用的示例/模板
+│   └── templates/                 ← 工单模板（可选）
 │
-├── codoop-flow/                   (Loop 3 - 需要重构)
+├── codoop-flow/                   (Loop 3 - 独立 CLI + 库)
 │   ├── SKILL.md
 │   ├── README.md
 │   ├── agents/                    (3 个内部 UI personas)
@@ -74,126 +120,89 @@ skills/
 │   │   ├── testing-reality-checker.md
 │   │   └── engineering-technical-writer.md
 │   └── scripts/
-│       ├── codoop_tools.py        ← 第三环 CLI（pick/verify/finish/fail）
-│       └── codoop_flow_lib/       ← Loop 3 专用库
-│           ├── config.py          (共用配置模块 - 副本或导入)
-│           ├── ticket.py          (共用工单结构 - 副本或导入)
-│           ├── verify.py          (Loop 3 验证)
-│           ├── worktree.py        (Loop 3 worktree)
-│           ├── gitutil.py         (共用 git 工具)
-│           ├── ignore.py          (共用 ignore 工具)
+│       ├── codoop_tools.py        ← Loop 3 专用 CLI
+│       └── codoop_lib_v1/         ← Loop 3 独立库（版本化，同 Loop 2）
+│           ├── config.py
+│           ├── ticket.py
+│           ├── verify.py
+│           ├── worktree.py
+│           ├── gitutil.py
+│           ├── ignore.py
 │           └── __init__.py
 │
-├── spec-driven-development/       (Loop 2 支持 skill)
-├── planning-and-task-breakdown/   (Loop 2 支持 skill)
-├── definition-of-done/            (Loop 2 支持 skill)
-├── incremental-implementation/    (Loop 3 支持 skill)
-├── debugging-and-error-recovery/  (Loop 3 支持 skill)
-├── test-driven-development/       (Loop 3 支持 skill)
+├── spec-driven-development/
+├── planning-and-task-breakdown/
+├── definition-of-done/
+├── incremental-implementation/
+├── debugging-and-error-recovery/
+├── test-driven-development/
 │
-└── _shared/
-    └── agents/                    (共用 personas)
-        ├── alignment-agent.md
-        ├── ...
-        ├── code-reviewer.md
-        ├── security-auditor.md
-        └── test-engineer.md
+└── _shared/agents/
 ```
+
+**说明：**
+- 两个 `codoop_lib_v1/` 完全独立，但代码应该一致（同步维护）
+- 如果未来 Loop 2 需要不同的 config.py，可以演进到 v2
+- 两个 CLI 工具（codoop-ticket.py 和 codoop_tools.py）完全独立
 
 ---
 
 ## 重构步骤
 
-### 第 1 步：分析共享库需求
+### 第 1 步：分析库的需求
 
-**绝对必须共享的（3 个）：**
+**共同需要的（两个环都要）：**
 - `config.py` — 配置加载，定义 Config 类和目录结构
 - `ticket.py` — 工单数据结构（Ticket 类）
 - `gitutil.py` — git 工具函数
+- `ignore.py` — 生成文件过滤
 
-**可选共享的（2 个）：**
-- `ignore.py` — 生成文件过滤（可各自实现或共享）
-
-**Loop 2 专用（2 个）：**
+**Loop 2 专用：**
 - `tickets_cli.py` — 工单生命周期（draft 相关）
 
-**Loop 3 专用（2 个）：**
+**Loop 3 专用：**
 - `verify.py` — 测试和验证
 - `worktree.py` — worktree 管理
 
-### 第 2 步：共享库的处理方案
+### 第 2 步：复制策略（推荐）
 
-有三种方案可选：
-
-#### **方案 A：复制共享库（推荐用于完全独立性）**
+**不能有任何 import 跨环，必须完全独立复制。**
 
 ```
-skills/codoop-ticket/scripts/codoop_flow_lib/
-├── config.py          (从 codoop-flow 复制)
-├── ticket.py          (从 codoop-flow 复制)
-├── gitutil.py         (从 codoop-flow 复制)
-├── ignore.py          (从 codoop-flow 复制)
-├── tickets_cli.py     (仅 Loop 2 需要)
-└── __init__.py
+skills/codoop-ticket/scripts/codoop_lib_v1/
+├── __init__.py
+├── config.py          (独立副本)
+├── ticket.py          (独立副本)
+├── gitutil.py         (独立副本)
+├── ignore.py          (独立副本)
+└── tickets_cli.py     (Loop 2 专用)
 
-skills/codoop-flow/scripts/codoop_flow_lib/
-├── config.py          (或保持原有)
-├── ticket.py
-├── gitutil.py
-├── ignore.py
-├── verify.py          (仅 Loop 3 需要)
-├── worktree.py        (仅 Loop 3 需要)
-└── __init__.py
+skills/codoop-flow/scripts/codoop_lib_v1/
+├── __init__.py
+├── config.py          (独立副本)
+├── ticket.py          (独立副本)
+├── gitutil.py         (独立副本)
+├── ignore.py          (独立副本)
+├── verify.py          (Loop 3 专用)
+└── worktree.py        (Loop 3 专用)
 ```
 
-**优点：** 完全独立，Loop 2 和 Loop 3 可各自更新依赖
-**缺点：** 代码重复，更新时需要同步
+**为什么不能用符号链接或导入：**
+1. 符号链接在某些环境不支持（Windows、某些容器）
+2. 导入会产生代码耦合（违反架构原则）
+3. 两个环应该能各自打包、部署、演进
 
-#### **方案 B：符号链接共享库（需要 Git LFS 或特殊处理）**
+**版本化命名 (codoop_lib_v1)：**
+- 如果未来 Loop 2 的配置需求改变，可以创建 codoop_lib_v2
+- 向后兼容性由版本号管理，不需要复杂的协调
 
-```
-skills/codoop-ticket/scripts/codoop_flow_lib/
-├── config.py          → ../../codoop-flow/scripts/codoop_flow_lib/config.py
-├── ticket.py          → ../../codoop-flow/scripts/codoop_flow_lib/ticket.py
-├── gitutil.py         → ../../codoop-flow/scripts/codoop_flow_lib/gitutil.py
-├── ignore.py          → ../../codoop-flow/scripts/codoop_flow_lib/ignore.py
-└── tickets_cli.py     (本地实现)
-```
+### 同步维护策略
 
-**优点：** 单一真理源，更新自动同步
-**缺点：** 符号链接不是所有环境都支持（Windows）
-
-#### **方案 C：顶层 lib，两个环都导入（需要 Python path 配置）**
-
-```
-scripts/codoop_libs/     ← 项目顶层
-├── config.py
-├── ticket.py
-├── gitutil.py
-└── ignore.py
-
-skills/codoop-ticket/scripts/codoop_flow_lib/
-├── __init__.py         (re-export 来自 scripts/../../../codoop_libs/)
-└── tickets_cli.py
-
-skills/codoop-flow/scripts/codoop_flow_lib/
-├── __init__.py         (re-export 来自 scripts/../../../codoop_libs/)
-├── verify.py
-└── worktree.py
-```
-
-**优点：** 真正的单一真理源，无重复
-**缺点：** 需要配置 Python path，移植性差
-
----
-
-### 推荐方案：A（复制共享库）
-
-**理由：**
-1. 每个环都能完全独立运行（即使 codoop-flow 项目不存在，Loop 2 也能独立使用）
-2. 实现简单，无需符号链接或特殊配置
-3. 可以各自演进，如果需要同步再统一
-4. 符合"抛开其他两个环也能独立运行"的需求
+虽然代码复制在两个地方，但应该：
+1. 在 `skills/codoop-flow/scripts/codoop_lib_v1/` 中维护"参考实现"
+2. 定期（如有改动）同步到 `skills/codoop-ticket/scripts/codoop_lib_v1/`
+3. 在 git commit 时同时修改两处
+4. 可选：创建脚本自动检查两个版本的一致性
 
 ---
 
@@ -201,57 +210,60 @@ skills/codoop-flow/scripts/codoop_flow_lib/
 
 ### Loop 2 改造（codoop-ticket）
 
-#### 创建 codoop-ticket/scripts/ 目录结构
+#### 创建 codoop-ticket/scripts/ 结构
 
 ```bash
 skills/codoop-ticket/scripts/
-├── codoop-ticket.py                      ← 第二环 CLI
-├── codoop_flow_lib/
-│   ├── __init__.py
-│   ├── config.py                         ← 从 codoop-flow 复制
-│   ├── ticket.py                         ← 从 codoop-flow 复制
-│   ├── gitutil.py                        ← 从 codoop-flow 复制
-│   ├── ignore.py                         ← 从 codoop-flow 复制
-│   └── tickets_cli.py                    ← 从 codoop-flow 的 tickets_cli.py 复制
-└── __pycache__/
+├── codoop-ticket.py              ← Loop 2 独立 CLI（新建）
+└── codoop_lib_v1/                ← Loop 2 独立库（从 codoop-flow 复制）
+    ├── __init__.py
+    ├── config.py
+    ├── ticket.py
+    ├── gitutil.py
+    ├── ignore.py
+    └── tickets_cli.py
 ```
 
 #### codoop-ticket.py 内容
 
-从 `codoop-flow/scripts/codoop.py` 派生，**只保留** ticket 子命令：
+从 `codoop-flow/scripts/codoop.py` 派生，**删除 setup 和 install，只保留 ticket**：
 
 ```python
 #!/usr/bin/env python3
 """codoop-ticket — Human-Centric ticket design CLI (Loop 2).
 
-Standalone tool for designing work tickets: init draft → fill PRD/Spec/Plan → promote to pending.
+Standalone: init draft → fill docs → promote to pending.
 
     python codoop-ticket.py ticket init <id> --config <toml> [--title "..."]
     python codoop-ticket.py ticket validate <id> --config <toml>
     python codoop-ticket.py ticket promote <id> --config <toml>
     python codoop-ticket.py ticket update-metadata <id> --config <toml>
 
-This tool is completely independent of codoop-flow (Loop 3).
-It only requires a codoop_flow.toml pointing at the target repo.
+Completely independent of codoop-flow (Loop 3). No cross-loop dependencies.
 """
 
 from pathlib import Path
 import argparse
 import sys
 
-from codoop_flow_lib.config import load_config
-from codoop_flow_lib.tickets_cli import (
-    init_draft, promote, validate_draft, 
+# 导入本地独立库
+from codoop_lib_v1.config import load_config
+from codoop_lib_v1.tickets_cli import (
+    init_draft, promote, validate_draft,
     update_metadata_from_docs, write_metadata
 )
 
-# ... (只包含 _cmd_ticket_* 函数，删除 setup 和 install)
+def _cmd_ticket_init(args) -> int:
+    # ... (从 codoop.py 复制)
+    pass
+
+# ... (其他 ticket 命令)
 
 def main() -> int:
-    parser = argparse.ArgumentParser(prog="codoop-ticket", description="Loop 2: Human-Centric ticket design")
+    parser = argparse.ArgumentParser(prog="codoop-ticket", description="Loop 2: Design tickets")
     sub = parser.add_subparsers(dest="command", required=True)
 
-    p_ticket = sub.add_parser("ticket", help="ticket lifecycle (draft -> pending)")
+    p_ticket = sub.add_parser("ticket", help="ticket lifecycle")
     tsub = p_ticket.add_subparsers(dest="ticket_command", required=True)
 
     for name, func, extra in (
@@ -260,13 +272,12 @@ def main() -> int:
         ("update-metadata", _cmd_ticket_update_metadata, False),
         ("promote", _cmd_ticket_promote, False),
     ):
-        sp = tsub.add_parser(name, help=f"{name} a draft ticket")
-        sp.add_argument("ticket_id", help="e.g. ticket_001")
-        sp.add_argument("--config", default=None, help="path to codoop_flow.toml")
+        sp = tsub.add_parser(name)
+        sp.add_argument("ticket_id")
+        sp.add_argument("--config", default=None)
         if extra:
-            sp.add_argument("--title", default="", help="ticket title")
-            sp.add_argument("--language", default="auto", choices=["auto", "zh", "en"],
-                          help="template language")
+            sp.add_argument("--title", default="")
+            sp.add_argument("--language", choices=["auto", "zh", "en"], default="auto")
         sp.set_defaults(func=func)
 
     args = parser.parse_args()
@@ -278,126 +289,228 @@ if __name__ == "__main__":
 
 #### 更新 codoop-ticket SKILL.md
 
-在 SKILL.md 中添加 CLI 使用说明：
+添加 CLI 文档部分，说明如何独立使用：
 
 ```markdown
-## 使用 CLI 工具
+## 独立使用 Loop 2
 
-对于想要在自己的开发流程中使用 Loop 2 的用户，可以直接运行 CLI：
+除了在 AI 编码工具中调用 skill，你也可以直接使用 CLI：
 
-### 设置项目
+### 创建项目配置
 
 ```bash
-python codoop-ticket.py setup <target-repo> --config <path-to-toml>
+# 一次性初始化（创建 docs/tickets/{drafts,pending,done,failed}/）
+# setup 命令在 codoop-flow 中，通过以下方式调用
+python path/to/codoop-flow/scripts/codoop_tools.py --help  # 查看 setup
 ```
 
 ### 设计工单
 
 ```bash
+cd /path/to/target-repo
+
 # 1. 初始化工单草稿
-python codoop-ticket.py ticket init ticket_001 --config codoop_flow.toml --title "Add user search"
+python path/to/codoop-ticket/scripts/codoop-ticket.py \
+  ticket init ticket_001 --config codoop_flow.toml --title "Add user search"
 
-# 2. 编辑 module_prd.md + spec.md
-# （手动在编辑器中编写）
+# 2. 编辑工单文件
+# （在编辑器中打开 docs/tickets/drafts/ticket_001/module_prd.md 和 spec.md）
 
-# 3. 验证工单完整性
-python codoop-ticket.py ticket validate ticket_001 --config codoop_flow.toml
+# 3. 验证完整性
+python path/to/codoop-ticket/scripts/codoop-ticket.py \
+  ticket validate ticket_001 --config codoop_flow.toml
 
-# 4. 将工单从 drafts/ 提升到 pending/
-python codoop-ticket.py ticket promote ticket_001 --config codoop_flow.toml
+# 4. 提升到 pending/
+python path/to/codoop-ticket/scripts/codoop-ticket.py \
+  ticket promote ticket_001 --config codoop_flow.toml
 ```
 
-## 完全独立使用
+## 完全独立
 
-Loop 2 可以完全独立使用，无需 codoop-flow 或任何其他环的代码。
-只需要一个指向目标项目的 `codoop_flow.toml` 配置文件。
+Loop 2 不依赖任何其他环的代码。即使没有 codoop-flow，Loop 2 也能完整运行。
 ```
 
-### Loop 3 保留原样
+### Loop 3 改造（codoop-flow）
 
-Loop 3（codoop-flow）的 `scripts/codoop_flow/` 继续存在，不需要改动。
+#### 重命名库目录
 
-但如果要让 Loop 3 也完全独立，可以按同样的方式在 `codoop-flow/scripts/codoop_flow_lib/` 中维护一份共享库的副本。
+```bash
+skills/codoop-flow/scripts/
+├── codoop_tools.py               (保持不变)
+└── codoop_lib_v1/                ← 改名自 codoop_flow（版本化名称）
+    ├── __init__.py
+    ├── config.py
+    ├── ticket.py
+    ├── gitutil.py
+    ├── ignore.py
+    ├── verify.py
+    └── worktree.py
+```
+
+#### 更新 codoop_tools.py 导入
+
+```python
+# 改为导入本地库
+from codoop_lib_v1.config import Config, load_config
+from codoop_lib_v1.ticket import Ticket
+# 等等
+```
+
+#### 更新 codoop-flow SKILL.md
+
+说明 setup 命令的位置（全局工具）：
+
+```markdown
+## 初始化项目
+
+codoop-flow 提供 setup 命令初始化项目结构（全局工具）：
+
+```bash
+python skills/codoop-flow/scripts/codoop_tools.py setup <target-repo> --config codoop_flow.toml
+```
+
+这创建必要的目录和配置文件。
+
+## 运行工单
+
+```bash
+python skills/codoop-flow/scripts/codoop_tools.py --config codoop_flow.toml pick
+```
+
+详见 Step 1-7 说明。
+```
 
 ---
 
 ## 改造工作量
 
-| 任务 | 工作量 | 说明 |
-|---|---|---|
-| 复制 codoop_flow_lib/ 到 codoop-ticket/scripts/ | 5 分钟 | 复制 5 个文件 |
-| 创建 codoop-ticket/scripts/codoop-ticket.py | 10 分钟 | 从 codoop.py 派生，删除 setup/install |
-| 更新 codoop-ticket SKILL.md 添加 CLI 文档 | 10 分钟 | 补充 CLI 使用说明 |
-| 创建 codoop-ticket/README.md（可选） | 10 分钟 | 说明独立使用 |
-| 验证 Loop 2 独立运行 | 10 分钟 | 测试 codoop-ticket.py |
-| **合计** | **~45 分钟** | |
+| 任务 | 工作量 |
+|---|---|
+| 复制 5 个文件到 codoop-ticket/scripts/codoop_lib_v1/ | 5 分钟 |
+| 创建 codoop-ticket.py（从 codoop.py 派生） | 10 分钟 |
+| 修改 codoop_lib_v1/ 的导入（config.py, ticket.py 等） | 5 分钟 |
+| 更新 codoop-ticket SKILL.md 添加 CLI 文档 | 10 分钟 |
+| 重命名 codoop-flow/scripts/codoop_flow/ → codoop_lib_v1/ | 5 分钟 |
+| 更新 codoop_tools.py 和 codoop.py 的导入 | 10 分钟 |
+| 更新 codoop-flow SKILL.md | 5 分钟 |
+| 验证两个环独立运行 | 10 分钟 |
+| **合计** | **~60 分钟** |
 
 ---
 
-## 与 Loop 3 Sub-Skills 提升的整合
-
-这个改造可以与前面的"Loop 3 Sub-Skills 提升"并行进行：
-
-### 改造总体规划
+## 改造完成后的目录结构
 
 ```
-Phase 1a（这份文档）：Loop 2 独立化
-- 复制共享库到 codoop-ticket/scripts/codoop_flow_lib/
-- 创建 codoop-ticket.py
-- 更新 SKILL.md 文档
-- 工作量：~45 分钟
+skills/codoop-ticket/scripts/
+├── codoop-ticket.py              ← Loop 2 CLI (独立)
+└── codoop_lib_v1/
+    ├── config.py
+    ├── ticket.py
+    ├── gitutil.py
+    ├── ignore.py
+    ├── tickets_cli.py
+    └── __init__.py
 
-Phase 1b（Loop 3 Sub-Skills 提升）：Loop 3 能力提升
-- 提升 incremental-implementation 等 3 个 skills
-- 提升 code-reviewer 等 3 个 agents
-- 删除 references/
-- 工作量：~36 分钟
-
-Phase 2（可选）：Loop 3 独立化
-- 复制共享库到 codoop-flow/scripts/codoop_flow_lib/（如果需要）
-- 更新 codoop_tools.py 导入路径
-- 工作量：~20 分钟
+skills/codoop-flow/scripts/
+├── codoop_tools.py               ← Loop 3 CLI (独立)
+├── codoop.py                     ← 保留（setup/install 命令）
+└── codoop_lib_v1/
+    ├── config.py
+    ├── ticket.py
+    ├── gitutil.py
+    ├── ignore.py
+    ├── verify.py
+    ├── worktree.py
+    └── __init__.py
 ```
 
 ---
 
-## 完成后的效果
+## 三个环的协作方式
 
-### Loop 1 用户
+### 文件系统协作流
+
+```
+User: /skill codoop-discover "我想做...的功能"
+↓ 在会话内协作，输出规格文档
+docs/backlog/ {product/, interface/, architecture/, ...}
+
+Human Engineer: 阅读 backlog，为每个功能创建工单
+↓
+
+User: python codoop-ticket.py ticket init ticket_001 --config ...
+  （或 /skill codoop-ticket 设计...）
+↓ 协作设计工单（PRD → Spec → Plan）
+docs/tickets/drafts/ticket_001/ {module_prd.md, spec.md, plan.md, metadata.json}
+
+Human Engineer: python codoop-ticket.py ticket promote ticket_001 --config ...
+↓ 工单移至 pending/
+docs/tickets/pending/ticket_001/
+
+AI Agent: /skill codoop-flow 针对 codoop_flow.toml 运行工单
+  或 python codoop_tools.py --config ... pick
+↓ 执行工单（Build → Verify → Review → Ship）
+docs/tickets/done/ticket_001/ + 代码提交
+```
+
+**关键点：** 每个环通过文件系统状态机协作，不通过代码依赖
+
+---
+
+## 与 Phase 1b（Sub-Skills 提升）的协调
+
+这份改造（Loop 2/3 独立化）与前面的"Loop 3 Sub-Skills 提升"分离：
+
+- **loop-3-skills-elevation-plan.zh-CN.md** — 提升 incremental-implementation 等 skills
+- **loop-architecture-refactoring.zh-CN.md** — 分离 Loop 2/3 CLI 和库
+
+两者都需要进行，可以：
+1. 先做 Sub-Skills 提升（独立工作）
+2. 再做架构重构（这份文档）
+
+或交叉进行，最后一起提交。
+
+---
+
+## 完成后的用户体验
+
+### 完整流程（三环协作）
+
 ```bash
+# 初始化
+python skills/codoop-flow/scripts/codoop_tools.py setup /path/to/project
+
+# Loop 1：产品探索（在 AI 编码工具中）
 /skill codoop-discover "我想做一个 SaaS 项目管理工具"
-# 完全独立，输出 docs/backlog/
-```
+→ outputs: docs/backlog/
 
-### Loop 2 用户
-```bash
-python skills/codoop-ticket/scripts/codoop-ticket.py ticket init ticket_001 --config codoop_flow.toml
-# 完全独立，无需 codoop-flow
-```
+# Loop 2：工单设计（命令行或 AI 编码工具）
+python skills/codoop-ticket/scripts/codoop-ticket.py ticket init ticket_001
+# （编辑 docs/tickets/drafts/ticket_001/ 的文件）
+python skills/codoop-ticket/scripts/codoop-ticket.py ticket promote ticket_001
+→ moves to: docs/tickets/pending/
 
-或在 AI 编码工具中：
-```
-/skill codoop-ticket 设计一个用户搜索功能
-# 在会话内协作设计工单
-```
-
-### Loop 3 用户
-```bash
-python skills/codoop-flow/scripts/codoop_tools.py --config codoop_flow.toml pick
-# 完全独立，从 pending/ 拾起工单执行
-```
-
-或在 AI 编码工具中：
-```
+# Loop 3：工单执行（命令行或 AI 编码工具）
 /skill codoop-flow 针对 codoop_flow.toml 运行工单
-# 在会话内执行第三环
+→ outputs: docs/tickets/done/ + 代码变更
+```
+
+### 单独使用某个环
+
+```bash
+# 只用 Loop 2？直接调用 codoop-ticket.py，无需其他环
+
+# 只用 Loop 3？直接调用 codoop_tools.py，无需其他环
+
+# 但如果要完整流程，需要 Loop 1→2→3 的协作
 ```
 
 ---
 
 ## 待讨论
 
-1. **是否采用方案 A（复制）？** 还是考虑其他方案？
-2. **Loop 3 是否也需要独立化？** （复制共享库到 codoop-flow 中）
-3. **全局 setup 命令的位置？** setup 目前在 codoop.py 中，应该保留在 codoop-flow 还是移到 codoop-ticket？
+1. **执行顺序** — Sub-Skills 提升先还是架构重构先？建议同步进行
+2. **setup 命令** — 应该放在 Loop 2 还是 Loop 3？（建议 Loop 3，全局）
+3. **codoop.py 的其他命令** — install 命令何去何从？（可保留在 codoop-flow 中作为全局工具）
+4. **文档位置** — 合并两份改造文档还是分开？
 
