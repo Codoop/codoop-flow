@@ -15,7 +15,7 @@ We model the entire system as three sets of nested loops, each driven respective
 ```mermaid
 flowchart TD
     subgraph ventureLoop [1. Venture-Discovery Loop]
-        V1["1. Top-Level Design & Business Justification<br>Skill: product-discovery-loop<br><b>Subagents:</b><br>- product-sprint-prioritizer (PM)<br>- sales-offer-lead-gen-strategist (GTM Pricing)<br>- design-ux-architect & ui-designer (UI/UX)<br>- engineering-backend-architect & software-architect (Tech)"] -->|"2. Collaborative Drafting"| V2["docs/backlog/design-draft.md<br>(Challenge Loop Conflict Alignment)"]
+        V1["1. Top-Level Design & Business Justification<br>Skill: codoop-discover (in-session)<br><b>Subagents:</b><br>- product-sprint-prioritizer (PM)<br>- sales-offer-lead-gen-strategist (GTM Pricing)<br>- design-ux-architect & design-ui-designer (UI/UX)<br>- engineering-backend-architect & engineering-software-architect (Tech)<br>- alignment-agent (Consistency Auditor)"] -->|"2. Collaborative Drafting"| V2["docs/backlog/design-draft.md<br>(Challenge Loop Conflict Alignment)"]
         V2 -->|"3. Consistency Hard Audit Lock"| V3["Consistency Hard Audit Lock<br>Subagent: workflow-architect"]
         V3 --> V4{"100% Consistency Contract?"}
         V4 -->|"No (Challenge)"| V1
@@ -92,7 +92,14 @@ flowchart TD
 
 ## 2. Venture-Discovery Loop: Business Exploration and Project Anchoring
 
-This loop runs **before any concrete feature ticket is generated**. It is the core justification stage for the project's "0-to-1" top-level design, business-model design, and technical-architecture blueprint. Its core is based on the specification in `codoop-skills-main/skills/product-discovery-loop/SKILL.md`, orchestrating Subagents in parallel collaboration to ensure that the project forms scientific, consistent specification assets from the very start, avoiding "tech debt" and "product assumptions." The entire process involves no actual business code or physical scaffolding whatsoever; it focuses solely on the accumulation of documentation assets and the polishing of consensus.
+This loop runs **before any concrete feature ticket is generated**. It is the core justification stage for the project's "0-to-1" top-level design, business-model design, and technical-architecture blueprint.
+
+**Invocation**: User invokes the `codoop-discover` skill **in-session** within Claude Code, Codex, Cursor, or another AI coding tool:
+```
+/skill codoop-discover I want to build a SaaS project management tool for remote teams
+```
+
+The skill orchestrates Subagents in parallel collaboration to ensure that the project forms scientific, consistent specification assets from the very start, avoiding "tech debt" and "product assumptions." The entire process involves no actual business code or physical scaffolding whatsoever; it focuses solely on the accumulation of documentation assets and the polishing of consensus.
 
 ### 2.1 Core Operating Rules of the Discovery Loop and Consistency Audit (The Challenge Loop)
 

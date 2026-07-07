@@ -16,8 +16,8 @@
 flowchart TD
     subgraph ventureLoop ["1. 创业探索环 - Venture-Discovery Loop"]
         V1["顶层设计与商业论证
-        Skill: product-discovery-loop
-        Subagents: PM / GTM / UI-UX / 技术架构"] -->|协同草拟草案| V2["docs/backlog/design-draft.md
+        Skill: codoop-discover (会话内调用)
+        Subagents: PM / GTM / UI-UX / 技术架构 / 一致性审计"] -->|协同草拟草案| V2["docs/backlog/design-draft.md
         Challenge Loop 冲突对齐"]
         V2 -->|一致性硬审计锁| V3["一致性审计
         Subagent: workflow-architect"]
@@ -127,7 +127,14 @@ flowchart TD
 
 ## 2. 创业探索环 (Venture-Discovery Loop)：商业探索与项目起锚
 
-本循环运行于**具体功能工单产生之前**，是项目从「0 到 1」顶层设计、商业模式设计与技术架构蓝图的核心论证阶段。其核心是基于 `codoop-skills-main/skills/product-discovery-loop/SKILL.md` 的规范，通过并行协作的 Subagents 编排，确保项目在启动之初即形成科学、一致的规范资产，避免“技术债”与“产品假想”。整个过程完全不涉及实际业务代码或物理脚手架的搭建，只聚焦于文档资产的沉淀与共识打磨。
+本循环运行于**具体功能工单产生之前**，是项目从「0 到 1」顶层设计、商业模式设计与技术架构蓝图的核心论证阶段。
+
+**调用方式**：用户在 Claude Code、Codex、Cursor 等 AI 编码工具的会话内调用 `codoop-discover` skill：
+```
+/skill codoop-discover 我想做一个 SaaS 项目管理工具，面向远程团队
+```
+
+通过并行协作的 Subagents 编排，确保项目在启动之初即形成科学、一致的规范资产，避免”技术债”与”产品假想”。整个过程完全不涉及实际业务代码或物理脚手架的搭建，只聚焦于文档资产的沉淀与共识打磨。
 
 ### 2.1 探索环核心运行规则与一致性审计 (The Challenge Loop)
 

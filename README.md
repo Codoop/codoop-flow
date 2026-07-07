@@ -92,6 +92,34 @@ launch the local `claude` command.
 
 ---
 
+## The Three Loops
+
+codoop-flow implements a **Triple-Loop** system for AI-driven development:
+
+### 🔍 Loop 1: Venture-Discovery (Product Design)
+**Use when**: You have a product idea and need comprehensive 0→1 design before coding.
+
+**Invoke in-session**:
+```
+/skill codoop-discover I want to build a SaaS project management tool for remote teams
+```
+
+The skill orchestrates expert agents (PM, GTM, UX/UI, Architect) through:
+- **SNAP clarification** — removes ambiguities via structured questions
+- **Multi-role drafting** — experts collaborate in-session
+- **Consistency audit** — catches cross-document conflicts
+- **Backlog generation** — outputs complete specs to `docs/backlog/`
+
+[Learn more about codoop-discover →](./skills/codoop-discover/README.md)
+
+### 📋 Loop 2: Human-Centric (Ticket Design) *(Coming soon)*
+Draft work tickets with PRD, spec, plan, and todo — ready for the agent loop.
+
+### 🤖 Loop 3: Agent-Centric (Implementation)
+Pick a ticket → build in isolated worktree → verify → multi-review → ship & archive.
+
+---
+
 ## Quick start
 
 **① Onboard your project** (creates the ticket dirs + generates config):

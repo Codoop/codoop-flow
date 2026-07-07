@@ -1,13 +1,18 @@
-# 安装 codoop-flow skill 到各 coding agent
+# 安装 codoop-flow skills 到各 coding agent
 
 [English](./install.md) · **简体中文**
 
-codoop-flow 是一个**自包含 skill**:`skills/codoop-flow/` 下同时带了编排说明书
-(`SKILL.md`)、确定性护栏 CLI(`scripts/`)和它依赖的评审 persona / 子技能
-(`references/`)。所以无论装到哪个 agent,只要那个目录能被读到、且能跑 `python3`,
-流程就能跑起来。
+codoop-flow 包含**三个独立 skill**，分别应对 AI 驱动开发的不同阶段：
 
-> 前提:目标机器有 `python3`(标准库即可,无第三方依赖);目标工程是一个 git 仓库,
+| Skill | 用途 | 阶段 |
+|-------|------|------|
+| **codoop-discover** | 产品设计与架构规划（0→1 阶段） | 开码前 |
+| **codoop-ticket** | 工单规划与分解 | 工单设计（开发中） |
+| **codoop-flow** | 代码实现与交付（隔离 worktree） | 编码 & 发布 |
+
+每个 skill 都是**自包含**的：带了编排说明书(`SKILL.md`)、确定性 CLI 和共享的 sub-agent personas。所以无论装到哪个 agent，只要那个目录能被读到、且能跑 `python3`，技能就能工作。
+
+> 前提：目标机器有 `python3`(标准库即可,无第三方依赖);目标工程是一个 git 仓库,
 > 且有 `docs/tickets/{pending,in_progress,done,failed}/`。准备一份 `codoop_flow.toml`
 > 指向目标工程(见 `codoop_flow.toml.example`)。
 
@@ -56,14 +61,21 @@ git clone https://github.com/Codoop/codoop-flow.git
 claude --plugin-dir /path/to/codoop-flow
 ```
 
-装好后,直接对 Claude Code 说:「读 codoop-flow skill,针对 <codoop_flow.toml> 跑一轮工单」,
-或用 `/loop 5m run the codoop-flow skill against <toml>` 定时跑。
+装好后，可以在会话内直接调用三个 skill：
 
-探索环里，`--agent claude-code` 和 `--agent claude` 都会拉起本地 `claude` 命令：
+**1. codoop-discover**（产品设计）— 在会话内调用：
+```
+/skill codoop-discover 我想做一个 SaaS 项目管理工具，面向远程团队
+```
 
-```bash
-python3 /path/to/codoop-flow/skills/codoop-flow/scripts/codoop.py \
-  discover --agent claude-code --config /path/to/codoop_flow.toml "一个想法"
+**2. codoop-flow**（代码实现）— 在会话内调用：
+```
+使用 codoop-flow skill，针对 /path/to/codoop_flow.toml 跑下一张工单
+```
+
+或用循环定时跑：
+```
+/loop 5m 使用 codoop-flow skill，针对 /path/to/codoop_flow.toml 跑下一张工单
 ```
 
 ---

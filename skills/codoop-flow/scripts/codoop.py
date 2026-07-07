@@ -1,19 +1,16 @@
 #!/usr/bin/env python3
 """codoop-flow human-facing CLI.
 
-Covers the parts a human drives directly:
+Covers the human-driven ticket lifecycle (design §4.1):
 
-    # Venture-Discovery loop (design §2): interactive multi-role design session.
-    python codoop.py discover --config <toml> ["initial idea"]
-
-    # Human-Centric ticket lifecycle (design §4.1):
     python codoop.py ticket init <id> --config <toml> [--title "..."]
     python codoop.py ticket validate <id> --config <toml>
     python codoop.py ticket promote <id> --config <toml>   # drafts/ -> pending/
 
-The autonomous Agent-Centric loop (build/verify/review/ship) is driven by the
-current coding agent in-session via the codoop-flow skill
-(skills/codoop-flow/SKILL.md), which calls the guardrail CLI codoop_tools.py.
+The Venture-Discovery loop (design §2) is now invoked in-session via the
+codoop-discover skill. The Agent-Centric loop (build/verify/review/ship) is
+driven via the codoop-flow skill (skills/codoop-flow/SKILL.md), which calls
+the guardrail CLI codoop_tools.py.
 """
 
 from __future__ import annotations
@@ -21,7 +18,6 @@ from __future__ import annotations
 import argparse
 import sys
 
-from codoop_flow import discover
 from codoop_flow.config import load_config, setup_target
 from codoop_flow.tickets_cli import init_draft, promote, validate_draft
 
@@ -41,11 +37,6 @@ def _cmd_setup(args) -> int:
     print("Next: add a ticket to pending/, then in Codex or Claude Code say")
     print(f'  "use the codoop-flow skill and run a ticket against {cfg_path}"')
     return 0
-
-
-def _cmd_discover(args) -> int:
-    config = load_config(args.config)
-    return discover.launch(config, initial_idea=args.idea or "", agent=args.agent)
 
 
 def _cmd_ticket_init(args) -> int:
@@ -91,17 +82,6 @@ def main() -> int:
     p_setup.add_argument("--config", default=None, help="where to write codoop_flow.toml (default: ./codoop_flow.toml)")
     p_setup.add_argument("--worktree-root", default="~/codoop_tickets/worktrees", help="where per-ticket worktrees are created")
     p_setup.set_defaults(func=_cmd_setup)
-
-    p_disc = sub.add_parser("discover", help="launch the discovery design session")
-    p_disc.add_argument("--config", default=None, help="path to codoop_flow.toml")
-    p_disc.add_argument(
-        "--agent",
-        choices=("claude", "claude-code", "codex", "codex-cli"),
-        default=None,
-        help="interactive coding agent to launch (default: CODOOP_AGENT or claude)",
-    )
-    p_disc.add_argument("idea", nargs="?", default="", help="optional initial idea")
-    p_disc.set_defaults(func=_cmd_discover)
 
     p_ticket = sub.add_parser("ticket", help="ticket lifecycle (draft -> pending)")
     tsub = p_ticket.add_subparsers(dest="ticket_command", required=True)

@@ -1,6 +1,6 @@
 # codoop-flow 第一环改造：Venture-Discovery Loop 升级为会话内可调用 Skill
 
-> 状态：讨论中
+> 状态：✅ **完成** (2025-07-06)
 > 目标读者：项目维护者 + 本次对话参与者
 > 关联文档：
 > - [`refactor-plan.zh-CN.md`](./refactor-plan.zh-CN.md) — 完整三环改造总体计划
@@ -311,6 +311,28 @@ SKILL.md 应该指导 orchestrator 如何生成这些文档。
 
 ---
 
-## 下一步
+## 改造完成总结
 
-确认上述"待确认的问题"后，即可开始实施改造。
+✅ **Phase 1.0-1.5 全部完成，第一环已升级为会话内可直接调用的 Skill**
+
+### 关键成果
+
+1. **目录结构升级** — `skills/codoop-discover/` 提升到顶层，插件自动扫描
+2. **共享 agents 库** — `skills/_shared/agents/` 集中管理 7 个专家角色（单一真相源）
+3. **会话内编排** — SKILL.md 改造为完整的 8 步在线协作流程
+4. **插件注册** — 两处 manifest 已更新，CLaude Code 和 Agents 均可发现
+5. **文档齐备** — README / engineering-design / install 全部更新，用户指南完成
+
+### 改造后的使用
+
+**在 Claude Code / Codex / Cursor 中，用户只需一句话：**
+
+```
+/skill codoop-discover I want to build a SaaS project management tool
+```
+
+SKILL 自动编排：SNAP 澄清 → 多角色协作 → 一致性审计 → 生成 docs/backlog/
+
+### 下一步
+
+**Phase 2** — Human-Centric Loop (第二环工单设计 skill) 和 **Phase 3** — 完整系统验证

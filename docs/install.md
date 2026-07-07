@@ -1,8 +1,16 @@
-# Installing the codoop-flow skill in each coding agent
+# Installing the codoop-flow skills in each coding agent
 
 **English** · [简体中文](./install.zh-CN.md)
 
-codoop-flow is a **self-contained skill**: under `skills/codoop-flow/` it carries the orchestration guide (`SKILL.md`), the deterministic guardrail CLI (`scripts/`), and the review personas / sub-skills it depends on (`references/`). So no matter which agent you install it into, as long as that directory is readable and `python3` runs, the pipeline works.
+codoop-flow includes **three independent skills**, each addressing a different stage of AI-driven development:
+
+| Skill | Purpose | Stage |
+|-------|---------|-------|
+| **codoop-discover** | Product design & architecture (0→1 planning) | Before coding |
+| **codoop-ticket** | Work ticket planning & breakdown | Ticket design (coming soon) |
+| **codoop-flow** | Code implementation in isolated worktree | Coding & shipping |
+
+Each skill is **self-contained**: it carries the orchestration guide (`SKILL.md`), any deterministic CLI, and shared sub-agent personas. So no matter which agent you install it into, as long as the directory is readable and `python3` runs, the skills work.
 
 > Prerequisites: the machine has `python3` (standard library only, zero third-party deps); the target project is a git repo with `docs/tickets/{pending,in_progress,done,failed}/`. Prepare a `codoop_flow.toml` pointing at the target project (see `codoop_flow.toml.example`).
 
@@ -51,14 +59,21 @@ git clone https://github.com/Codoop/codoop-flow.git
 claude --plugin-dir /path/to/codoop-flow
 ```
 
-Once installed, just tell Claude Code: "read the codoop-flow skill and run a ticket against <codoop_flow.toml>", or schedule it with `/loop 5m run the codoop-flow skill against <toml>`.
+Once installed, you can invoke the three skills:
 
-For the discovery loop, `--agent claude-code` and `--agent claude` both launch
-the local `claude` command:
+**1. codoop-discover** (Product Design) — invoke in-session:
+```
+/skill codoop-discover I want to build a SaaS project management tool for remote teams
+```
 
-```bash
-python3 /path/to/codoop-flow/skills/codoop-flow/scripts/codoop.py \
-  discover --agent claude-code --config /path/to/codoop_flow.toml "an idea"
+**2. codoop-flow** (Code Implementation) — invoke in-session:
+```
+Use the codoop-flow skill to run a ticket against /path/to/codoop_flow.toml
+```
+
+Or schedule continuously with:
+```
+/loop 5m run the codoop-flow skill against /path/to/codoop_flow.toml
 ```
 
 ---

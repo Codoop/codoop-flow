@@ -88,6 +88,34 @@ cp -R skills/codoop-flow "${CODEX_HOME:-$HOME/.codex}/skills/"
 
 ---
 
+## 三环系统
+
+codoop-flow 实现了 **三环** AI 驱动开发体系：
+
+### 🔍 第一环：创业探索（产品设计）
+**适用场景**：你有产品想法，需要在写代码前做完整的 0→1 设计。
+
+**在会话内调用**：
+```
+/skill codoop-discover 我想做一个 SaaS 项目管理工具，面向远程团队
+```
+
+Skill 编排多个专家角色（PM、GTM、UX/UI、架构师）协作：
+- **SNAP 澄清** — 通过结构化问题消除假设
+- **多角色起草** — 专家在会话内协作
+- **一致性审计** — 发现和解决跨文档冲突
+- **生成 Backlog** — 输出完整规格到 `docs/backlog/`
+
+[了解 codoop-discover →](./skills/codoop-discover/README.md)
+
+### 📋 第二环：人工设计（工单设计）*（开发中）*
+用 PRD、Spec、Plan、Todo 精心设计工单，为 Agent 环做准备。
+
+### 🤖 第三环：AI 编排（实现）
+挑单 → 隔离 worktree 写码 → 验证 → 多重评审 → 归档。
+
+---
+
 ## 快速上手
 
 **① 接入你的工程**（建好工单目录 + 生成配置）：
