@@ -17,6 +17,54 @@
       "category": "Developer Tools"
     },
     {
+      "name": "codoop-ticket",
+      "source": {
+        "source": "local",
+        "path": "skills/codoop-ticket"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Developer Tools"
+    },
+    {
+      "name": "spec-driven-development",
+      "source": {
+        "source": "local",
+        "path": "skills/spec-driven-development"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Developer Tools"
+    },
+    {
+      "name": "planning-and-task-breakdown",
+      "source": {
+        "source": "local",
+        "path": "skills/planning-and-task-breakdown"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Developer Tools"
+    },
+    {
+      "name": "definition-of-done",
+      "source": {
+        "source": "local",
+        "path": "skills/definition-of-done"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Developer Tools"
+    },
+    {
       "name": "codoop-flow",
       "source": {
         "source": "local",
