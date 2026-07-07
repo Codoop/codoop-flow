@@ -116,9 +116,21 @@ docs/tickets/
 
 ## CLI 参考
 
-所有工单生命周期命令都在 `codoop.py` 中，委托到 `tickets_cli.py`。
+Loop 2 有独立的 CLI 工具 `codoop-ticket.py`，完全独立于 Loop 3 的 `codoop-flow`。
 
-### `codoop ticket init <ticket_id> --config <toml> [--title "..."] [--language auto|zh|en]`
+所有命令都可以通过以下方式调用：
+
+```bash
+python skills/codoop-ticket/scripts/codoop-ticket.py ticket <command> <args>
+```
+
+或者在 AI 编码工具中直接调用 skill：
+
+```
+/skill codoop-ticket 设计工单
+```
+
+### `codoop-ticket ticket init <ticket_id> --config <toml> [--title "..."] [--language auto|zh|en]`
 
 **创建** `docs/tickets/drafts/<ticket_id>/`，包含：
 - `metadata.json` 存根（占位符值）
@@ -131,7 +143,7 @@ docs/tickets/
 
 **退出码：** 成功返回 0，如果草稿已存在则抛出 `FileExistsError`。
 
-### `codoop ticket validate <ticket_id> --config <toml>`
+### `codoop-ticket ticket validate <ticket_id> --config <toml>`
 
 **验证**草稿准备好提升。
 
@@ -144,7 +156,7 @@ docs/tickets/
 
 **退出码：** 成功返回 0，任何阻止错误返回 1。
 
-### `codoop ticket update-metadata <ticket_id> --config <toml>`
+### `codoop-ticket ticket update-metadata <ticket_id> --config <toml>`
 
 从当前 `spec.md`（和可选的 `plan.md`/`todo.md`）**自动推断** `metadata.json`，写回磁盘，并打印以供人工审查。
 

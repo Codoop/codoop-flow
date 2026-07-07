@@ -116,9 +116,21 @@ Both work identically in standalone mode as they do when called by `codoop-ticke
 
 ## CLI Reference
 
-All ticket-lifecycle commands live in `codoop.py` and delegate to `tickets_cli.py`.
+Loop 2 has an independent CLI tool `codoop-ticket.py` that is completely independent of Loop 3's `codoop-flow`.
 
-### `codoop ticket init <ticket_id> --config <toml> [--title "..."] [--language auto|zh|en]`
+All commands can be invoked via:
+
+```bash
+python skills/codoop-ticket/scripts/codoop-ticket.py ticket <command> <args>
+```
+
+Or directly call the skill in any AI coding tool:
+
+```
+/skill codoop-ticket Design a work ticket for this feature
+```
+
+### `codoop-ticket ticket init <ticket_id> --config <toml> [--title "..."] [--language auto|zh|en]`
 
 **Creates** `docs/tickets/drafts/<ticket_id>/` with:
 - `metadata.json` stub (placeholder values)
@@ -131,7 +143,7 @@ All ticket-lifecycle commands live in `codoop.py` and delegate to `tickets_cli.p
 
 **Exit codes:** 0 on success, raises `FileExistsError` if draft already exists.
 
-### `codoop ticket validate <ticket_id> --config <toml>`
+### `codoop-ticket ticket validate <ticket_id> --config <toml>`
 
 **Validates** a draft is ready to promote.
 
@@ -144,7 +156,7 @@ All ticket-lifecycle commands live in `codoop.py` and delegate to `tickets_cli.p
 
 **Exit codes:** 0 on success, 1 on any blocking error.
 
-### `codoop ticket update-metadata <ticket_id> --config <toml>`
+### `codoop-ticket ticket update-metadata <ticket_id> --config <toml>`
 
 **Auto-infers** `metadata.json` from the current `spec.md` (and optionally `plan.md`/`todo.md`), writes the result back to disk, and prints it for human review.
 
@@ -155,7 +167,7 @@ All ticket-lifecycle commands live in `codoop.py` and delegate to `tickets_cli.p
 
 Typically called after Phase 3 is complete, before validating and promoting.
 
-### `codoop ticket promote <ticket_id> --config <toml>`
+### `codoop-ticket ticket promote <ticket_id> --config <toml>`
 
 **Promotes** a draft to pending (ready for Loop 3 pickup).
 

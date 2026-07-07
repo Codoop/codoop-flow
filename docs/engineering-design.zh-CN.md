@@ -271,7 +271,7 @@ codoop-project-repo/            # 项目主 Git 仓库 (唯一可信源 + 核心
   - **规范遵循**：遵循 `incremental-implementation` 与 `context-engineering`。
   - **引擎抽象与动态调度**：调度器 `main_scheduler.py` 内部设计了通用的 **AI Coding Engine 抽象接口**。在工单 `metadata.json` 中可声明 `"coding_engine"`（支持 `claude`, `codex`, `cursor`，若不指定则全局默认）。
   - **主流编码工具适配逻辑**：
-    - **Claude Code CLI**：以非交互式 Headless 模式调用 `claude -p [task_prompt]`。通过 `--append-system-prompt-file` 动态注入 `./source/agent-skills-main/skills/incremental-implementation/SKILL.md`，限制其只修改指定端代码目录。
+    - **Claude Code CLI**：以非交互式 Headless 模式调用 `claude -p [task_prompt]`。通过 `--append-system-prompt-file` 动态注入 `./skills/incremental-implementation/SKILL.md`，限制其只修改指定端代码目录。
     - **Codex CLI / API 驱动**：
       - **Codex CLI (OpenAI 官方客户端)**：由于 OpenAI 为 Codex 提供了原生的客户端二进制与 NPM 包装器（安装：`npm install -g @openai/codex`），调度器可通过非交互式静默模式 `codex -q "[task_prompt]"` 快速调起，或者通过 PyPI 的官方 `codex-python` SDK（`from codex import Codex`）进行高内聚、无进程感知的底层 API 原生控制与代码修改。
       - **API 自定义驱动 (通用LLM)**：直接调用 OpenAI Codex/GPT-5/Claude API，将 `SKILL.md`、`module_prd.md` 和 `spec.md` 编译为高密度的 System Prompt 与 Context，通过 AST（抽象语法树）或 Search-Replace 块（Search-Replace Blocks）对隔离 Worktree 内的文件执行精准修改。
@@ -289,12 +289,12 @@ codoop-project-repo/            # 项目主 Git 仓库 (唯一可信源 + 核心
   1. **自适应多端分辨率截图**：输出自适应当前运行终端的 `responsive-desktop.png`、`responsive-tablet.png`、`responsive-mobile.png` 等页面视觉呈现截图。
   2. **动态交互状态序列图**：针对表单验证、复杂弹窗或多步导航交互，输出操作对比序列（如 `form-empty.png`（空表单） vs `form-filled.png`（填充后表单）、`nav-before-click.png` vs `nav-after-click.png`）。
     结果收集**：统一在工单目录下生成 `docs/tickets/in_progress/[ticket_id]/public/qa-screenshots/test-results.json`，汇总所有的设备兼容性、交互状态及测试用例通过情况。评审 Subagents（如 `evidence-collector`）在加载时也将只读取该局部的隔离路径，确保数据纯净。
-     Skill 加载**：启动测试和新增测试用例时，调度器会追加挂载 `./source/agent-skills-main/skills/test-driven-development/SKILL.md` 的内容，强制当前使用的 AI 编码引擎在修改代码时严格覆盖 Happy Path、空值边界（empty/null）和异常分支。
+     Skill 加载**：启动测试和新增测试用例时，调度器会追加挂载 `./skills/test-driven-development/SKILL.md` 的内容，强制当前使用的 AI 编码引擎在修改代码时严格覆盖 Happy Path、空值边界（empty/null）和异常分支。
 3. **系统级纠错分端自愈阶段 (Debug)**：
   - **规范遵循**：遵循 `debugging-and-error-recovery` 的 triage 机制。
   - **即时反馈自愈**：若上述任何一端的自动化单元/集成测试运行失败或截图收集异常，流水线立即触发 **Stop-the-line (停止整线)** 熔断机制。
     - **智能去噪精炼**：调度器调起轻量级去噪模型，对各种分端测试框架的原始报错、编译堆栈与测试断言异常进行精准清洗，提取出最核心的 **Traceback、报错代码行号与 Exception 细节**，规避无关的构建日志噪音。
-    - **即时反馈注入**：将这些清洗后的结构化错误与对应的平台环境上下文重塑为高密度的 Debug Prompt（在头部附加 `./source/agent-skills-main/skills/debugging-and-error-recovery/SKILL.md` 的 triage 规则）直接回传给当前执行的 AI 编码引擎，开启自愈。
+    - **即时反馈注入**：将这些清洗后的结构化错误与对应的平台环境上下文重塑为高密度的 Debug Prompt（在头部附加 `./skills/debugging-and-error-recovery/SKILL.md` 的 triage 规则）直接回传给当前执行的 AI 编码引擎，开启自愈。
     - **最大尝试限制**：自愈请求限制最大 3 次。若重试耗尽仍未通过，终止运行，进行熔断保护并移动至 `failed/` 目录，输出包含所有报错细节的 `healing_report.md`。
 4. **并行五重多维评审门禁阶段 (Review)**：
   - **规范遵循**：遵循 `code-review-and-quality`、`security-and-hardening` 与 `./source/agency-agents-main/testing/` 规范。

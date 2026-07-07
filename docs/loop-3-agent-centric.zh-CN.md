@@ -121,7 +121,7 @@ python3 <SKILL>/scripts/codoop_tools.py --config <toml> verify <ticket_id>
 
 ### 第 5 步 — 审查（代理，验证通过后）
 
-代理对 worktree 中的 `git diff` 运行来自 `<SKILL>/references/agents/` 的审查 personas。
+代理对 worktree 中的 `git diff` 运行来自 `<SKILL>/../../_shared/agents/` 的审查 personas。
 
 **批准是一致的** — 任何关键或重要的发现都阻止发布。
 
@@ -285,31 +285,31 @@ python3 <SKILL>/scripts/codoop_tools.py --config <toml> fail <ticket_id> --repor
 
 ### 静态组（总是运行）
 
-**1. 代码审查员**（`references/agents/code-reviewer.md`）
+**1. 代码审查员**（`_shared/agents/code-reviewer.md`）
 - 检查：正确性（逻辑、规格）、可读性（命名、结构）、架构（模式、抽象）、安全性（无明显漏洞）、性能（高效算法）
 - 判决：批准或请求更改
 - 阻止：关键（必须修复）和重要（应该修复）
 - 非阻止：建议
 
-**2. 安全审计员**（`references/agents/security-auditor.md`）
+**2. 安全审计员**（`_shared/agents/security-auditor.md`）
 - 检查：输入处理、认证/授权、数据保护、基础设施、第三方集成、AI/LLM 功能
 - 映射到：OWASP Top 10 和 OWASP LLM Top 10
 - 严重程度：关键 / 高 / 中 / 低 / 信息
 - 阻止：关键和高
 
-**3. 测试工程师**（`references/agents/test-engineer.md`）
+**3. 测试工程师**（`_shared/agents/test-engineer.md`）
 - 检查：测试金字塔（单元/集成/E2E）、行为 vs 实现、测试质量、覆盖缺口
 - 输出：覆盖分析和按优先级推荐测试
 
 ### 动态 UI/UX 组（当 `ui_capture: true`）
 
-**4. 证据收集员**（`references/agents/testing-evidence-collector.md`）
+**4. 证据收集员**（`_shared/agents/testing-evidence-collector.md`）
 - 获得 `screenshot_dir` 检查渲染屏幕
 - 运行 Playwright 捕获、审查 `test-results.json`
 - 要求每个声称的视觉证明；无幻想批准
 - 默认假设：第一实现有 3-5+ 问题
 
-**5. 现实检查员**（`references/agents/testing-reality-checker.md`）
+**5. 现实检查员**（`_shared/agents/testing-reality-checker.md`）
 - 获得 `screenshot_dir` 交叉验证 QA 发现
 - 端到端旅程分析、跨设备一致性、性能检查（>3s 加载 = 失败）
 - 默认状态：需要工作；仅在压倒性证据支持时就绪

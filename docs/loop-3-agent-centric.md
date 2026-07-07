@@ -121,7 +121,7 @@ On verify failure, the agent applies `/skill debugging-and-error-recovery`:
 
 ### Step 5 — Review (Agent, after verify passes)
 
-The agent runs review personas from `<SKILL>/references/agents/` against the `git diff` in the worktree.
+The agent runs review personas from `<SKILL>/_shared/agents/` against the `git diff` in the worktree.
 
 **Approval is unanimous** — any Critical or Important finding blocks release.
 
@@ -285,31 +285,31 @@ Each ticket executes in its own **isolated `git worktree`** — a full independe
 
 ### Static Group (always runs)
 
-**1. code-reviewer** (`references/agents/code-reviewer.md`)
+**1. code-reviewer** (`_shared/agents/code-reviewer.md`)
 - Checks: Correctness (logic, specs), Readability (naming, structure), Architecture (patterns, abstraction), Security (no obvious vulns), Performance (efficient algorithms)
 - Verdict: APPROVE or REQUEST CHANGES
 - Blocking: Critical (must fix) and Important (should fix)
 - Non-blocking: Suggestion
 
-**2. security-auditor** (`references/agents/security-auditor.md`)
+**2. security-auditor** (`_shared/agents/security-auditor.md`)
 - Checks: Input Handling, Auth/Authz, Data Protection, Infrastructure, Third-Party Integrations, AI/LLM Features
 - Maps to: OWASP Top 10 and OWASP LLM Top 10
 - Severity: Critical / High / Medium / Low / Info
 - Blocking: Critical and High
 
-**3. test-engineer** (`references/agents/test-engineer.md`)
+**3. test-engineer** (`_shared/agents/test-engineer.md`)
 - Checks: Test pyramid (unit/integration/E2E), behavior vs. implementation, test quality, coverage gaps
 - Output: Coverage analysis and recommended tests by priority
 
 ### Dynamic UI/UX Group (when `ui_capture: true`)
 
-**4. evidence-collector** (`references/agents/testing-evidence-collector.md`)
+**4. evidence-collector** (`_shared/agents/testing-evidence-collector.md`)
 - Gets `screenshot_dir` to inspect rendered screens
 - Runs Playwright capture, reviews `test-results.json`
 - Requires visual proof for every claim; no fantasy approvals
 - Default assumption: 3–5+ issues on first implementation
 
-**5. reality-checker** (`references/agents/testing-reality-checker.md`)
+**5. reality-checker** (`_shared/agents/testing-reality-checker.md`)
 - Gets `screenshot_dir` to cross-validate QA findings
 - End-to-end journey analysis, cross-device consistency, performance checks (>3s load = fail)
 - Default status: NEEDS WORK; only READY with overwhelming evidence
