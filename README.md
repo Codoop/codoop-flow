@@ -255,11 +255,14 @@ codoop-flow/
 ├── .agents/plugins/marketplace.json # Codex marketplace manifest
 ├── .claude-plugin/                # Claude Code plugin manifests
 ├── .codex-plugin/                 # Codex plugin manifest
-├── skills/codoop-execute/         # ★self-contained Codex/agent skill package
-│   ├── SKILL.md                   #   Agent-loop orchestration guide
-│   ├── agents/openai.yaml         #   Codex UI/discovery metadata
-│   ├── scripts/                   #   guardrail CLI + human CLI + deterministic modules
-│   └── references/                #   review personas / sub-skills / discovery sub-agents
+├── skills/
+│   ├── _shared/                   # shared code & agents (used by all skills)
+│   │   ├── codoop_lib_v1/         #   shared libraries (ticket, config, verify, etc.)
+│   │   └── agents/                #   review personas (code-reviewer, security-auditor, etc.)
+│   ├── codoop-execute/            # ★Loop 3: Agent-Centric code execution
+│   ├── codoop-ticket/             # ★Loop 2: Human-Centric ticket design  
+│   ├── codoop-discover/           # ★Loop 1: Venture-Discovery product design
+│   └── [6 other skills]/          # standalone disciplines
 ├── tests/test_skeleton.py         # 14 skeleton tests (subprocess CLI calls, no AI)
 ├── LICENSE                         # MIT
 └── docs/

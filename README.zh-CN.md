@@ -251,11 +251,14 @@ codoop-flow/
 ├── .agents/plugins/marketplace.json # Codex marketplace 清单
 ├── .claude-plugin/                # Claude Code 插件声明
 ├── .codex-plugin/                 # Codex 插件声明
-├── skills/codoop-execute/         # ★自包含 Codex/agent skill 包
-│   ├── SKILL.md                   #   Agent 环编排说明书
-│   ├── agents/openai.yaml         #   Codex UI/发现元数据
-│   ├── scripts/                   #   护栏 CLI + 人面向 CLI + 确定性模块
-│   └── references/                #   评审 persona / 子技能 / 探索子代理
+├── skills/
+│   ├── _shared/                   # 共享代码 & agent personas（所有 skills 使用）
+│   │   ├── codoop_lib_v1/         #   共享库（ticket、config、verify 等）
+│   │   └── agents/                #   评审 persona（code-reviewer、security-auditor 等）
+│   ├── codoop-execute/            # ★第三环：Agent 编排执行
+│   ├── codoop-ticket/             # ★第二环：人类工单设计
+│   ├── codoop-discover/           # ★第一环：创意探索设计
+│   └── [其他 6 个 skill]/         # 独立学科
 ├── tests/test_skeleton.py         # 14 个骨架测试（子进程调 CLI，不依赖 AI）
 ├── LICENSE                         # MIT
 └── docs/
