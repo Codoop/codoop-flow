@@ -167,7 +167,28 @@ skills/
 - planning SKILL.md 中的引用改为：`See /skill definition-of-done` 而非指向文件路径
 - definition-of-done.md 的内容改写为 SKILL.md 格式（加上 YAML frontmatter）
 
-### Phase 2.2 — 新建 codoop-ticket SKILL.md（工单编排编排）
+### Phase 2.2 — 工单 CLI 增强：元数据自动推断
+
+**新增功能**：`update_metadata_from_docs()` 和 `write_metadata()`
+
+**智能推断逻辑**：
+- `modules` — 从 spec.md 的标题中提取（"## Backend"、"## Web" 等）
+- `files_to_edit` — 从 spec.md 的"## Editable Files"部分提取
+- `test_command` — 根据 modules 生成默认值（可被用户覆盖）
+
+**工作流**：
+1. AI agent 完成 spec.md 撰写
+2. codoop-ticket SKILL 调用 `tickets_cli update-metadata`
+3. 自动推断 modules、files_to_edit、test_command
+4. 显示推断结果给用户 review
+5. 用户确认或修改后进行 validate + promote
+
+**CLI 支持**：
+```bash
+python codoop.py ticket update-metadata <ticket_id>
+```
+
+### Phase 2.3 — 新建 codoop-ticket SKILL.md（工单编排编排）
 
 **三阶段编排流程**：
 

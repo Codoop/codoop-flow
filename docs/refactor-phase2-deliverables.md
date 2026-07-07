@@ -127,21 +127,44 @@
 **文件**：`skills/codoop-flow/scripts/codoop_flow/tickets_cli.py`
 
 **改动**：
+
+#### A. 语言自动检测
 - `init_draft()` 新增 `language` 参数（auto | zh | en）
   - auto（默认）：从 title 检测 CJK 字符，自动选择语言
   - zh：中文模板（业务 PRD、技术规格等）
   - en：英文模板（Business PRD、Technical Spec 等）
-- `validate_draft()` — 无改动（保持原样）
-- `promote()` — 无改动（保持原样）
+
+#### B. 元数据自动推断（新增）
+- `update_metadata_from_docs(config, ticket_id)` — 从设计文档智能推断元数据
+  - 从 spec.md 的标题章节提取 `modules`（Backend、Web、Mobile、Desktop）
+  - 从 spec.md 的"Editable Files"部分提取 `files_to_edit`
+  - 根据 modules 生成 `test_command` 的默认值
+  - 返回推断后的 metadata dict（未写入磁盘）
+
+- `write_metadata(config, ticket_id, metadata)` — 将更新的元数据写入磁盘
+
+#### C. 其他函数（无改动）
+- `validate_draft()` — 保持原样
+- `promote()` — 保持原样
 
 **CLI 更新**：`skills/codoop-flow/scripts/codoop.py`
 
-**新增参数**：
+**新增参数和命令**：
 ```bash
+# 初始化工单（支持语言选择）
 python codoop.py ticket init <ticket_id> --title "..." --language {auto,zh,en}
+
+# 自动更新元数据（基于 spec.md、plan.md、todo.md）
+python codoop.py ticket update-metadata <ticket_id>
+
+# 验证和发布工单
+python codoop.py ticket validate <ticket_id> --config <toml>
+python codoop.py ticket promote <ticket_id> --config <toml>
 ```
 
-**backward compatibility**：✅ 所有现有调用无需改动，自动使用 auto 检测
+**backward compatibility**：✅ 所有现有调用无需改动
+- 语言检测自动使用 auto
+- update-metadata 是新增命令，不影响现有流程
 
 ---
 
@@ -254,11 +277,21 @@ python codoop.py ticket init <ticket_id> --title "..." --language {auto,zh,en}
 └─────────────────────────────────────────────────────┘
                           ↓ 用户确认 OK
 ┌─────────────────────────────────────────────────────┐
+│ 【元数据推断】自动更新 metadata.json（AI）         │
+├─────────────────────────────────────────────────────┤
+│ 12. codoop-ticket 调用 tickets_cli update-metadata  │
+│     - 从 spec.md 提取 modules                       │
+│     - 从 spec.md 提取 files_to_edit                 │
+│     - 生成 test_command 默认值                      │
+│ 13. 显示推断结果，用户 review 并确认或修改         │
+└─────────────────────────────────────────────────────┘
+                          ↓ 用户确认 OK
+┌─────────────────────────────────────────────────────┐
 │ 【最终化】验证与发布                               │
 ├─────────────────────────────────────────────────────┤
-│ 12. codoop-ticket 调用 tickets_cli validate         │
-│ 13. codoop-ticket 调用 tickets_cli promote          │
-│ 14. 工单移至 pending/，等待第三环 pick             │
+│ 14. codoop-ticket 调用 tickets_cli validate         │
+│ 15. codoop-ticket 调用 tickets_cli promote          │
+│ 16. 工单移至 pending/，等待第三环 pick             │
 └─────────────────────────────────────────────────────┘
 
 最终工单在：docs/tickets/pending/ticket_001/
@@ -280,7 +313,8 @@ python codoop.py ticket init <ticket_id> --title "..." --language {auto,zh,en}
 - [ ] `skills/planning-and-task-breakdown/` 复制完整
 - [ ] `skills/definition-of-done/` 转换完整
 - [ ] `skills/codoop-flow/scripts/codoop_flow/tickets_cli.py` 语言支持 ok
-- [ ] `skills/codoop-flow/scripts/codoop.py` CLI 参数 ok
+- [ ] `skills/codoop-flow/scripts/codoop_flow/tickets_cli.py` 元数据推断 ok
+- [ ] `skills/codoop-flow/scripts/codoop.py` CLI 参数 ok（包括 update-metadata）
 
 ### 文档交付
 - [ ] `.claude-plugin/marketplace.json` +4 entries
