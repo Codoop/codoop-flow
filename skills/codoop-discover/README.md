@@ -87,7 +87,7 @@ After discovery is complete:
 1. **Review** the generated backlog documents
 2. **Decide** on ticket breakdown (which features to build first)
 3. **Transition** to `codoop-ticket` skill to draft work tickets
-4. **Implement** using the `codoop-flow` agent-centric skill to build in isolated worktrees
+4. **Implement** using the `codoop-execute` agent-centric skill to build in isolated worktrees
 
 ## Expert Agents
 

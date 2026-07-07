@@ -2,7 +2,7 @@
 
 Runs without pytest: `python tests/test_skeleton.py`. No AI dependency — the
 intelligent work (writing code, review) is the active coding agent's job
-in-session, driven by the codoop-flow skill. Here we only exercise the
+in-session, driven by the codoop-execute skill. Here we only exercise the
 DETERMINISTIC guardrails (codoop_tools.py) and the human ticket lifecycle, using
 a throwaway git repo.
 
@@ -18,12 +18,13 @@ import sys
 import tempfile
 from pathlib import Path
 
-# The skill package is self-contained under skills/codoop-flow/scripts/.
+# The CLI script is under skills/codoop-execute/scripts/; shared libraries are in skills/_shared/.
 _ROOT = Path(__file__).resolve().parent.parent
-_SCRIPTS = _ROOT / "skills" / "codoop-flow" / "scripts"
-sys.path.insert(0, str(_SCRIPTS))
+_SCRIPTS = _ROOT / "skills" / "codoop-execute" / "scripts"
+_SHARED = _ROOT / "skills" / "_shared"
+sys.path.insert(0, str(_SHARED))
 
-from codoop_flow.config import Config  # noqa: E402
+from codoop_lib_v1.config import Config  # noqa: E402
 
 _TOOLS = _SCRIPTS / "codoop_tools.py"
 
@@ -222,7 +223,7 @@ def test_status_reports_counts(root: Path, worktrees: Path) -> None:
 
 def test_ticket_lifecycle(root: Path, worktrees: Path) -> None:
     print("[test] lifecycle: init -> validate(fail) -> fill -> validate(ok) -> promote")
-    from codoop_flow.tickets_cli import init_draft, promote, validate_draft
+    from codoop_lib_v1.tickets_cli import init_draft, promote, validate_draft
     cfg = _config_obj(root, worktrees)
     draft = init_draft(cfg, "ticket_010", title="demo")
     _check(draft.exists(), "draft scaffolded")
@@ -237,7 +238,7 @@ def test_ticket_lifecycle(root: Path, worktrees: Path) -> None:
 
 def test_promote_blocks_incomplete(root: Path, worktrees: Path) -> None:
     print("[test] promote refuses incomplete draft")
-    from codoop_flow.tickets_cli import init_draft, promote
+    from codoop_lib_v1.tickets_cli import init_draft, promote
     cfg = _config_obj(root, worktrees)
     init_draft(cfg, "ticket_011")
     raised = False
