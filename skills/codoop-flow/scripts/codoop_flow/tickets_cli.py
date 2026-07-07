@@ -36,14 +36,28 @@ def _drafts_dir(config: Config) -> Path:
     return config.tickets_dir / "drafts"
 
 
-def init_draft(config: Config, ticket_id: str, title: str = "") -> Path:
+def init_draft(config: Config, ticket_id: str, title: str = "", language: str = "auto") -> Path:
     """Scaffold docs/tickets/drafts/<ticket_id>/ with a metadata stub + empty
     design docs. Returns the draft dir. Refuses to clobber an existing draft.
+
+    Args:
+        config: Config object
+        ticket_id: Ticket identifier
+        title: Ticket title
+        language: Template language. "auto" (default) detects from title, "zh" or "en" explicit.
     """
     draft = _drafts_dir(config) / ticket_id
     if draft.exists():
         raise FileExistsError(f"draft already exists: {draft}")
     draft.mkdir(parents=True)
+
+    # Detect language: if title contains Chinese characters, use Chinese; otherwise English
+    if language == "auto":
+        if title:
+            has_cjk = any('一' <= c <= '鿿' for c in title)
+            language = "zh" if has_cjk else "en"
+        else:
+            language = "zh"
 
     stub = {
         "ticket_id": ticket_id,
@@ -57,26 +71,50 @@ def init_draft(config: Config, ticket_id: str, title: str = "") -> Path:
     (draft / METADATA_FILE).write_text(
         json.dumps(stub, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
     )
-    (draft / "module_prd.md").write_text(
-        f"# {title or ticket_id} — 业务 PRD\n\n"
-        "> 100% 纯业务描述,不涉及任何代码/表结构/API 字段。\n\n"
-        "## 核心业务大图\n\n## 用户故事 (User Stories)\n\n"
-        "## 业务流转状态图\n\n## Definition of Done (验收条件)\n",
-        encoding="utf-8",
-    )
-    (draft / "spec.md").write_text(
-        "# 技术规格 (Spec)\n\n> 基于 module_prd.md,定义 API 契约 / 数据 Schema / "
-        "UI 交互 / files_to_edit 白名单。\n\n"
-        "## API 契约\n\n## 数据 Schema\n\n## UI 交互约定\n\n"
-        "## 编辑范围 (files_to_edit)\n",
-        encoding="utf-8",
-    )
-    (draft / "plan.md").write_text(
-        "# 执行步骤计划 (Plan)\n\n- Step 1: ...\n", encoding="utf-8"
-    )
-    (draft / "todo.md").write_text(
-        "# 原子任务 (Todo)\n\n- [ ] [backend] ...\n", encoding="utf-8"
-    )
+
+    if language == "zh":
+        (draft / "module_prd.md").write_text(
+            f"# {title or ticket_id} — 业务 PRD\n\n"
+            "> 100% 纯业务描述,不涉及任何代码/表结构/API 字段。\n\n"
+            "## 核心业务大图\n\n## 用户故事 (User Stories)\n\n"
+            "## 业务流转状态图\n\n## Definition of Done (验收条件)\n",
+            encoding="utf-8",
+        )
+        (draft / "spec.md").write_text(
+            "# 技术规格 (Spec)\n\n> 基于 module_prd.md,定义 API 契约 / 数据 Schema / "
+            "UI 交互 / files_to_edit 白名单。\n\n"
+            "## API 契约\n\n## 数据 Schema\n\n## UI 交互约定\n\n"
+            "## 编辑范围 (files_to_edit)\n",
+            encoding="utf-8",
+        )
+        (draft / "plan.md").write_text(
+            "# 执行步骤计划 (Plan)\n\n- 步骤 1: ...\n", encoding="utf-8"
+        )
+        (draft / "todo.md").write_text(
+            "# 原子任务 (Todo)\n\n- [ ] [backend] ...\n", encoding="utf-8"
+        )
+    else:  # English
+        (draft / "module_prd.md").write_text(
+            f"# {title or ticket_id} — Business PRD\n\n"
+            "> 100% business description, no code/schema/API details.\n\n"
+            "## Business Overview\n\n## User Stories\n\n"
+            "## State Flow\n\n## Acceptance Criteria\n",
+            encoding="utf-8",
+        )
+        (draft / "spec.md").write_text(
+            "# Technical Spec\n\n> Based on module_prd.md, define API contract / data schema / "
+            "UI interactions / files_to_edit whitelist.\n\n"
+            "## API Contract\n\n## Data Schema\n\n## UI Interactions\n\n"
+            "## Editable Files (files_to_edit)\n",
+            encoding="utf-8",
+        )
+        (draft / "plan.md").write_text(
+            "# Implementation Plan\n\n- Step 1: ...\n", encoding="utf-8"
+        )
+        (draft / "todo.md").write_text(
+            "# Atomic Tasks (Todo)\n\n- [ ] [backend] ...\n", encoding="utf-8"
+        )
+
     return draft
 
 

@@ -19,11 +19,12 @@
 
 | 维度 | 当前状态 |
 |------|---------|
-| **SKILL.md** | ❌ 不存在 |
-| **CLI** | ✅ 存在（`tickets_cli.py`），但仅做确定性操作：`init`、`validate`、`promote` |
-| **撰写能力** | ❌ 完全缺失 — 没有 sub-agent 协助用户撰写 PRD、Spec、Plan、Todo |
-| **Sub-agents** | ❌ 未定义 — 没有工单尺度的专家角色 |
-| **工单输出** | 🔲 手工阶段 — 用户需要自己或找 AI 帮忙写 4 个文档 |
+| **工单编排 SKILL** | ❌ 不存在 — `codoop-ticket/SKILL.md` |
+| **Spec SKILL** | 🔲 隐藏在 source/ — 应提升到顶层 `skills/spec-driven-development/` |
+| **Plan SKILL** | 🔲 隐藏在 source/ — 应提升到顶层 `skills/planning-and-task-breakdown/` |
+| **工单 CLI** | ✅ 存在（`tickets_cli.py`），但仅做确定性操作：`init`、`validate`、`promote` |
+| **工单撰写能力** | ❌ 无 — 需要新建 `codoop-ticket` skill |
+| **用户直接使用** | 🔲 Spec/Plan 只能通过工单编排调用 | 应该让 spec-driven-development、planning-and-task-breakdown 也**独立可调用** |
 
 ### 使用场景（本次改造的真实诉求）
 
@@ -58,17 +59,23 @@
 
 ### 核心目标
 
-两个维度的升级：
+**三个新 skills 各司其职 + 工单编排整合**：
 
-| 维度 | 当前状态 | 改造后 |
-|------|--------|--------|
-| **工单编排** | 无 SKILL — 工单设计无流程 | `codoop-ticket` skill 提供三阶段编排 |
-| **需求撰写** | 纯手工或另起 AI 窗口 | 会话内编排：PM 撰写 PRD |
-| **规格设计** | 调用外部 skill 需手动 | SKILL.md 自动加载 spec-driven-development |
-| **任务分解** | 手工或另起 AI | SKILL.md 自动加载 planning-and-task-breakdown |
-| **第一环联动** | 无关联 | 结合 `docs/backlog/` 的产品规范、设计规范 |
-| **人类参与** | 每阶段都需 | 三阶段都有明确的人类确认点 |
-| **确定性部分** | ✅ 已有 CLI | 保持不变，继承 `tickets_cli.py` init/validate/promote |
+| Skill | 现状 | 改造后 |
+|-------|------|--------|
+| **codoop-ticket** | ❌ 无 | 新建 — 工单设计三阶段编排 + 调用下游 skills |
+| **spec-driven-development** | 🔲 source/ 隐藏 | 提升到顶层 — 用户可独立调用生成 spec 文档 |
+| **planning-and-task-breakdown** | 🔲 source/ 隐藏 | 提升到顶层 — 用户可独立调用生成 plan/todo 文档 |
+| **工单 CLI** | ✅ tickets_cli | 保持原样 — init/validate/promote 的确定性操作 |
+
+**用户使用场景**：
+
+| 场景 | 调用方式 |
+|------|---------|
+| 完整工单设计（PRD→Spec→Plan） | `/skill codoop-ticket draft ticket_001` |
+| 只生成 spec 文档 | `/skill spec-driven-development` 直接调用 |
+| 只生成 plan/todo | `/skill planning-and-task-breakdown` 直接调用 |
+| 工单生命周期管理 | `python codoop.py ticket init/validate/promote` |
 
 ### 改造不包括
 
@@ -81,7 +88,7 @@
 
 ## 改造步骤
 
-### Phase 2.0 — 目录结构升级：新建 codoop-ticket skill
+### Phase 2.0 — 目录结构升级：新建三个顶层 skills
 
 **当前结构**：
 ```
@@ -90,28 +97,45 @@ skills/
 ├── codoop-flow/
 └── _shared/
     └── agents/
+
+source/
+└── agent-skills-main/
+    └── skills/
+        ├── spec-driven-development/     (← 资源，待复制）
+        └── planning-and-task-breakdown/ (← 资源，待复制）
 ```
 
 **改造后结构**：
 ```
 skills/
 ├── codoop-discover/
-├── codoop-ticket/          (← 新增，第二环 Human-Centric)
+├── codoop-ticket/          (← 新增，工单编排编排）
+│   ├── SKILL.md
+│   └── README.md
+├── spec-driven-development/       (← 新增，从 source/ 复制提升）
+│   ├── SKILL.md
+│   └── README.md
+├── planning-and-task-breakdown/   (← 新增，从 source/ 复制提升）
+│   ├── SKILL.md
+│   └── README.md
+├── definition-of-done/            (← 新增，从 source/ 复制提升，planning 依赖）
 │   ├── SKILL.md
 │   └── README.md
 ├── codoop-flow/
 └── _shared/
     └── agents/
-        ├── product-sprint-prioritizer.md (复用 Discovery PM)
-        ├── sales-offer-lead-gen-strategist.md
-        ├── design-ux-architect.md
-        ├── design-ui-designer.md
-        ├── engineering-backend-architect.md (复用 Discovery Architect)
+        ├── product-sprint-prioritizer.md
+        ├── engineering-backend-architect.md
         ├── engineering-software-architect.md
         └── alignment-agent.md
 ```
 
-**注**：直接复用 Discovery 的 agents，但在 codoop-ticket SKILL.md 中明确指引工单范围，agents 根据需要主动确认是否需要商业模式/GTM 讨论。
+**关键点**：
+- ✅ 从 `source/agent-skills-main/` 中**复制** spec 和 plan 的内容
+- ✅ 提升为顶层 `skills/spec-driven-development/` 和 `skills/planning-and-task-breakdown/`
+- ✅ 使其成为独立可调用的 skills（用户可直接 `/skill spec-driven-development` 或 `/skill planning-and-task-breakdown`）
+- ✅ `codoop-ticket` 会调用这两个 skills 作为子步骤
+- 📌 改造完成后由用户自行清理 `source/` 资源
 
 **具体操作**：
 
@@ -122,25 +146,28 @@ skills/
    - `product-sprint-prioritizer.md`（PM agent）
    - `engineering-backend-architect.md` + `engineering-software-architect.md`（Architect agents）
 
-### Phase 2.1 — 创建轻量工单 Personas
+### Phase 2.1 — 复制并提升 spec-driven-development、planning-and-task-breakdown 和 definition-of-done
 
-**为什么需要新 personas？**
+**复制清单**：
+- `source/agent-skills-main/skills/spec-driven-development/SKILL.md` → `skills/spec-driven-development/SKILL.md`
+- `source/agent-skills-main/skills/planning-and-task-breakdown/SKILL.md` → `skills/planning-and-task-breakdown/SKILL.md`
+- `source/agent-skills-main/references/definition-of-done.md` → 转换为 `skills/definition-of-done/SKILL.md`（planning 依赖）
 
-- Discovery 的 PM 和 Architect 是**全局 0→1 阶段**，内容庞大复杂
-- 工单设计是**增量小范围阶段**，只关心"这个模块做什么"，不需要商业论证
+**为什么提升到顶层**：
+1. 这三个 skills **独立价值高** — 用户可能单独需要调用，不一定走完整工单编排流程
+2. **跨项目复用** — 其他项目也可能单独引用这些 skills
+3. **一级入口** — 让用户可以直接 `/skill spec-driven-development`、`/skill planning-and-task-breakdown` 和 `/skill definition-of-done`
 
-**新 personas 的特点**：
+**新建文件**：
+- `skills/spec-driven-development/README.md` — 说明独立调用方式 + 作为工单子步骤的行为
+- `skills/planning-and-task-breakdown/README.md` — 说明独立调用方式 + 作为工单子步骤的行为
+- `skills/definition-of-done/README.md` — 说明如何在工单流程中引用此标准
 
-| 角色 | Discovery 版本 | 工单轻量版 |
-|------|---------------|----------|
-| **ticket-pm.md** | 撰写全局 PRD、OST、用户旅程、商业模式 | 只写这个工单的 PRD：业务需求、验收标准、edge cases |
-| **ticket-architect.md** | 设计全局架构、DB schema、OpenAPI | 只写这个工单的契约：API 接口、DB 字段、edit-scope 白名单 |
+**调整**：
+- planning SKILL.md 中的引用改为：`See /skill definition-of-done` 而非指向文件路径
+- definition-of-done.md 的内容改写为 SKILL.md 格式（加上 YAML frontmatter）
 
-**内容来源**：
-- 参考 Discovery 版本的结构，但去掉大规模论证部分
-- 聚焦工单尺度的快速、精准撰写
-
-### Phase 2.2 — 新建 codoop-ticket SKILL.md
+### Phase 2.2 — 新建 codoop-ticket SKILL.md（工单编排编排）
 
 **三阶段编排流程**：
 
@@ -154,7 +181,7 @@ skills/
 4. 人类确认 — 用户审阅、反馈、修改，直到满意
 
 【第二阶段】技术规格 (spec.md)
-5. 加载 spec-driven-development skill — 从 source/agent-skills-main/skills/spec-driven-development
+5. 调用 spec-driven-development skill（已提升到顶层 skills/）
 6. 基于 module_prd.md 设计 spec.md — 包含：
    - API 接口定义（各端：backend / web / mobile / desktop）
    - 数据库字段变更
@@ -163,7 +190,7 @@ skills/
 7. 人类确认 — 用户审阅、反馈、修改，直到满意
 
 【第三阶段】任务分解 (plan.md + todo.md)
-8. 加载 planning-and-task-breakdown skill — 从 source/agent-skills-main/skills/planning-and-task-breakdown
+8. 调用 planning-and-task-breakdown skill（已提升到顶层 skills/）
 9. 基于 spec.md 分解任务 — 生成：
    - plan.md（实现步骤：Step 1, Step 2, ...）
    - todo.md（原子任务清单，≤100 行代码/任务）
@@ -188,56 +215,72 @@ description: Draft work tickets with intelligent PRD, spec, and plan guidance. U
 - 不需要多个角色协作辩论（只有 PM + Architect）
 - 重点是"快速精准"而非"全局论证"
 
-### Phase 2.3 — 直接复用 Agents，工单范围通过 SKILL.md 指引
+### Phase 2.3 — codoop-ticket 使用 PM + Architect Agents，工单范围通过 SKILL.md 指引
 
-**不需要新建 personas，直接复用**：
+**复用 Discovery 中的 agents**：
 - `product-sprint-prioritizer.md`（PM agent）
 - `engineering-backend-architect.md` + `engineering-software-architect.md`（Architect agents）
 
-**SKILL.md 中的关键指引**（工单范围上下文）：
+**SKILL.md 中的工单范围上下文**：
 
-在调用 PM agent 之前，SKILL.md 需要明确告诉它：
+在调用 PM agent 之前：
 ```
 这是一个工单设计阶段，我们的目标是为"<module_name>"模块设计 PRD。
 聚焦在这个模块的业务需求、用户故事、验收标准。
 如果涉及商业模式、GTM 策略或跨模块影响，请主动确认用户是否需要讨论。
 ```
 
-在调用 Architect agent 之前，SKILL.md 需要明确告诉它：
+在调用 Architect agent 之前：
 ```
 这是一个工单设计的技术规格阶段，基于已有的系统架构（见 docs/backlog/architecture/）。
 聚焦在"<module_name>"模块的：API 接口设计、DB 字段变更、各端实现细节。
 如果涉及全局架构变更、性能重构等超出工单范围的事项，请主动确认用户。
 ```
 
-**优点**：
+**设计指导**：
 - ✅ 复用已验证的高质量 agents
-- ✅ 保持思维框架一致
+- ✅ 保持思维框架一致性
 - ✅ agents 智能识别"超出范围"的决策点，主动找用户确认
-- ✅ 减少维护负担
+- ✅ 减少维护负担，无需为工单尺度创建新 personas
 
 ### Phase 2.4 — 插件 manifest 注册
 
-在两处 manifest 中添加 `codoop-ticket` 入口：
+在两处 manifest 中添加三个新 skills 入口：
 
 1. `.claude-plugin/marketplace.json`
+   - codoop-ticket
+   - spec-driven-development
+   - planning-and-task-breakdown
+
 2. `.agents/plugins/marketplace.json`
+   - codoop-ticket
+   - spec-driven-development
+   - planning-and-task-breakdown
 
 （参考 Phase 1.4 的做法）
 
-### Phase 2.5 — 测试与文档
+### Phase 2.5 — 更新文档
 
-1. **`tests/test_skeleton.py`**：
-   - 新增 ticket lifecycle 测试（已存在）
-   - 新增 ticket SKILL 的单步验证（可选）
-
-2. **`skills/codoop-ticket/README.md`**：
+1. **`skills/codoop-ticket/README.md`**：
    - 说明如何在会话内调用 `/skill codoop-ticket`
-   - 工单工作流示例
+   - 工单三阶段工作流示例
    - 与第一环、第三环的协作关系
 
-3. **`docs/install.md` 更新**：
-   - 补充 codoop-ticket 的安装和使用说明
+2. **`skills/spec-driven-development/README.md`**：
+   - 说明独立调用方式：`/skill spec-driven-development`
+   - 说明作为 codoop-ticket 子步骤时的行为
+   - 规格设计指南
+
+3. **`skills/planning-and-task-breakdown/README.md`**：
+   - 说明独立调用方式：`/skill planning-and-task-breakdown`
+   - 说明作为 codoop-ticket 子步骤时的行为
+   - 任务分解指南
+
+4. **`docs/install.md` 更新**：
+   - 补充三个新 skills 的安装和使用说明
+
+5. **`README.md` 更新**：
+   - 更新"Three Loops"表格，添加 spec-driven-development 和 planning-and-task-breakdown
 
 ---
 
@@ -257,21 +300,26 @@ description: Draft work tickets with intelligent PRD, spec, and plan guidance. U
 - **第二环现有文档**：`docs/engineering-design.md` §4 Human-Centric Loop
   - 定义了 PRD / Spec / Plan / Todo 的输出规范
 
-**source/agent-skills-main 中的外部 skills**（需要在 codoop-ticket SKILL.md 中调用）：
+**source/agent-skills-main 中的资源**（待复制提升到 skills/）：
 - **spec-driven-development** — `source/agent-skills-main/skills/spec-driven-development/`
+  - 将复制到 `skills/spec-driven-development/`
   - 指导如何从业务需求设计出技术契约
   - 产出 spec.md（API、DB、各端实现细节）
 
 - **planning-and-task-breakdown** — `source/agent-skills-main/skills/planning-and-task-breakdown/`
+  - 将复制到 `skills/planning-and-task-breakdown/`
   - 指导如何从技术契约分解出实现步骤和原子任务
   - 产出 plan.md（步骤）和 todo.md（任务清单）
 
 ### B. 设计约束
 
 1. **不能改 tickets_cli.py** — 确定性部分是护栏，不能动
-2. **SKILL.md 必须调用 tickets_cli** — 流程最后还是要用 CLI 来 validate + promote
-3. **相对路径** — ticket-pm.md / ticket-architect.md 应该放在 `skills/codoop-ticket/agents/` 还是 `skills/_shared/agents/`？
-   - **建议**：放在 `skills/codoop-ticket/agents/`（工单专用，不跨环复用）
+2. **codoop-ticket SKILL.md 必须调用 tickets_cli** — 流程最后还是要用 CLI 来 validate + promote
+3. **Spec 和 Plan 的独立性** — 复制后的 spec-driven-development 和 planning-and-task-breakdown 应该能：
+   - ✅ 独立被调用（`/skill spec-driven-development` 或 `/skill planning-and-task-breakdown`）
+   - ✅ 在 codoop-ticket 中被调用作为子步骤
+   - ✅ 路径相对正确（指向本地 agents、references 等资源）
+4. **不复用轻量 personas** — PM 和 Architect agents 直接复用 Discovery 版本，由 SKILL.md 的上下文来指引工单范围
 
 ### C. 改造前的代码检查清单
 
@@ -279,7 +327,9 @@ description: Draft work tickets with intelligent PRD, spec, and plan guidance. U
 
 - [ ] `skills/codoop-flow/scripts/codoop_flow/tickets_cli.py` 的接口稳定（validate、promote 的返回值）
 - [ ] `tests/test_skeleton.py` 中 ticket lifecycle 的断言是否覆盖全
-- [ ] Discovery 的 PM/Architect personas 中，哪些部分可以作为"轻量版"的参考
+- [ ] 查看 `source/agent-skills-main/skills/spec-driven-development/` 的结构，确认复制后的路径依赖
+- [ ] 查看 `source/agent-skills-main/skills/planning-and-task-breakdown/` 的结构，确认复制后的路径依赖
+- [ ] 确认 spec-driven-development 和 planning-and-task-breakdown 是否有对 source/ 目录的硬引用，需要调整为相对路径
 
 ---
 
@@ -305,20 +355,20 @@ description: Draft work tickets with intelligent PRD, spec, and plan guidance. U
 
 ## 待确认的决策点
 
-1. **第一环产出物的读取**：
+1. **Spec 和 Plan 的提升策略**：
+   - 复制 `source/` 中的 spec 和 plan skills 到顶层 `skills/` 时，是否需要修改它们的 SKILL.md 和相对路径？
+   - 这两个 skills 在"作为 codoop-ticket 的子步骤"和"独立调用"时的行为是否需要区分？
+   - **建议**：保持相同逻辑，通过上下文区分（工单编排模式 vs 独立模式）
+
+2. **第一环产出物的读取**：
    - codoop-ticket SKILL 中如何读取 `docs/backlog/` 下的产品规范、设计规范、架构文档？
    - 是否应该自动扫描并提供给 PM 和 Architect agents 作为上下文？
    - **建议**：是的，自动读取并注入到 sub-agent prompts 中
 
-2. **spec-driven-development 和 planning-and-task-breakdown 的集成方式**：
-   - SKILL.md 中是否直接 include 这两个 skill 的内容？
-   - 还是通过文本描述 + 指引用户？
-   - **建议**：直接 include 或清晰引用，让编排流程无缝衔接
-
-3. **SKILL.md 中的工单范围指引**：
-   - 如何在调用 PM 和 Architect agents 时，明确告诉它们"我们在做工单设计，不是全局设计"？
-   - 是否需要自动检测"超出范围"的决策点（如商业模式变更、全局架构影响）并找用户确认？
-   - **建议**：在 SKILL.md 中提供明确的上下文范围说明，让 agents 能主动识别并确认超出范围的项目
+3. **spec-driven-development 和 planning-and-task-breakdown 在 codoop-ticket 中的调用方式**：
+   - codoop-ticket SKILL.md 中如何调用这两个 skills？
+   - 是否需要将前一阶段的输出（如 module_prd.md 的内容）作为上下文传入？
+   - **建议**：通过 SKILL.md 中的清晰指引，或通过文本上下文传递关键信息
 
 4. **人类确认的触发方式**：
    - 每个阶段完成后，SKILL 如何让用户确认？
@@ -336,19 +386,30 @@ description: Draft work tickets with intelligent PRD, spec, and plan guidance. U
 
 ### 受影响的文件列表
 
-- 📝 **新增**：
-  - `skills/codoop-ticket/SKILL.md`
-  - `skills/codoop-ticket/README.md`
+- 📝 **新增目录**：
+  - `skills/codoop-ticket/` — 工单编排 skill
+    - `SKILL.md`（编排逻辑）
+    - `README.md`（使用指南）
+  - `skills/spec-driven-development/` — 从 source/ 复制提升
+    - `SKILL.md`（spec 设计逻辑）
+    - `README.md`（使用指南）
+  - `skills/planning-and-task-breakdown/` — 从 source/ 复制提升
+    - `SKILL.md`（任务分解逻辑）
+    - `README.md`（使用指南）
+  - `skills/definition-of-done/` — 从 source/ 复制提升，planning 依赖
+    - `SKILL.md`（DoD 标准，由 references/definition-of-done.md 转换）
+    - `README.md`（使用指南）
 
 - ✏️ **修改**：
-  - `.claude-plugin/marketplace.json` （添加 codoop-ticket 条目）
-  - `.agents/plugins/marketplace.json` （添加 codoop-ticket 条目）
-  - `docs/install.md` 和 `.zh-CN.md` （补充 codoop-ticket 说明）
-  - 主 `README.md` 和 `.zh-CN.md` （补充三环介绍）
+  - `.claude-plugin/marketplace.json` （添加 codoop-ticket、spec-driven-development、planning-and-task-breakdown 条目）
+  - `.agents/plugins/marketplace.json` （添加三个新 skills 条目）
+  - `docs/install.md` 和 `.zh-CN.md` （补充三个新 skills 说明）
+  - 主 `README.md` 和 `.zh-CN.md` （更新 Three Loops 表格）
 
 - 🚫 **不动**：
   - `tickets_cli.py` （确定性护栏，保持原样）
   - `test_skeleton.py` （现有 ticket 测试不改）
+  - `source/` （改造完成后由用户自行清理）
 
 ---
 
@@ -356,4 +417,20 @@ description: Draft work tickets with intelligent PRD, spec, and plan guidance. U
 
 确认上述"待确认的决策点"后，即可开始 Phase 2 的实施。
 
-预计工作量：较 Phase 1 稍轻（复用第一环的框架，新建 2 个轻量 personas + SKILL）。
+预计工作量：中等（复制 spec + plan skills 到顶层，新建 codoop-ticket 编排 skill，更新三处 manifest）。
+
+**核心清单**：
+- [ ] 从 `source/agent-skills-main/skills/spec-driven-development/SKILL.md` 复制到 `skills/spec-driven-development/SKILL.md`
+- [ ] 从 `source/agent-skills-main/skills/planning-and-task-breakdown/SKILL.md` 复制到 `skills/planning-and-task-breakdown/SKILL.md`
+- [ ] 从 `source/agent-skills-main/references/definition-of-done.md` 转换为 `skills/definition-of-done/SKILL.md`（添加 YAML frontmatter）
+- [ ] 新建 `skills/codoop-ticket/SKILL.md`（工单三阶段编排）
+- [ ] 新建 `skills/codoop-ticket/README.md`
+- [ ] 新建 `skills/spec-driven-development/README.md`
+- [ ] 新建 `skills/planning-and-task-breakdown/README.md`
+- [ ] 新建 `skills/definition-of-done/README.md`
+- [ ] 更新 `skills/planning-and-task-breakdown/SKILL.md` 中对 definition-of-done 的引用（改为 skill 链接而非文件路径）
+- [ ] 更新 `.claude-plugin/marketplace.json`（+4 entries：codoop-ticket、spec-driven-development、planning-and-task-breakdown、definition-of-done）
+- [ ] 更新 `.agents/plugins/marketplace.json`（+4 entries）
+- [ ] 更新 `docs/install.md` 和 `install.zh-CN.md`
+- [ ] 更新 `README.md` 和 `README.zh-CN.md`（Three Loops 表格）
+- [ ] 验证各 SKILL.md 中的相对路径正确

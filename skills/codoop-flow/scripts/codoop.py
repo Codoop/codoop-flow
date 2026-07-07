@@ -41,7 +41,7 @@ def _cmd_setup(args) -> int:
 
 def _cmd_ticket_init(args) -> int:
     config = load_config(args.config)
-    draft = init_draft(config, args.ticket_id, title=args.title or "")
+    draft = init_draft(config, args.ticket_id, title=args.title or "", language=args.language or "auto")
     print(f"created draft: {draft}")
     print("Fill module_prd.md + spec.md (+ plan/todo), then: "
           f"python codoop.py ticket promote {args.ticket_id} --config <toml>")
@@ -96,6 +96,8 @@ def main() -> int:
         sp.add_argument("--config", default=None, help="path to codoop_flow.toml")
         if extra:
             sp.add_argument("--title", default="", help="ticket title")
+            sp.add_argument("--language", default="auto", choices=["auto", "zh", "en"],
+                          help="template language: auto (detect from title), zh, or en")
         sp.set_defaults(func=func)
 
     args = parser.parse_args()
