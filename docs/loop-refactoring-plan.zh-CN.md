@@ -40,10 +40,13 @@ docs/tickets/done/ {ticket_001/, ticket_002/, ...}
 
 ```
 改造前：
-skills/codoop-flow/scripts/
-├── codoop.py             (Loop 2 + 3 混合)
-├── codoop_tools.py       (Loop 3)
-└── codoop_flow/          (Loop 2 + 3 + 共享)
+skills/codoop-flow/
+├── agents/               (6 个 internal personas)
+├── scripts/
+│   ├── codoop.py         (Loop 2 + 3 混合)
+│   ├── codoop_tools.py   (Loop 3)
+│   └── codoop_flow/      (Loop 2 + 3 + 共享)
+└── references/           (3 skills + 6 personas)
 
 改造后：
 skills/codoop-ticket/scripts/
@@ -54,6 +57,15 @@ skills/codoop-flow/scripts/
 ├── codoop_tools.py       (Loop 3 CLI)
 ├── codoop.py             (保留 setup/install 全局命令)
 └── codoop_lib_v1/        ← 改名自 codoop_flow/（独立库，含 Loop 3 + 共享）
+
+skills/_shared/agents/
+├── (原有 7 个 personas)
+├── code-reviewer.md      ← 新增
+├── security-auditor.md   ← 新增
+├── test-engineer.md      ← 新增
+├── testing-evidence-collector.md      ← 新增
+├── testing-reality-checker.md         ← 新增
+└── engineering-technical-writer.md    ← 新增
 ```
 
 **关键：** 两个 `codoop_lib_v1/` 必须是独立副本，不能有任何 import 依赖
@@ -74,45 +86,53 @@ skills/codoop-flow/scripts/
 
 ---
 
-### Part B：Loop 3 能力提升（Sub-Skills + Review Personas）
+### Part B：Loop 3 能力提升（Sub-Skills + All Personas）
 
-**目标：** 提升 Loop 3 内部的 sub-skills 和 review personas 到顶层
+**目标：** 提升 Loop 3 内部的 sub-skills 和所有 personas 到顶层
 
 **三个子 Skills（从 references/skills/ 提升）：**
 - incremental-implementation（增量实现纪律）
 - debugging-and-error-recovery（调试自愈纪律）
 - test-driven-development（TDD 纪律）
 
-**三个 Review Personas（从 references/agents/ 提升）：**
+**六个 Personas（从 references/agents/ 全部提升）：**
+
+*Review Personas（审查类）：*
 - code-reviewer（代码审查）
 - security-auditor（安全审计）
 - test-engineer（测试工程）
 
-**内部 Personas（保留在 codoop-flow 中）：**
-- testing-evidence-collector（UI 视觉验收，内部）
-- testing-reality-checker（UX 交互验收，内部）
-- engineering-technical-writer（活文档同步，内部）
+*UI/UX Personas（验收类）：*
+- testing-evidence-collector（UI 视觉规范验收）
+- testing-reality-checker（UX 交互体验验收）
+
+*Documentation Persona（文档类）：*
+- engineering-technical-writer（活文档同步）
+
+**codoop-flow 中不再包含任何 agents 目录。**
 
 #### Part B 步骤
 
 1. 复制 3 个 sub-skills 到 `skills/` 顶层
-2. 复制 3 个 review personas 到 `skills/_shared/agents/`
+2. 复制 6 个 personas（全部）到 `skills/_shared/agents/`
 3. 删除 `skills/codoop-flow/references/` 目录
-4. 更新 codoop-flow SKILL.md 中的路径引用
-5. 更新 manifests（.claude-plugin/marketplace.json）
+4. 删除 `skills/codoop-flow/agents/` 目录
+5. 更新 codoop-flow SKILL.md 中的路径引用（指向 `../../_shared/agents/`）
+6. 更新 manifests（.claude-plugin/marketplace.json）
 
 #### Part B 工作量
 
 | 任务 | 工作量 |
 |---|---|
 | 复制 3 个 sub-skills | 3 分钟 |
-| 复制 3 个 review personas | 2 分钟 |
+| 复制 6 个 personas | 2 分钟 |
 | 删除 references/ 目录 | 1 分钟 |
+| 删除 agents/ 目录 | 1 分钟 |
 | 更新 codoop-flow SKILL.md 路径 | 10 分钟 |
 | 更新 manifests | 5 分钟 |
 | 更新文档（docs/install.md） | 5 分钟 |
 | 验证功能无破损 | 10 分钟 |
-| **合计** | **~36 分钟** |
+| **合计** | **~37 分钟** |
 
 ---
 
@@ -120,21 +140,28 @@ skills/codoop-flow/scripts/
 
 ### 并行进行（推荐）
 
-**时间：** ~96 分钟（60 + 36）
+**时间：** ~97 分钟（60 + 37）
 
 同时进行 Part A 和 Part B，最后一起提交：
 
 ```
 Phase 1（并行）：
 ├─ Part A：分离 Loop 2/3 CLI 和库 (~60 min)
-├─ Part B：提升 Loop 3 sub-skills 和 personas (~36 min)
+├─ Part B：提升 Loop 3 sub-skills 和所有 personas (~37 min)
 └─ 最后：验证整体一致性，单个提交
 
 产出：
 ├── codoop-ticket/scripts/{codoop-ticket.py, codoop_lib_v1/}
 ├── codoop-flow/scripts/{codoop_lib_v1/ (改名), SKILL.md 更新}
+│   (删除 agents/ 目录)
 ├── skills/{incremental-implementation/, debugging-and-error-recovery/, test-driven-development/}
-├── skills/_shared/agents/{code-reviewer.md, security-auditor.md, test-engineer.md}
+├── skills/_shared/agents/
+│   ├── code-reviewer.md
+│   ├── security-auditor.md
+│   ├── test-engineer.md
+│   ├── testing-evidence-collector.md
+│   ├── testing-reality-checker.md
+│   └── engineering-technical-writer.md
 └── docs/{install.md, loop-2-human-centric.md, loop-3-agent-centric.md} 更新
 ```
 
@@ -177,24 +204,26 @@ skills/
 │   │   └── codoop_lib_v1/                   ← 独立库
 ├── codoop-flow/                             (Loop 3 - 改造后独立 + 能力提升)
 │   ├── SKILL.md (更新)
-│   ├── agents/                              (内部 3 个 personas)
 │   └── scripts/
 │       ├── codoop_tools.py
 │       ├── codoop.py                        (setup/install)
-│       └── codoop_lib_v1/                   ← 独立库（改名）
+│       └── codoop_lib_v1/                   ← 独立库（改名，删除 agents/）
 ├── spec-driven-development/                 (Loop 2 支持 skill)
 ├── planning-and-task-breakdown/             (Loop 2 支持 skill)
 ├── definition-of-done/                      (Loop 2 支持 skill)
 ├── incremental-implementation/              (Loop 3 sub-skill - 新增)
 ├── debugging-and-error-recovery/            (Loop 3 sub-skill - 新增)
 ├── test-driven-development/                 (Loop 3 sub-skill - 新增)
-└── _shared/agents/                          (共用 personas)
+└── _shared/agents/                          (所有 personas 集中)
     ├── alignment-agent.md                   (Loop 1)
     ├── design-ux-architect.md               (Loop 1)
-    ├── ... (其他 7 个)
-    ├── code-reviewer.md                     (Loop 3 review - 新增)
-    ├── security-auditor.md                  (Loop 3 review - 新增)
-    └── test-engineer.md                     (Loop 3 review - 新增)
+    ├── ... (原有 7 个)
+    ├── code-reviewer.md                     (Loop 3 - 新增)
+    ├── security-auditor.md                  (Loop 3 - 新增)
+    ├── test-engineer.md                     (Loop 3 - 新增)
+    ├── testing-evidence-collector.md        (Loop 3 - 新增)
+    ├── testing-reality-checker.md           (Loop 3 - 新增)
+    └── engineering-technical-writer.md      (Loop 3 - 新增)
 ```
 
 ---
@@ -280,15 +309,16 @@ python skills/codoop-flow/scripts/codoop_tools.py --config ... pick
 ### Part B（能力提升）
 
 - [ ] 复制 3 个 sub-skills 到 skills/
-- [ ] 复制 3 个 review personas 到 skills/_shared/agents/
+- [ ] 复制 6 个 personas 到 skills/_shared/agents/
 - [ ] 删除 skills/codoop-flow/references/
+- [ ] 删除 skills/codoop-flow/agents/
 - [ ] 更新 codoop-flow SKILL.md 中的路径引用
-  - 第 77 行（incremental-implementation）
-  - 第 92 行（debugging-and-error-recovery）
-  - 第 107-114 行（review personas）
-  - 第 128 行（technical-writer）
-- [ ] 更新 manifests（.claude-plugin/marketplace.json）
-- [ ] 更新 docs/install.md 列出新增 skills
+  - 第 77 行（incremental-implementation）→ `../../incremental-implementation/SKILL.md`
+  - 第 92 行（debugging-and-error-recovery）→ `../../debugging-and-error-recovery/SKILL.md`
+  - 第 100-114 行（所有 personas）→ `../../_shared/agents/xxx.md`
+- [ ] 更新 manifests（.claude-plugin/marketplace.json）- 添加 3 个新 skills
+- [ ] 更新 docs/install.md 列出新增 3 个 skills
+- [ ] 更新 docs/loop-3-agent-centric.md 更新 agents 说明
 - [ ] 更新 docs/loop-3-agent-centric.md（如有说明）
 
 ### 最后验证
