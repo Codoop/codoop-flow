@@ -1,78 +1,78 @@
 ---
 name: codoop-ticket
-description: 设计工单（PRD、规格、计划）。用自然语言描述要做什么功能，codoop-ticket 会通过三个阶段帮助设计完整的工单文档。最终产出 module_prd.md、spec.md、plan.md、todo.md 和自动推断的 metadata.json。
+description: Design work tickets (PRD → Spec → Plan) in three stages. Describe features in natural language; codoop-ticket orchestrates PM and Architect agents, calls spec and planning skills, and auto-infers metadata. Outputs complete ticket package for Phase 3.
 ---
 
-# Codoop-Ticket — 工单设计编排
+# Codoop-Ticket — Ticket Design Orchestration
 
-帮助用户系统性地设计工单（ticket），通过三个阶段逐步完成业务需求、技术规格和任务分解。
+Help users systematically design work tickets in-session through three stages: requirements, technical specs, and task breakdown.
 
-## 什么是工单？
+## What is a Ticket?
 
-工单是一个完整的功能模块的设计文档包，包含：
+A ticket is a complete design document package for one feature module:
 
-| 文件 | 作用 | 作者 |
-|------|------|------|
-| `module_prd.md` | 业务需求（纯业务语言，无技术细节） | PM agent |
-| `spec.md` | 技术规格（API、数据库、各端实现细节） | Architect agent |
-| `plan.md` | 实现计划（分步骤） | 自动推断 |
-| `todo.md` | 原子任务清单（≤100行代码/任务） | 自动推断 |
-| `metadata.json` | 工单元数据（模块、测试命令、编辑范围） | 自动推断 |
+| File | Purpose | Author |
+|------|---------|--------|
+| `module_prd.md` | Business requirements (pure business language, no tech) | PM agent |
+| `spec.md` | Technical specification (APIs, DB, implementation details) | Architect agent |
+| `plan.md` | Implementation plan (steps) | Auto-inferred |
+| `todo.md` | Atomic task list (≤100 lines code/task) | Auto-inferred |
+| `metadata.json` | Ticket metadata (modules, test commands, edit scope) | Auto-inferred |
 
-## 何时使用
+## When to Use
 
-- ✅ 要从业务需求设计出完整的工单
-- ✅ 第一环已产出产品规范和设计文档，现在需要设计增量功能工单
-- ✅ 需要人类参与每个阶段的审查和反馈
+- ✅ Design a complete ticket from business requirements
+- ✅ Phase 1 has produced product and design specs; now design incremental feature tickets
+- ✅ Need human review and feedback at each stage
 
-## 工单设计的三个阶段
+## Three Stages of Ticket Design
 
-### 【第一阶段】需求设计 (module_prd.md)
+### 【Phase 1】Requirement Design (module_prd.md)
 
-**目标**：理解业务需求，定义功能边界和验收标准。
+**Goal**: Understand business requirements and define feature boundaries.
 
-**流程**：
-1. 你描述要做什么功能（自然语言）
-2. codoop-ticket 与你讨论需求细节、边界、依赖
-3. codoop-ticket 读取 `docs/backlog/` 下的第一环产出（产品规范、设计规范、架构文档）
-4. PM agent 基于讨论和第一环文档撰写 `module_prd.md`（纯业务）
-5. 你审阅、反馈、修改，直到满意
+**Process**:
+1. Describe what feature you want to build (natural language)
+2. codoop-ticket discusses requirements, boundaries, dependencies with you
+3. codoop-ticket reads Phase 1 outputs from `docs/backlog/` (product specs, design specs, architecture)
+4. PM agent writes `module_prd.md` based on discussion and Phase 1 context
+5. You review, provide feedback, modify until satisfied
 
-**示例**：
+**Example**:
 ```
-用户：帮我设计电商平台的用户搜索功能
-       - 需要支持关键词、分类、价格范围过滤
-       - 要和现有的商品库集成
+User: Design an e-commerce product search feature
+       - Need keyword, category, and price range filtering
+       - Should integrate with existing product catalog
 
-codoop-ticket：讨论需求
-       - 搜索范围：商品名称、描述、SKU 都搜吗？
-       - 过滤逻辑：OR 还是 AND 组合？
-       - 结果排序：相关性排序还是销量排序？
+codoop-ticket: Clarifying questions
+       - Search scope: product name, description, SKU?
+       - Filter logic: OR or AND combination?
+       - Result sorting: relevance or sales?
        
-读取第一环：
-       - docs/backlog/product/commerce-strategy.md（商业策略）
-       - docs/backlog/interface/search-ux.md（搜索 UX 规范）
+Reading Phase 1:
+       - docs/backlog/product/commerce-strategy.md
+       - docs/backlog/interface/search-ux.md
        
-PM agent 输出：
-       ✅ module_prd.md：业务需求、用户故事、验收条件
+PM agent output:
+       ✅ module_prd.md: business needs, user stories, acceptance criteria
 ```
 
-### 【第二阶段】技术规格 (spec.md)
+### 【Phase 2】Technical Spec (spec.md)
 
-**目标**：设计技术契约，确保实现方向一致。
+**Goal**: Design the technical contract and ensure implementation alignment.
 
-**流程**：
-1. 加载 `/skill spec-driven-development`
-2. 基于 `module_prd.md` 设计 `spec.md`：
-   - API 接口设计（后端、Web、移动端各端）
-   - 数据库字段和数据模型
-   - UI 交互流程
-   - 编辑范围白名单（`files_to_edit`）
-3. 你审阅、反馈、修改，直到满意
+**Process**:
+1. Load `/skill spec-driven-development`
+2. Design `spec.md` based on `module_prd.md`:
+   - API interface design (backend, web, mobile platforms)
+   - Database fields and data models
+   - UI interaction flows
+   - Editable files whitelist (`files_to_edit`)
+3. You review, provide feedback, modify until satisfied
 
-**示例**：
+**Example**:
 ```
-spec.md 包含：
+spec.md includes:
 
 ## Backend API
 - GET /api/products/search?q=...&category=...&price_min=...&price_max=...
@@ -87,53 +87,53 @@ spec.md 包含：
 - ResultsList component: grid/list view toggle
 - ResultItem component: product card with quick add-to-cart
 
-## Files to Edit
+## Editable Files
 - backend/**
 - web/src/**
 - mobile/lib/**
 ```
 
-### 【第三阶段】任务分解 (plan.md + todo.md)
+### 【Phase 3】Task Breakdown (plan.md + todo.md)
 
-**目标**：分解成可实施的、有序的原子任务。
+**Goal**: Decompose into implementable, ordered atomic tasks.
 
-**流程**：
-1. 加载 `/skill planning-and-task-breakdown`
-2. 基于 `spec.md` 分解任务：
-   - `plan.md`：实现步骤（Step 1、Step 2 等）
-   - `todo.md`：原子任务清单（每个 ≤100 行代码）
-3. 参考 `/skill definition-of-done` 了解完成标准
-4. 你审阅、反馈、修改，直到满意
+**Process**:
+1. Load `/skill planning-and-task-breakdown`
+2. Break down tasks based on `spec.md`:
+   - `plan.md`: implementation steps (Step 1, Step 2, etc.)
+   - `todo.md`: atomic task list (each ≤100 lines code)
+3. Reference `/skill definition-of-done` to understand completion standards
+4. You review, provide feedback, modify until satisfied
 
-**示例**：
+**Example**:
 ```
 plan.md:
-- Step 1: Backend API 实现 + 数据库迁移
-- Step 2: Web 前端 SearchBar 和 ResultsList 组件
-- Step 3: Web 过滤逻辑和状态管理
-- Step 4: Mobile 端适配
+- Step 1: Backend API implementation + database migration
+- Step 2: Web frontend SearchBar and ResultsList components
+- Step 3: Web filter logic and state management
+- Step 4: Mobile platform adaptation
 
 todo.md:
 - [ ] Task 1: Create search API endpoint (backend)
 - [ ] Task 2: Add database full-text search index
 - [ ] Task 3: Implement SearchBar React component
-- ...（每个任务都有验收条件和验证步骤）
+- ...（each task has acceptance criteria and verification steps）
 ```
 
-### 【元数据推断】自动更新 metadata.json
+### 【Auto Metadata Inference】Update metadata.json
 
-**流程**：
-1. 基于 `spec.md` 自动推断：
-   - `modules`：从 spec 的标题提取（## Backend → backend、## Web → web）
-   - `files_to_edit`：从 spec 的"## Editable Files"提取
-   - `test_command`：根据 modules 生成默认值
-2. 显示推断结果，你确认或修改
+**Process**:
+1. Automatically infer from `spec.md`:
+   - `modules`: extract from spec headers (## Backend → backend, ## Web → web)
+   - `files_to_edit`: extract from "## Editable Files" section
+   - `test_command`: generate defaults based on modules
+2. Show inferred metadata.json; you confirm or modify
 
-**示例**：
+**Example**:
 ```json
 {
   "ticket_id": "ticket_001",
-  "title": "电商平台用户搜索功能",
+  "title": "E-commerce Product Search Feature",
   "modules": ["backend", "web", "mobile"],
   "files_to_edit": ["backend/**", "web/src/**", "mobile/lib/**"],
   "test_command": {
@@ -146,103 +146,103 @@ todo.md:
 }
 ```
 
-### 【最终化】验证与发布
+### 【Finalize】Validate & Release
 
-**流程**：
-1. 调用 `tickets_cli validate` 检查工单完整性
-2. 调用 `tickets_cli promote` 移至 `pending/`
-3. 工单完成，等待第三环 codoop-flow skill pick 并开发
+**Process**:
+1. Call `tickets_cli validate` to verify ticket completeness
+2. Call `tickets_cli promote` to move to `pending/`
+3. Ticket complete, ready for Phase 3 development
 
 ---
 
-## 使用方式
+## How to Use
 
-### 启动工单设计
+### Launch Ticket Design
 
-用自然语言描述你要做什么功能：
+Describe what you want to build in natural language:
 
 ```
 /skill codoop-ticket
-我想为电商平台设计用户搜索功能，需要支持关键词、分类、价格范围过滤，并和现有商品库集成
+I want to design an e-commerce product search feature with keyword, category, and price range filtering that integrates with the existing catalog.
 ```
 
-或简洁版：
+Or concisely:
 
 ```
 /skill codoop-ticket
-帮我设计电商搜索功能的工单
+Design the e-commerce search feature for our platform.
 ```
 
-### 流程中的确认
+### Phase Confirmation Flow
 
-每个阶段完成后，你需要 review 并确认：
+After each phase, you review and confirm:
 
 ```
-用户：看起来不错，PRD 完整，进入下一阶段
-codoop-ticket：OK，现在加载 spec-driven-development，开始设计技术规格...
+User: This PRD looks good, move to spec phase
+codoop-ticket: OK, loading spec-driven-development, starting technical spec...
 
-（Spec 设计完成）
+（Spec design complete）
 
-用户：Spec 的 API 设计我改一下，改成 POST 而不是 GET...
-codoop-ticket：已修改，用户满意吗？
-用户：OK，进入下一阶段
+User: I need to change the API to use POST instead of GET...
+codoop-ticket: Updated. Do you want to proceed?
+User: Yes, move to task breakdown phase
 
-...依此类推
+...and so on
 ```
 
 ---
 
-## 与其他环的关系
+## Integration with Other Phases
 
-### 与第一环（Venture-Discovery）的联动
+### Integration with Phase 1 (Venture-Discovery)
 
-codoop-ticket 会自动读取第一环的输出：
+codoop-ticket automatically reads Phase 1 outputs:
 
-- `docs/backlog/product/` — 产品规范
-- `docs/backlog/interface/` — 界面规范
-- `docs/backlog/architecture/` — 架构规范
-- `docs/backlog/modules/` — 模块拆分
+- `docs/backlog/product/` — product specifications
+- `docs/backlog/interface/` — interface specifications
+- `docs/backlog/architecture/` — architecture specifications
+- `docs/backlog/modules/` — module breakdown
 
-这些作为 context 输入给 PM 和 Architect agents，确保工单与全局规划对齐。
+These serve as context to PM and Architect agents, ensuring tickets align with the global plan.
 
-### 与第三环（Agent-Centric）的交接
+### Handoff to Phase 3 (Agent-Centric)
 
-工单完成后，通过 `metadata.json` 向第三环传递：
+When the ticket is complete, Phase 3 receives via `metadata.json`:
 
-- `modules`：要调用哪些测试？
-- `files_to_edit`：编辑范围白名单（护栏）
-- `test_command`：验证标准
+- `modules`: which test suites to run?
+- `files_to_edit`: edit scope whitelist (guardrails)
+- `test_command`: verification standards
 
-第三环会自动 pick 工单并在 worktree 中开发。
+Phase 3 automatically picks up the ticket and develops in a worktree.
 
 ---
 
-## 设计指导
+## Design Guidance
 
-### Agents 的工单范围指引
+### Agent Scope Instructions
 
-codoop-ticket 在调用 PM 和 Architect agents 时，会明确告诉它们：
-
-```
-这是一个工单设计阶段，我们的目标是为"<module_name>"模块设计 PRD。
-聚焦在这个模块的业务需求、用户故事、验收标准。
-如果涉及商业模式、GTM 策略或跨模块影响，请主动确认用户是否需要讨论。
-```
+When calling PM and Architect agents, codoop-ticket clarifies scope:
 
 ```
-这是一个工单设计的技术规格阶段，基于已有的系统架构。
-聚焦在"<module_name>"模块的 API 接口设计、DB 字段变更、各端实现细节。
-如果涉及全局架构变更、性能重构等超出工单范围的事项，请主动确认用户。
+This is a ticket design phase for "<module_name>" PRD.
+Focus on business requirements, user stories, acceptance criteria for this module.
+If business model, GTM strategy, or cross-module impact surfaces, confirm with user.
 ```
 
-这样 agents 能智能识别"超出范围"的决策点，主动找用户确认，而不是憋着或假设。
+```
+This is ticket-scoped technical spec design, building on existing architecture.
+Focus on "<module_name>" APIs, database changes, implementation details per platform.
+If global architecture changes, performance overhauls, or scope expansion surfaces, confirm with user.
+```
 
-### 快速精准 vs 全局论证
+This lets agents intelligently flag "out of scope" decisions rather than guessing.
 
-工单设计与第一环的产品发现不同：
+### Quick & Precise vs. Global Discovery
 
-- **第一环**：全局 0→1，要一致性审计，多角色辩论，产出全套规范
-- **第二环**：增量小范围，要快速精准，只有 PM + Architect，聚焦这个模块
+Ticket design differs from Phase 1 discovery:
 
-无需在工单级别做全局一致性检查（那是第一环的职责）。
+- **Phase 1**: Global 0→1, requires consistency audit, multi-role debate, comprehensive specs
+- **Phase 2**: Incremental module scope, needs speed & precision, just PM + Architect, module-focused
+
+No need for global consistency checks at ticket level (Phase 1's job).
 
