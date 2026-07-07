@@ -165,6 +165,129 @@ def validate_draft(config: Config, ticket_id: str) -> ValidationResult:
     return ValidationResult(ok=not errors, errors=errors, warnings=warnings)
 
 
+def update_metadata_from_docs(config: Config, ticket_id: str) -> dict:
+    """Intelligently update metadata.json based on the design docs (spec, plan, todo).
+
+    Infers:
+    - modules: extracted from spec.md's "## Backend", "## Web", etc. section headers
+    - files_to_edit: extracted from spec.md's "## Editable Files" section or inferred from modules
+    - test_command: recommended based on modules (can be overridden by user)
+
+    Returns the updated metadata dict (but does NOT write to disk yet).
+    User can review and accept/modify before validate().
+    """
+    draft = _drafts_dir(config) / ticket_id
+    meta_path = draft / METADATA_FILE
+
+    if not meta_path.exists():
+        raise ValueError(f"metadata.json not found: {meta_path}")
+
+    # Load current metadata
+    with open(meta_path, "r", encoding="utf-8") as f:
+        metadata = json.load(f)
+
+    spec_path = draft / "spec.md"
+    plan_path = draft / "plan.md"
+    todo_path = draft / "todo.md"
+
+    # Infer modules from spec.md section headers (e.g., "## Backend", "## Web")
+    modules = set()
+    if spec_path.exists():
+        spec_text = spec_path.read_text(encoding="utf-8")
+        spec_lines = spec_text.splitlines()
+        for line in spec_lines:
+            if line.startswith("## "):
+                section = line[3:].strip().lower()
+                # Common module names
+                if any(m in section for m in ["backend", "api", "server"]):
+                    modules.add("backend")
+                if any(m in section for m in ["web", "frontend", "react", "vue"]):
+                    modules.add("web")
+                if any(m in section for m in ["mobile", "ios", "android", "flutter"]):
+                    modules.add("mobile")
+                if any(m in section for m in ["desktop", "electron", "tauri"]):
+                    modules.add("desktop")
+
+        # If no modules inferred from headers, extract from explicit "## Editable Files" section
+        if not modules:
+            in_editable_section = False
+            for line in spec_lines:
+                if line.startswith("## ") and "editable" in line.lower():
+                    in_editable_section = True
+                elif line.startswith("## "):
+                    in_editable_section = False
+                elif in_editable_section and line.strip().startswith("-"):
+                    # e.g., "- backend/**" → infer module
+                    if "backend" in line:
+                        modules.add("backend")
+                    if "web" in line or "frontend" in line:
+                        modules.add("web")
+                    if "mobile" in line:
+                        modules.add("mobile")
+                    if "desktop" in line:
+                        modules.add("desktop")
+
+    # Default to backend if nothing inferred
+    if not modules:
+        modules = {"backend"}
+
+    modules = sorted(list(modules))
+
+    # Infer files_to_edit from spec.md's explicit section
+    files_to_edit = metadata.get("files_to_edit", [])
+    if spec_path.exists():
+        spec_text = spec_path.read_text(encoding="utf-8")
+        in_editable_section = False
+        for line in spec_text.splitlines():
+            if "## " in line and "editable" in line.lower():
+                in_editable_section = True
+            elif line.startswith("## "):
+                in_editable_section = False
+            elif in_editable_section and line.strip().startswith("-"):
+                pattern = line.strip()[1:].strip()  # "- backend/**" → "backend/**"
+                if pattern not in files_to_edit:
+                    files_to_edit.append(pattern)
+
+    # If no explicit files_to_edit in spec, infer from modules
+    if not files_to_edit:
+        for module in modules:
+            files_to_edit.append(f"{module}/**")
+
+    # Infer test_command for each module (can be overridden by user)
+    test_command = metadata.get("test_command", {})
+    for module in modules:
+        if module not in test_command:
+            # Provide sensible defaults
+            if module == "backend":
+                test_command[module] = "bash script/test-backend.sh"
+            elif module == "web":
+                test_command[module] = "npm test -- --coverage"
+            elif module == "mobile":
+                test_command[module] = "flutter test"
+            elif module == "desktop":
+                test_command[module] = "cargo test"
+
+    # Update metadata dict
+    updated = {
+        **metadata,
+        "modules": modules,
+        "files_to_edit": files_to_edit,
+        "test_command": test_command,
+    }
+
+    return updated
+
+
+def write_metadata(config: Config, ticket_id: str, metadata: dict) -> None:
+    """Write updated metadata dict to metadata.json."""
+    draft = _drafts_dir(config) / ticket_id
+    meta_path = draft / METADATA_FILE
+    meta_path.write_text(
+        json.dumps(metadata, indent=2, ensure_ascii=False) + "\n",
+        encoding="utf-8"
+    )
+
+
 def promote(config: Config, ticket_id: str) -> Path:
     """Validate, then move drafts/<id> -> pending/<id> so the codoop-flow skill
     can pick it up. Raises ValueError if validation fails."""

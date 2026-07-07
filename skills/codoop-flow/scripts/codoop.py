@@ -19,7 +19,7 @@ import argparse
 import sys
 
 from codoop_flow.config import load_config, setup_target
-from codoop_flow.tickets_cli import init_draft, promote, validate_draft
+from codoop_flow.tickets_cli import init_draft, promote, validate_draft, update_metadata_from_docs, write_metadata
 
 
 def _cmd_setup(args) -> int:
@@ -73,6 +73,20 @@ def _cmd_ticket_promote(args) -> int:
     return 0
 
 
+def _cmd_ticket_update_metadata(args) -> int:
+    config = load_config(args.config)
+    try:
+        updated = update_metadata_from_docs(config, args.ticket_id)
+        write_metadata(config, args.ticket_id, updated)
+    except ValueError as e:
+        print(f"error: {e}")
+        return 1
+    import json
+    print("Updated metadata.json:")
+    print(json.dumps(updated, indent=2, ensure_ascii=False))
+    return 0
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(prog="codoop", description="codoop-flow human CLI")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -89,6 +103,7 @@ def main() -> int:
     for name, func, extra in (
         ("init", _cmd_ticket_init, True),
         ("validate", _cmd_ticket_validate, False),
+        ("update-metadata", _cmd_ticket_update_metadata, False),
         ("promote", _cmd_ticket_promote, False),
     ):
         sp = tsub.add_parser(name, help=f"{name} a draft ticket")
