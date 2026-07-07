@@ -15,13 +15,13 @@
 In any AI coding tool, say:
 
 ```
-Use the codoop-flow skill to run a ticket against /path/to/codoop_flow.toml
+Use the codoop-execute skill to run a ticket against /path/to/codoop_flow.toml
 ```
 
 Or schedule it to run continuously:
 
 ```
-/loop 5m run the codoop-flow skill against /path/to/codoop_flow.toml
+/loop 5m run the codoop-execute skill against /path/to/codoop_flow.toml
 ```
 
 The skill picks the oldest pending ticket, builds it in an isolated worktree, runs tests, gathers review feedback, self-heals on failure, and ships the result when ready.

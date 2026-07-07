@@ -198,7 +198,7 @@ After Loop 1 approval, the human reviews `docs/backlog/` and decides on ticket b
 
 Loop 1's `docs/backlog/bridge/scaffolding-blueprint.md` becomes the direct input for the first Loop 3 ticket: `ticket_001_project_scaffolding`.
 
-All backlog specs (architecture, schema, API contract) are referenced by Loop 2 tickets, which are then executed by Loop 3 via `codoop-flow`.
+All backlog specs (architecture, schema, API contract) are referenced by Loop 2 tickets, which are then executed by Loop 3 via `codoop-execute`.
 
 ---
 

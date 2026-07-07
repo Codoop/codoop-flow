@@ -15,13 +15,13 @@
 在任何 AI 编码工具中，说：
 
 ```
-使用 codoop-flow skill，针对 /path/to/codoop_flow.toml 跑一张工单
+使用 codoop-execute skill，针对 /path/to/codoop_flow.toml 跑一张工单
 ```
 
 或者定时运行：
 
 ```
-/loop 5m 使用 codoop-flow skill，针对 /path/to/codoop_flow.toml 跑一张工单
+/loop 5m 使用 codoop-execute skill，针对 /path/to/codoop_flow.toml 跑一张工单
 ```
 
 这个 skill 拾取最旧的 pending 工单，在隔离 worktree 中构建它、运行测试、收集审查反馈、自愈失败、准备好时发布结果。

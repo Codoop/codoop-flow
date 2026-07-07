@@ -116,7 +116,7 @@ Both work identically in standalone mode as they do when called by `codoop-ticke
 
 ## CLI Reference
 
-Loop 2 has an independent CLI tool `codoop-ticket.py` that is completely independent of Loop 3's `codoop-flow`.
+Loop 2 has an independent CLI tool `codoop-ticket.py` that is completely independent of Loop 3's `codoop-execute`.
 
 All commands can be invoked via:
 

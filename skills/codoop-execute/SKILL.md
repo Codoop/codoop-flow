@@ -1,11 +1,11 @@
 ---
-name: codoop-flow
-description: Drive the codoop-flow Agent-Centric ticket pipeline in-session from Codex, Claude Code, or another coding agent. Use when the user asks to run codoop-flow tickets, process the pending queue, or work a specific ticket through build/verify/review/ship. Orchestrates a deterministic guardrail CLI (scripts/codoop_tools.py) plus the current agent's coding, review, and self-healing work.
+name: codoop-execute
+description: Drive the codoop-flow Agent-Centric ticket pipeline in-session from Codex, Claude Code, or another coding agent. Use when the user asks to run tickets, process the pending queue, or work a specific ticket through build/verify/review/ship. Orchestrates a deterministic guardrail CLI (scripts/codoop_tools.py) plus the current agent's coding, review, and self-healing work.
 ---
 
-# codoop-flow orchestration
+# codoop-execute orchestration
 
-You are the orchestrator of the codoop-flow Agent-Centric loop (engineering
+You are the orchestrator of the codoop-flow Agent-Centric loop (Loop 3, engineering
 design §5). You do the intelligent work **in this session**: writing code,
 self-healing, review judgment, and living-doc sync. A small guardrail CLI
 (`scripts/codoop_tools.py`, inside this skill) handles everything that must be
@@ -27,7 +27,7 @@ $SKILL/
     └── codoop.py                  human CLI (setup/install global commands)
 
 _SHARED/
-└── codoop_lib_v1/                 shared modules (codoop-flow + codoop-ticket)
+└── codoop_lib_v1/                 shared modules (codoop-execute + codoop-ticket)
     ├── config.py
     ├── ticket.py
     ├── verify.py

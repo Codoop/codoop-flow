@@ -116,7 +116,7 @@ docs/tickets/
 
 ## CLI 参考
 
-Loop 2 有独立的 CLI 工具 `codoop-ticket.py`，完全独立于 Loop 3 的 `codoop-flow`。
+Loop 2 有独立的 CLI 工具 `codoop-ticket.py`，完全独立于 Loop 3 的 `codoop-execute`。
 
 所有命令都可以通过以下方式调用：
 

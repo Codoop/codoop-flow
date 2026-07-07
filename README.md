@@ -63,7 +63,7 @@ Local development fallback:
 
 ```bash
 mkdir -p "${CODEX_HOME:-$HOME/.codex}/skills"
-cp -R skills/codoop-flow "${CODEX_HOME:-$HOME/.codex}/skills/"
+cp -R skills/codoop-execute "${CODEX_HOME:-$HOME/.codex}/skills/"
 ```
 
 The bundled discovery CLI also accepts `--agent codex-cli`; `--agent codex` is
@@ -166,7 +166,7 @@ The agent runs the whole pipeline, commits the result to the `dev/<id>` branch, 
 To keep working the queue continuously, use your agent's scheduler. In Claude Code:
 
 ```
-/loop 5m run the codoop-flow skill against codoop_flow.toml
+/loop 5m run the codoop-execute skill against codoop_flow.toml
 ```
 
 ---
@@ -255,7 +255,7 @@ codoop-flow/
 ├── .agents/plugins/marketplace.json # Codex marketplace manifest
 ├── .claude-plugin/                # Claude Code plugin manifests
 ├── .codex-plugin/                 # Codex plugin manifest
-├── skills/codoop-flow/            # ★self-contained Codex/agent skill package
+├── skills/codoop-execute/         # ★self-contained Codex/agent skill package
 │   ├── SKILL.md                   #   Agent-loop orchestration guide
 │   ├── agents/openai.yaml         #   Codex UI/discovery metadata
 │   ├── scripts/                   #   guardrail CLI + human CLI + deterministic modules

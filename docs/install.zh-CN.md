@@ -11,7 +11,7 @@ codoop-flow 包含**六个独立 skill**，分别应对 AI 驱动开发的不同
 | **spec-driven-development** | 设计技术规格 | 工单设计 / 独立使用 |
 | **planning-and-task-breakdown** | 分解规格为有序任务 | 工单设计 / 独立使用 |
 | **definition-of-done** | 项目级完成标准检查清单 | 质量守门 |
-| **codoop-flow** | 代码实现与交付（隔离 worktree） | 编码 & 发布 |
+| **codoop-execute** | 代码实现与交付（隔离 worktree） | 编码 & 发布 |
 
 每个 skill 都是**自包含**的：带了编排说明书(`SKILL.md`)、确定性 CLI 和共享的 sub-agent personas。所以无论装到哪个 agent，只要那个目录能被读到、且能跑 `python3`，技能就能工作。
 
@@ -103,14 +103,14 @@ claude --plugin-dir /path/to/codoop-flow
 /skill definition-of-done 检查我完成的任务是否符合完成标准
 ```
 
-**6. codoop-flow**（第三环：代码实现）— 在会话内调用：
+**6. codoop-execute**（第三环：代码实现）— 在会话内调用：
 ```
-使用 codoop-flow skill，针对 /path/to/codoop_flow.toml 跑下一张工单
+使用 codoop-execute skill，针对 /path/to/codoop_flow.toml 跑下一张工单
 ```
 
 或用循环定时跑：
 ```
-/loop 5m 使用 codoop-flow skill，针对 /path/to/codoop_flow.toml 跑下一张工单
+/loop 5m 使用 codoop-execute skill，针对 /path/to/codoop_flow.toml 跑下一张工单
 ```
 
 ---
@@ -123,7 +123,7 @@ claude --plugin-dir /path/to/codoop-flow
 git clone https://github.com/Codoop/codoop-flow.git
 # 拷全部 6 个 skill — 每个都自带 SKILL.md
 for skill in codoop-discover codoop-ticket spec-driven-development \
-             planning-and-task-breakdown definition-of-done codoop-flow; do
+             planning-and-task-breakdown definition-of-done codoop-execute; do
   cp -R "codoop-flow/skills/$skill"  <目标 agent 的技能目录>/
 done
 # _shared 被 codoop-discover 用相对路径引用

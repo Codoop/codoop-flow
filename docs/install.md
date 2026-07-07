@@ -13,7 +13,7 @@ codoop-flow includes **nine independent skills**, each addressing a different st
 | **spec-driven-development** | Design technical specs before coding | Loop 2 / standalone |
 | **planning-and-task-breakdown** | Break specs into ordered tasks | Loop 2 / standalone |
 | **definition-of-done** | Project-level completion standards | Reference |
-| **codoop-flow** | Code implementation in isolated worktree | Loop 3 |
+| **codoop-execute** | Code implementation in isolated worktree | Loop 3 |
 
 **Loop 3 Engineering Disciplines:**
 
@@ -111,14 +111,14 @@ Once installed, you can invoke the six skills:
 /skill definition-of-done Check if my completed task meets our quality standards
 ```
 
-**6. codoop-flow** (Phase 3: Code Implementation) — invoke in-session:
+**6. codoop-execute** (Phase 3: Code Implementation) — invoke in-session:
 ```
-Use the codoop-flow skill to run a ticket against /path/to/codoop_flow.toml
+Use the codoop-execute skill to run a ticket against /path/to/codoop_flow.toml
 ```
 
 Or schedule continuously with:
 ```
-/loop 5m run the codoop-flow skill against /path/to/codoop_flow.toml
+/loop 5m run the codoop-execute skill against /path/to/codoop_flow.toml
 ```
 
 **7. incremental-implementation** (Loop 3 Engineering Discipline) — standalone or Loop 3 build:
@@ -146,7 +146,7 @@ Each skill is a self-contained directory; any agent can copy all nine into its o
 git clone https://github.com/Codoop/codoop-flow.git
 # Copy all 9 skills — each brings its own SKILL.md
 for skill in codoop-discover codoop-ticket spec-driven-development \
-             planning-and-task-breakdown definition-of-done codoop-flow \
+             planning-and-task-breakdown definition-of-done codoop-execute \
              incremental-implementation debugging-and-error-recovery test-driven-development; do
   cp -R "codoop-flow/skills/$skill"  <the agent's skills directory>/
 done

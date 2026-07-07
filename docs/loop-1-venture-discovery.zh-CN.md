@@ -198,7 +198,7 @@ docs/backlog/
 
 第一环的 `docs/backlog/bridge/scaffolding-blueprint.md` 成为第一个第三环工单的直接输入：`ticket_001_project_scaffolding`。
 
-所有 backlog 规格（架构、模式、API 契约）被第二环工单引用，然后由第三环通过 `codoop-flow` 执行。
+所有 backlog 规格（架构、模式、API 契约）被第二环工单引用，然后由第三环通过 `codoop-execute` 执行。
 
 ---
 
