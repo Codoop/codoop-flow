@@ -26,6 +26,8 @@ import json
 import sys
 from pathlib import Path
 
+# Add _shared to path for shared libraries
+sys.path.insert(0, str(Path(__file__).parents[2] / "_shared"))
 from codoop_lib_v1.config import Config, load_config
 from codoop_lib_v1.gitutil import git
 from codoop_lib_v1.ignore import GENERATED_PATHSPECS

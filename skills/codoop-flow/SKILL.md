@@ -15,29 +15,31 @@ worktree, running tests, enforcing the edit-scope whitelist, committing.
 or judge whitelist membership yourself) — always call the tool, because those
 steps must never be guessed.
 
-## This skill is self-contained
+## This skill uses shared libraries
 
-Everything needed lives under **this skill's own directory** (call it `$SKILL`):
+The core CLI logic lives here, but shared modules are in the `_shared/` directory:
 
 ```
 $SKILL/
 ├── SKILL.md                       (this file)
 └── scripts/
     ├── codoop_tools.py            guardrail CLI (Loop 3)
-    ├── codoop.py                  human CLI (setup/install global commands)
-    └── codoop_lib_v1/             deterministic modules (Loop 3 + shared libraries)
-        ├── config.py
-        ├── ticket.py
-        ├── verify.py
-        ├── worktree.py
-        ├── gitutil.py
-        └── ignore.py
+    └── codoop.py                  human CLI (setup/install global commands)
+
+_SHARED/
+└── codoop_lib_v1/                 shared modules (codoop-flow + codoop-ticket)
+    ├── config.py
+    ├── ticket.py
+    ├── verify.py
+    ├── worktree.py
+    ├── gitutil.py
+    └── ignore.py
 ```
 
 **First, locate `$SKILL`** — the absolute path of the directory containing this
 SKILL.md. Build every path below from it (e.g. `$SKILL/scripts/codoop_tools.py`).
-The CLI imports its sibling `codoop_lib_v1/` package automatically, so just invoke
-it by absolute path with your launch Python.
+The CLI automatically imports `codoop_lib_v1/` from `$SKILL/../../_shared/`, so just
+invoke it by absolute path with your launch Python.
 
 ## Prerequisites
 

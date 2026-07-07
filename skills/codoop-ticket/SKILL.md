@@ -25,6 +25,10 @@ A ticket is a complete design document package for one feature module:
 - ✅ Phase 1 has produced product and design specs; now design incremental feature tickets
 - ✅ Need human review and feedback at each stage
 
+## Implementation Notes
+
+This skill uses shared modules from `_shared/codoop_lib_v1/` (which are also used by `codoop-flow`). The CLI automatically imports these from the parent `_shared/` directory, so you can invoke both `codoop.py` (Loop 2) and `codoop_tools.py` (Loop 3) without worrying about module location — they share the same library code.
+
 ## Three Stages of Ticket Design
 
 ### 【Phase 1】Requirement Design (module_prd.md)

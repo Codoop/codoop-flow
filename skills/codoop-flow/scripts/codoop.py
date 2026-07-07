@@ -19,6 +19,8 @@ import argparse
 import sys
 from pathlib import Path
 
+# Add _shared to path for shared libraries
+sys.path.insert(0, str(Path(__file__).parents[2] / "_shared"))
 from codoop_lib_v1.config import load_config, setup_target
 from codoop_lib_v1.tickets_cli import init_draft, promote, validate_draft, update_metadata_from_docs, write_metadata
 

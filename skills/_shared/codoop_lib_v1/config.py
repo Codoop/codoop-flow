@@ -7,9 +7,19 @@ config file so the tool itself carries no business-project state.
 
 from __future__ import annotations
 
-import tomllib
+import sys
 from dataclasses import dataclass
 from pathlib import Path
+
+if sys.version_info >= (3, 11):
+    import tomllib
+else:
+    try:
+        import tomli as tomllib  # type: ignore
+    except ImportError:
+        import subprocess
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "-q", "tomli"])
+        import tomli as tomllib  # type: ignore
 
 
 @dataclass(frozen=True)
