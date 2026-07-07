@@ -224,17 +224,14 @@ cp skills/codoop-flow/references/agents/test-engineer.md skills/_shared/agents/
 - `skills/_shared/agents/test-engineer.md`
 - 与现有的 7 个 discovery personas 并存，共 10 个
 
-### 第三步：更新 codoop-flow 的引用
-
-在 `skills/codoop-flow/references/` 中的脚本/配置中，更新所有引用 personas 的路径：
+### 第三步：删除 references/ 目录
 
 ```bash
-# 从
-../agents/code-reviewer.md
-
-# 改为
-../../_shared/agents/code-reviewer.md
+# 删除 codoop-flow 的 references/ 目录
+rm -rf skills/codoop-flow/references/
 ```
+
+codoop-flow 直接引用顶层的 skills 和 _shared/agents，无需中间层。
 
 ### 第四步：注册到 Manifests
 
@@ -280,11 +277,11 @@ cp skills/codoop-flow/references/agents/test-engineer.md skills/_shared/agents/
 |---|---|
 | 复制 3 个 sub-skills | 3 分钟 |
 | 复制 3 个 review personas | 2 分钟 |
-| 更新 codoop-flow 内部引用 | 10 分钟 |
+| 删除 references/ 目录 | 1 分钟 |
 | 更新 manifests | 5 分钟 |
 | 更新文档 | 15 分钟 |
 | 验证和测试 | 10 分钟 |
-| **合计** | **~45 分钟** |
+| **合计** | **~36 分钟** |
 
 ---
 
@@ -345,11 +342,15 @@ skills/
 这三个 skills 既在 Loop 3 的工单执行中被自动应用，也可以独立调用。
 ```
 
-### codoop-flow 的行为无变化
+### codoop-flow 的代码改动
 
-- 第三环的工作流完全不变
-- 只是引用的 skills 路径从 `references/skills/` 改为 `../incremental-implementation/` 等
-- 功能完全兼容
+- 删除 `skills/codoop-flow/references/` 整个目录
+- 在 codoop-flow 的主脚本/配置中，直接引用：
+  - `../../incremental-implementation/SKILL.md`
+  - `../../debugging-and-error-recovery/SKILL.md`
+  - `../../test-driven-development/SKILL.md`
+  - `../../_shared/agents/code-reviewer.md` 等
+- 第三环的工作流完全不变，功能完全兼容
 
 ### 用户使用体验改进
 
@@ -371,6 +372,5 @@ skills/
 
 1. **时机** — 是否现在就提升，还是等待其他工作完成？
 2. **其他 24 个 skills** — source/agent-skills-main/ 中的其他 24 个通用工程 skills 是否也应该提升到顶层？
-3. **向后兼容** — codoop-flow 的 references/ 目录是否保留（作为备份）还是删除？
-4. **文档充实** — 新提升的 3 个 skills 是否需要新的 README.md 说明独立使用场景？
+3. **文档充实** — 新提升的 3 个 skills 是否需要新的 README.md 说明独立使用场景？
 
