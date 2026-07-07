@@ -112,8 +112,24 @@ The skill orchestrates expert agents (PM, GTM, UX/UI, Architect) through:
 
 [Learn more about codoop-discover →](./skills/codoop-discover/README.md)
 
-### 📋 Loop 2: Human-Centric (Ticket Design) *(Coming soon)*
-Draft work tickets with PRD, spec, plan, and todo — ready for the agent loop.
+### 📋 Loop 2: Human-Centric (Ticket Design)
+Design work tickets through three stages: requirements (PRD) → technical spec → task breakdown. Ready for the agent loop.
+
+**Main orchestrator**:
+```
+/skill codoop-ticket Design the user search feature for our e-commerce platform
+```
+
+**Standalone tools** (also called by codoop-ticket):
+```
+/skill spec-driven-development Design technical specs before coding
+/skill planning-and-task-breakdown Break specs into ordered, implementable tasks
+/skill definition-of-done Check if completed work meets quality standards
+```
+
+These skills work independently or as phases in the codoop-ticket workflow.
+
+[Learn more about codoop-ticket →](./skills/codoop-ticket/README.md)
 
 ### 🤖 Loop 3: Agent-Centric (Implementation)
 Pick a ticket → build in isolated worktree → verify → multi-review → ship & archive.

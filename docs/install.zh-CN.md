@@ -2,12 +2,15 @@
 
 [English](./install.md) · **简体中文**
 
-codoop-flow 包含**三个独立 skill**，分别应对 AI 驱动开发的不同阶段：
+codoop-flow 包含**六个独立 skill**，分别应对 AI 驱动开发的不同阶段：
 
 | Skill | 用途 | 阶段 |
 |-------|------|------|
 | **codoop-discover** | 产品设计与架构规划（0→1 阶段） | 开码前 |
-| **codoop-ticket** | 工单规划与分解 | 工单设计（开发中） |
+| **codoop-ticket** | 工单编排（PRD → Spec → Plan） | 工单设计 |
+| **spec-driven-development** | 设计技术规格 | 工单设计 / 独立使用 |
+| **planning-and-task-breakdown** | 分解规格为有序任务 | 工单设计 / 独立使用 |
+| **definition-of-done** | 项目级完成标准检查清单 | 质量守门 |
 | **codoop-flow** | 代码实现与交付（隔离 worktree） | 编码 & 发布 |
 
 每个 skill 都是**自包含**的：带了编排说明书(`SKILL.md`)、确定性 CLI 和共享的 sub-agent personas。所以无论装到哪个 agent，只要那个目录能被读到、且能跑 `python3`，技能就能工作。
@@ -61,14 +64,34 @@ git clone https://github.com/Codoop/codoop-flow.git
 claude --plugin-dir /path/to/codoop-flow
 ```
 
-装好后，可以在会话内直接调用三个 skill：
+装好后，可以在会话内直接调用六个 skill：
 
-**1. codoop-discover**（产品设计）— 在会话内调用：
+**1. codoop-discover**（第一环：产品设计）— 在会话内调用：
 ```
 /skill codoop-discover 我想做一个 SaaS 项目管理工具，面向远程团队
 ```
 
-**2. codoop-flow**（代码实现）— 在会话内调用：
+**2. codoop-ticket**（第二环：工单编排）— 在会话内调用：
+```
+/skill codoop-ticket 帮我设计电商平台的用户搜索功能工单
+```
+
+**3. spec-driven-development**（第二环：规格设计）— 独立使用或由 codoop-ticket 调用：
+```
+/skill spec-driven-development 基于工单 PRD，设计技术规格
+```
+
+**4. planning-and-task-breakdown**（第二环：任务分解）— 独立使用或由 codoop-ticket 调用：
+```
+/skill planning-and-task-breakdown 基于规格，分解成实现任务
+```
+
+**5. definition-of-done**（质量守门：完成标准）— 开发中参考：
+```
+/skill definition-of-done 检查我完成的任务是否符合完成标准
+```
+
+**6. codoop-flow**（第三环：代码实现）— 在会话内调用：
 ```
 使用 codoop-flow skill，针对 /path/to/codoop_flow.toml 跑下一张工单
 ```

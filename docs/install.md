@@ -2,12 +2,15 @@
 
 **English** · [简体中文](./install.zh-CN.md)
 
-codoop-flow includes **three independent skills**, each addressing a different stage of AI-driven development:
+codoop-flow includes **six independent skills**, each addressing a different stage of AI-driven development:
 
 | Skill | Purpose | Stage |
 |-------|---------|-------|
 | **codoop-discover** | Product design & architecture (0→1 planning) | Before coding |
-| **codoop-ticket** | Work ticket planning & breakdown | Ticket design (coming soon) |
+| **codoop-ticket** | Orchestrate ticket design (PRD → Spec → Plan) | Ticket design |
+| **spec-driven-development** | Design technical specs before coding | Ticket design / standalone |
+| **planning-and-task-breakdown** | Break specs into ordered tasks | Ticket design / standalone |
+| **definition-of-done** | Project-level completion standards | Quality gate |
 | **codoop-flow** | Code implementation in isolated worktree | Coding & shipping |
 
 Each skill is **self-contained**: it carries the orchestration guide (`SKILL.md`), any deterministic CLI, and shared sub-agent personas. So no matter which agent you install it into, as long as the directory is readable and `python3` runs, the skills work.
@@ -59,14 +62,34 @@ git clone https://github.com/Codoop/codoop-flow.git
 claude --plugin-dir /path/to/codoop-flow
 ```
 
-Once installed, you can invoke the three skills:
+Once installed, you can invoke the six skills:
 
-**1. codoop-discover** (Product Design) — invoke in-session:
+**1. codoop-discover** (Phase 1: Product Design) — invoke in-session:
 ```
 /skill codoop-discover I want to build a SaaS project management tool for remote teams
 ```
 
-**2. codoop-flow** (Code Implementation) — invoke in-session:
+**2. codoop-ticket** (Phase 2: Ticket Design Orchestration) — invoke in-session:
+```
+/skill codoop-ticket Design the user search feature for our e-commerce platform
+```
+
+**3. spec-driven-development** (Phase 2: Technical Spec Design) — standalone or called by codoop-ticket:
+```
+/skill spec-driven-development Based on the ticket PRD, design the technical spec
+```
+
+**4. planning-and-task-breakdown** (Phase 2: Task Decomposition) — standalone or called by codoop-ticket:
+```
+/skill planning-and-task-breakdown Break down the spec into implementation tasks
+```
+
+**5. definition-of-done** (Reference: Completion Standards) — reference during development:
+```
+/skill definition-of-done Check if my completed task meets our quality standards
+```
+
+**6. codoop-flow** (Phase 3: Code Implementation) — invoke in-session:
 ```
 Use the codoop-flow skill to run a ticket against /path/to/codoop_flow.toml
 ```

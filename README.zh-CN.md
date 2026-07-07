@@ -108,8 +108,24 @@ Skill 编排多个专家角色（PM、GTM、UX/UI、架构师）协作：
 
 [了解 codoop-discover →](./skills/codoop-discover/README.md)
 
-### 📋 第二环：人工设计（工单设计）*（开发中）*
-用 PRD、Spec、Plan、Todo 精心设计工单，为 Agent 环做准备。
+### 📋 第二环：人工设计（工单设计）
+通过三个阶段精心设计工单：需求文档（PRD）→ 技术规格（Spec）→ 任务分解（Plan）。准备好交给 Agent 环。
+
+**主要编排工具**：
+```
+/skill codoop-ticket 帮我设计电商平台的用户搜索功能工单
+```
+
+**独立工具**（也被 codoop-ticket 调用）：
+```
+/skill spec-driven-development 设计技术规格（不需要手工编排）
+/skill planning-and-task-breakdown 把规格分解成有序的实现任务
+/skill definition-of-done 检查完成的工作是否达到质量标准
+```
+
+这些 skill 既可独立使用，也可作为 codoop-ticket 流程的各个阶段。
+
+[了解 codoop-ticket →](./skills/codoop-ticket/README.md)
 
 ### 🤖 第三环：AI 编排（实现）
 挑单 → 隔离 worktree 写码 → 验证 → 多重评审 → 归档。
