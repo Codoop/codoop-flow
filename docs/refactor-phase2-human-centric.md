@@ -434,24 +434,142 @@ description: Draft work tickets with intelligent PRD, spec, and plan guidance. U
 
 ---
 
+## 最终交付物清单
+
+### 📦 新建 Skills（共 4 个）
+
+1. **`skills/codoop-ticket/`** — 工单三阶段编排
+   - SKILL.md：编排逻辑、调用子 agents 和 skills
+   - README.md：使用指南和工作流示例
+   - 集成：调用 spec-driven-development、planning-and-task-breakdown、definition-of-done
+
+2. **`skills/spec-driven-development/`** — 独立规格设计（从 source/ 复制提升）
+   - SKILL.md：从 source/ 复制
+   - README.md：独立调用方式和工单子步骤行为
+
+3. **`skills/planning-and-task-breakdown/`** — 独立任务分解（从 source/ 复制提升）
+   - SKILL.md：从 source/ 复制（更新对 definition-of-done 的引用）
+   - README.md：独立调用方式和工单子步骤行为
+
+4. **`skills/definition-of-done/`** — 完成标准（从 references/ 转换）
+   - SKILL.md：从 source/references/definition-of-done.md 转换（添加 YAML frontmatter）
+   - README.md：标准应用指南
+
+### 🛠️ 工单 CLI 改进
+
+**文件**：`skills/codoop-flow/scripts/codoop_flow/tickets_cli.py`
+
+新增函数：
+- `update_metadata_from_docs(config, ticket_id)` — 从 spec/plan/todo 推断 modules、files_to_edit、test_command
+- `write_metadata(config, ticket_id, metadata)` — 写入更新后的 metadata.json
+
+新增语言参数：
+- `init_draft()` 的 `language` 参数（auto | zh | en）— 自动检测标题语言
+
+新增 CLI 命令：
+- `python codoop.py ticket update-metadata <ticket_id>` — 智能更新元数据
+
+### 📝 文档和 Manifest 更新
+
+- `.claude-plugin/marketplace.json` — +4 entries
+- `.agents/plugins/marketplace.json` — +4 entries
+- `docs/install.md` 和 `install.zh-CN.md` — 补充 4 个新 skills 使用说明
+- `README.md` 和 `README.zh-CN.md` — 更新 Three Loops 表格
+
+---
+
+## ✅ 交付物验收清单
+
+### 代码实施
+- [ ] `skills/codoop-ticket/SKILL.md` 完整、可调用
+- [ ] `skills/codoop-ticket/README.md` 清晰、有示例
+- [ ] `skills/spec-driven-development/` 完全复制
+- [ ] `skills/planning-and-task-breakdown/` 完全复制
+- [ ] `skills/definition-of-done/SKILL.md` 转换完整
+- [ ] tickets_cli.py 语言自动检测功能 ok
+- [ ] tickets_cli.py 元数据推断功能 ok
+- [ ] codoop.py 新增 update-metadata 命令 ok
+
+### 文档和注册
+- [ ] `.claude-plugin/marketplace.json` 新增 4 entries
+- [ ] `.agents/plugins/marketplace.json` 新增 4 entries
+- [ ] `docs/install.md` 和 `.zh-CN.md` 更新
+- [ ] `README.md` 和 `.zh-CN.md` 更新
+
+### 测试和验证
+- [ ] 所有 skeleton 测试通过
+- [ ] 工单三阶段流程 end-to-end 验证
+- [ ] 语言自动检测验证
+- [ ] 元数据推断验证（spec.md 中有多模块部分）
+- [ ] 各 skill 可独立调用验证
+- [ ] manifest 在 Claude Code 中可发现
+
+### 后续清理
+- [ ] `source/` 目录资源由用户自行清理（改造完成后）
+
+---
+
+## 🎯 工单设计完整流程示例
+
+```
+用户调用：
+/skill codoop-ticket draft ticket_001 --title "用户搜索功能"
+
+【第一阶段】需求设计 (module_prd.md)
+1. codoop-ticket 初始化工单骨架（tickets_cli init）
+2. 与用户讨论需求，读取 docs/backlog/ 产品文档
+3. PM agent 撰写 module_prd.md
+4. 用户 review，提供反馈直到满意
+                          ↓ 用户确认 OK
+
+【第二阶段】技术规格 (spec.md)
+5. 加载 /skill spec-driven-development
+6. 基于 module_prd.md 生成 spec.md（包含各模块部分：## Backend、## Web 等）
+7. 用户 review，提供反馈直到满意
+                          ↓ 用户确认 OK
+
+【第三阶段】任务分解 (plan.md + todo.md)
+8. 加载 /skill planning-and-task-breakdown
+9. 基于 spec.md 分解任务生成 plan.md + todo.md
+10. 用户参考 /skill definition-of-done 检查完成标准
+11. 用户 review，提供反馈直到满意
+                          ↓ 用户确认 OK
+
+【元数据推断】自动更新 metadata.json（AI）
+12. codoop-ticket 调用 tickets_cli update-metadata
+    - 从 spec.md 提取 modules（## Backend → backend、## Web → web）
+    - 从 spec.md 提取 files_to_edit（## Editable Files 部分）
+    - 生成 test_command 默认值
+13. 显示推断结果，用户 review 并确认或修改
+                          ↓ 用户确认 OK
+
+【最终化】验证与发布
+14. codoop-ticket 调用 tickets_cli validate（检查必需字段）
+15. codoop-ticket 调用 tickets_cli promote（移至 pending/）
+16. 工单完成，等待第三环 codoop-flow skill pick
+
+最终工单在：docs/tickets/pending/ticket_001/
+├── metadata.json      （自动推断的模块、测试命令、编辑范围）
+├── module_prd.md      （纯业务描述）
+├── spec.md            （技术规格：API、DB、UI、编辑范围）
+├── plan.md            （实现计划：分步骤）
+└── todo.md            （原子任务清单，≤100 行/任务）
+```
+
+---
+
+## 📊 工作量估算
+
+- **新建 Skill**：1 个（codoop-ticket）
+- **复制提升 Skill**：3 个（spec-driven-development、planning-and-task-breakdown、definition-of-done）
+- **CLI 改进**：2 个新函数 + 1 个新命令 + 1 个新参数
+- **文档更新**：4 个文件
+- **Manifest 注册**：8 条
+
+**预计工作量**：中等（2-3 小时开发 + 1 小时测试）
+
+---
+
 ## 下一步
 
-确认上述"待确认的决策点"后，即可开始 Phase 2 的实施。
-
-预计工作量：中等（复制 spec + plan skills 到顶层，新建 codoop-ticket 编排 skill，更新三处 manifest）。
-
-**核心清单**：
-- [ ] 从 `source/agent-skills-main/skills/spec-driven-development/SKILL.md` 复制到 `skills/spec-driven-development/SKILL.md`
-- [ ] 从 `source/agent-skills-main/skills/planning-and-task-breakdown/SKILL.md` 复制到 `skills/planning-and-task-breakdown/SKILL.md`
-- [ ] 从 `source/agent-skills-main/references/definition-of-done.md` 转换为 `skills/definition-of-done/SKILL.md`（添加 YAML frontmatter）
-- [ ] 新建 `skills/codoop-ticket/SKILL.md`（工单三阶段编排）
-- [ ] 新建 `skills/codoop-ticket/README.md`
-- [ ] 新建 `skills/spec-driven-development/README.md`
-- [ ] 新建 `skills/planning-and-task-breakdown/README.md`
-- [ ] 新建 `skills/definition-of-done/README.md`
-- [ ] 更新 `skills/planning-and-task-breakdown/SKILL.md` 中对 definition-of-done 的引用（改为 skill 链接而非文件路径）
-- [ ] 更新 `.claude-plugin/marketplace.json`（+4 entries：codoop-ticket、spec-driven-development、planning-and-task-breakdown、definition-of-done）
-- [ ] 更新 `.agents/plugins/marketplace.json`（+4 entries）
-- [ ] 更新 `docs/install.md` 和 `install.zh-CN.md`
-- [ ] 更新 `README.md` 和 `README.zh-CN.md`（Three Loops 表格）
-- [ ] 验证各 SKILL.md 中的相对路径正确
+确认上述最终交付物和验收清单后，即可开始 Phase 2 的实施。
