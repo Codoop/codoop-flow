@@ -246,3 +246,36 @@ Ticket design differs from Phase 1 discovery:
 
 No need for global consistency checks at ticket level (Phase 1's job).
 
+---
+
+## Command-Line Interface (CLI)
+
+### Standalone Usage
+
+Loop 2 can be used independently via CLI without requiring codoop-flow:
+
+```bash
+# Initialize a new ticket draft
+python skills/codoop-ticket/scripts/codoop-ticket.py \
+  ticket init ticket_001 --config codoop_flow.toml --title "Add user search"
+
+# Validate ticket completeness
+python skills/codoop-ticket/scripts/codoop-ticket.py \
+  ticket validate ticket_001 --config codoop_flow.toml
+
+# Promote ticket from drafts/ to pending/
+python skills/codoop-ticket/scripts/codoop-ticket.py \
+  ticket promote ticket_001 --config codoop_flow.toml
+
+# Update metadata.json from docs
+python skills/codoop-ticket/scripts/codoop-ticket.py \
+  ticket update-metadata ticket_001 --config codoop_flow.toml
+```
+
+### Completely Independent
+
+Loop 2 has no dependencies on Loop 3 (codoop-flow). 
+Only requirement: a `codoop_flow.toml` pointing to the target project.
+
+For setup, use: `python skills/codoop-flow/scripts/codoop_tools.py setup <target-repo>`
+

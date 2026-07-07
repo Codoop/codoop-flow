@@ -19,8 +19,8 @@ import argparse
 import sys
 from pathlib import Path
 
-from codoop_flow.config import load_config, setup_target
-from codoop_flow.tickets_cli import init_draft, promote, validate_draft, update_metadata_from_docs, write_metadata
+from codoop_lib_v1.config import load_config, setup_target
+from codoop_lib_v1.tickets_cli import init_draft, promote, validate_draft, update_metadata_from_docs, write_metadata
 
 
 def _cmd_setup(args) -> int:

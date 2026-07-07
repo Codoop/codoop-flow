@@ -22,19 +22,21 @@ Everything needed lives under **this skill's own directory** (call it `$SKILL`):
 ```
 $SKILL/
 ├── SKILL.md                       (this file)
-├── scripts/
-│   ├── codoop_tools.py            guardrail CLI (Agent loop)
-│   ├── codoop.py                  human CLI (discover + ticket lifecycle)
-│   └── codoop_flow/               deterministic modules the CLIs import
-└── references/
-    ├── agents/                    review + doc personas
-    ├── skills/                    incremental-implementation / debugging / tdd / discovery
-    └── discovery-agents/          sub-agents for the discovery loop
+└── scripts/
+    ├── codoop_tools.py            guardrail CLI (Loop 3)
+    ├── codoop.py                  human CLI (setup/install global commands)
+    └── codoop_lib_v1/             deterministic modules (Loop 3 + shared libraries)
+        ├── config.py
+        ├── ticket.py
+        ├── verify.py
+        ├── worktree.py
+        ├── gitutil.py
+        └── ignore.py
 ```
 
 **First, locate `$SKILL`** — the absolute path of the directory containing this
 SKILL.md. Build every path below from it (e.g. `$SKILL/scripts/codoop_tools.py`).
-The CLI imports its sibling `codoop_flow/` package automatically, so just invoke
+The CLI imports its sibling `codoop_lib_v1/` package automatically, so just invoke
 it by absolute path with your launch Python.
 
 ## Prerequisites

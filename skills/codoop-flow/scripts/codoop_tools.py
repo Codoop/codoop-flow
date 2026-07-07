@@ -26,12 +26,12 @@ import json
 import sys
 from pathlib import Path
 
-from codoop_flow.config import Config, load_config
-from codoop_flow.gitutil import git
-from codoop_flow.ignore import GENERATED_PATHSPECS
-from codoop_flow.ticket import Ticket
-from codoop_flow.verify import verify as run_verify
-from codoop_flow.worktree import Worktree
+from codoop_lib_v1.config import Config, load_config
+from codoop_lib_v1.gitutil import git
+from codoop_lib_v1.ignore import GENERATED_PATHSPECS
+from codoop_lib_v1.ticket import Ticket
+from codoop_lib_v1.verify import verify as run_verify
+from codoop_lib_v1.worktree import Worktree
 
 
 def _emit(obj: dict) -> None:
