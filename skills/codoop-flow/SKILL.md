@@ -76,7 +76,7 @@ must edit in), `files_to_edit` (glob whitelist), `ui_capture`, `screenshot_dir`.
   `spec.md` (contract), `plan.md` + `todo.md` (steps). Also read the target
   repo's `docs/tech/project-structure.md` and `docs/tech/tech-standards.md` if
   present — respect them as hard architectural boundaries.
-- Load `$SKILL/references/skills/incremental-implementation/SKILL.md` discipline
+- Load `$SKILL/../../incremental-implementation/SKILL.md` discipline
   and implement the ticket **inside the `worktree` directory only**.
 - **Edit-scope rule:** only create/modify files matching the `files_to_edit`
   globs. Editing anything outside will fail verify (hard gate) — don't do it.
@@ -91,7 +91,7 @@ Exit 0 / `ok:true` = tests passed AND all edits were in-scope AND (for
 `test_output`.
 
 ### 4. Self-heal (your work) — on verify failure
-- Apply `$SKILL/references/skills/debugging-and-error-recovery/SKILL.md` triage.
+- Apply `$SKILL/../../debugging-and-error-recovery/SKILL.md` triage.
   Denoise `test_output` to the real traceback / assertion / out-of-scope file.
 - Fix the **root cause** with a minimal change; stay in scope; don't add
   unrelated features. Re-run verify.
@@ -99,21 +99,21 @@ Exit 0 / `ok:true` = tests passed AND all edits were in-scope AND (for
   failing, go to **Fail**.
 
 ### 5. Review (your reviewers) — after verify passes
-Run the review personas from `$SKILL/references/agents/` against `git diff` in
+Run the review personas from `$SKILL/../../_shared/agents/` against `git diff` in
 the worktree. Prefer parallel subagents when the host provides them (for example
 Codex multi-agent tools or Claude Code Task). If no subagent facility is
 available, perform the same reviews serially in this session. Approval must be
 **unanimous**; any Critical/Important defect = REJECT.
 
 Always run these three (static group):
-- `code-reviewer` → `$SKILL/references/agents/code-reviewer.md`
-- `security-auditor` → `$SKILL/references/agents/security-auditor.md`
-- `test-engineer` → `$SKILL/references/agents/test-engineer.md`
+- `code-reviewer` → `$SKILL/../../_shared/agents/code-reviewer.md`
+- `security-auditor` → `$SKILL/../../_shared/agents/security-auditor.md`
+- `test-engineer` → `$SKILL/../../_shared/agents/test-engineer.md`
 
 If `ui_capture` is true, ALSO run these two (dynamic UI/UX group), and give them
 the `screenshot_dir` to actually inspect the rendered screens:
-- `evidence-collector` → `$SKILL/references/agents/testing-evidence-collector.md`
-- `reality-checker` → `$SKILL/references/agents/testing-reality-checker.md`
+- `evidence-collector` → `$SKILL/../../_shared/agents/testing-evidence-collector.md`
+- `reality-checker` → `$SKILL/../../_shared/agents/testing-reality-checker.md`
 
 For each reviewer: read its markdown, use it as the review persona, hand it the
 diff (and screenshot dir for the UI two), and require a verdict. If **any**
@@ -127,7 +127,7 @@ under `docs/prd/` and `docs/tech/`, never source):
 - Update `docs/tech/project-structure.md` for new/moved files.
 - Append a concise entry to `docs/tech/changelog.md`.
 Adopt the technical-writer discipline
-(`$SKILL/references/agents/engineering-technical-writer.md`).
+(`$SKILL/../../_shared/agents/engineering-technical-writer.md`).
 
 ### 7. Finish (the tool)
 Draft a Conventional Commit message, then:

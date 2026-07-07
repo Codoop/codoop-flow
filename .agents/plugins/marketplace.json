@@ -65,6 +65,42 @@
       "category": "Developer Tools"
     },
     {
+      "name": "incremental-implementation",
+      "source": {
+        "source": "local",
+        "path": "skills/incremental-implementation"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Developer Tools"
+    },
+    {
+      "name": "debugging-and-error-recovery",
+      "source": {
+        "source": "local",
+        "path": "skills/debugging-and-error-recovery"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Developer Tools"
+    },
+    {
+      "name": "test-driven-development",
+      "source": {
+        "source": "local",
+        "path": "skills/test-driven-development"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Developer Tools"
+    },
+    {
       "name": "codoop-flow",
       "source": {
         "source": "local",

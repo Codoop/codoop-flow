@@ -2,16 +2,26 @@
 
 **English** · [简体中文](./install.zh-CN.md)
 
-codoop-flow includes **six independent skills**, each addressing a different stage of AI-driven development:
+codoop-flow includes **nine independent skills**, each addressing a different stage of AI-driven development:
+
+**Core Loop Skills:**
 
 | Skill | Purpose | Stage |
 |-------|---------|-------|
-| **codoop-discover** | Product design & architecture (0→1 planning) | Before coding |
-| **codoop-ticket** | Orchestrate ticket design (PRD → Spec → Plan) | Ticket design |
-| **spec-driven-development** | Design technical specs before coding | Ticket design / standalone |
-| **planning-and-task-breakdown** | Break specs into ordered tasks | Ticket design / standalone |
-| **definition-of-done** | Project-level completion standards | Quality gate |
-| **codoop-flow** | Code implementation in isolated worktree | Coding & shipping |
+| **codoop-discover** | Product design & architecture (0→1 planning) | Loop 1 |
+| **codoop-ticket** | Orchestrate ticket design (PRD → Spec → Plan) | Loop 2 |
+| **spec-driven-development** | Design technical specs before coding | Loop 2 / standalone |
+| **planning-and-task-breakdown** | Break specs into ordered tasks | Loop 2 / standalone |
+| **definition-of-done** | Project-level completion standards | Reference |
+| **codoop-flow** | Code implementation in isolated worktree | Loop 3 |
+
+**Loop 3 Engineering Disciplines:**
+
+| Skill | Purpose | Usage |
+|-------|---------|-------|
+| **incremental-implementation** | Split large changes into verifiable slices | Loop 3 Build phase / standalone |
+| **debugging-and-error-recovery** | Systematic root-cause analysis & self-healing | Loop 3 Debug phase / standalone |
+| **test-driven-development** | Red-Green-Refactor cycle with high coverage | Loop 3 Verify phase / standalone |
 
 Each skill is **self-contained**: it carries the orchestration guide (`SKILL.md`), any deterministic CLI, and shared sub-agent personas. So no matter which agent you install it into, as long as the directory is readable and `python3` runs, the skills work.
 
@@ -111,20 +121,36 @@ Or schedule continuously with:
 /loop 5m run the codoop-flow skill against /path/to/codoop_flow.toml
 ```
 
+**7. incremental-implementation** (Loop 3 Engineering Discipline) — standalone or Loop 3 build:
+```
+/skill incremental-implementation How do I break down this large refactoring into verifiable slices?
+```
+
+**8. debugging-and-error-recovery** (Loop 3 Engineering Discipline) — standalone or Loop 3 debug:
+```
+/skill debugging-and-error-recovery The test failed with an obscure stack trace. Help me find the root cause.
+```
+
+**9. test-driven-development** (Loop 3 Engineering Discipline) — standalone or Loop 3 verify:
+```
+/skill test-driven-development How should I write tests for this feature to ensure high coverage?
+```
+
 ---
 
 ## Generic copy (Cursor / Gemini / others)
 
-Each skill is a self-contained directory; any agent can copy all six into its own skills/rules directory:
+Each skill is a self-contained directory; any agent can copy all nine into its own skills/rules directory:
 
 ```bash
 git clone https://github.com/Codoop/codoop-flow.git
-# Copy all 6 skills — each brings its own SKILL.md
+# Copy all 9 skills — each brings its own SKILL.md
 for skill in codoop-discover codoop-ticket spec-driven-development \
-             planning-and-task-breakdown definition-of-done codoop-flow; do
+             planning-and-task-breakdown definition-of-done codoop-flow \
+             incremental-implementation debugging-and-error-recovery test-driven-development; do
   cp -R "codoop-flow/skills/$skill"  <the agent's skills directory>/
 done
-# _shared is referenced by codoop-discover via relative path
+# _shared is referenced by all skills via relative path
 cp -R codoop-flow/skills/_shared <the agent's skills directory>/
 ```
 

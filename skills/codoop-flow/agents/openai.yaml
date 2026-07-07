@@ -1,7 +1,0 @@
-interface:
-  display_name: "codoop-flow"
-  short_description: "Guardrailed AI ticket pipeline"
-  default_prompt: "Use $codoop-flow to set up this repo or run the next ticket against codoop_flow.toml."
-
-policy:
-  allow_implicit_invocation: true

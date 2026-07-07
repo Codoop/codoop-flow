@@ -53,6 +53,33 @@
       "keywords": ["standards", "quality", "completion", "dod", "checklist"]
     },
     {
+      "name": "incremental-implementation",
+      "version": "0.1.0",
+      "source": "skills/incremental-implementation/",
+      "description": "Split large code changes into small, verifiable vertical slices. Each slice: implement -> test -> verify -> commit. Core discipline for Loop 3 build phase.",
+      "homepage": "https://github.com/Codoop/codoop-flow",
+      "license": "MIT",
+      "keywords": ["implementation", "incremental", "vertical-slice", "discipline"]
+    },
+    {
+      "name": "debugging-and-error-recovery",
+      "version": "0.1.0",
+      "source": "skills/debugging-and-error-recovery/",
+      "description": "Systematic root-cause analysis and self-healing for test failures. Denoise error logs, classify errors, inject debug prompts. Core discipline for Loop 3 debug phase.",
+      "homepage": "https://github.com/Codoop/codoop-flow",
+      "license": "MIT",
+      "keywords": ["debugging", "error-recovery", "self-heal", "triage"]
+    },
+    {
+      "name": "test-driven-development",
+      "version": "0.1.0",
+      "source": "skills/test-driven-development/",
+      "description": "Red-Green-Refactor cycle: write tests first, implement minimal code, then refactor. Covers happy path, boundary values, and error cases.",
+      "homepage": "https://github.com/Codoop/codoop-flow",
+      "license": "MIT",
+      "keywords": ["testing", "tdd", "red-green-refactor", "coverage"]
+    },
+    {
       "name": "codoop-flow",
       "version": "0.1.0",
       "source": ".",
