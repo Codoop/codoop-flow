@@ -65,12 +65,23 @@ ticket, then run the normal loop below against that config.
 ```
 python3 $SKILL/scripts/codoop_tools.py --config <toml> pick
 ```
-Parse the JSON. If `picked` is false, stop and tell the user why (nothing
-pending, or a ticket already in_progress). If a ticket is already in_progress,
-that JSON still gives you its `ticket_dir` + `worktree` — resume it rather than
-picking a new one. On success you get: `ticket_id`, `ticket_dir` (holds
+Parse the JSON, then branch on `reason`:
+- `picked:true` — you claimed a fresh ticket. **Record `lease_token`** and pass
+  `--lease <token>` on EVERY later CLI call in this run (verify/finish/fail).
+- `reason:"resumed"` (`picked:false`, exit 0) — a ticket was already in_progress
+  and you own it (or it was unowned and you just adopted it). It also returns a
+  `lease_token`; use it for the rest of the run. Resume this ticket rather than
+  picking a new one.
+- `reason:"blocked_by_active_runner"` (exit **non-zero**) — another runner owns
+  this ticket. **Stop cleanly and do NOT enter the worktree.** Tell the user
+  who holds it (`held_by`, `acquired_at`) and that a human can hand it over with
+  `takeover <ticket_id>` (see below).
+- `reason:"no pending tickets"` — nothing to do; stop.
+
+On a claim/resume you get: `ticket_id`, `lease_token`, `ticket_dir` (holds
 module_prd.md / spec.md / plan.md / todo.md), `worktree` (the ISOLATED clone you
-must edit in), `files_to_edit` (advisory edit-scope hint), `ui_capture`, `screenshot_dir`.
+must edit in), `files_to_edit` (advisory edit-scope hint), `ui_capture`,
+`screenshot_dir`.
 
 ### 2. Build (your work)
 - Read the ticket's design docs from `ticket_dir`: `module_prd.md` (business),
@@ -87,7 +98,7 @@ must edit in), `files_to_edit` (advisory edit-scope hint), `ui_capture`, `screen
 
 ### 3. Verify (the tool)
 ```
-python3 $SKILL/scripts/codoop_tools.py --config <toml> verify <ticket_id>
+python3 $SKILL/scripts/codoop_tools.py --config <toml> verify <ticket_id> --lease <token>
 ```
 Exit 0 / `ok:true` = tests passed AND (for `ui_capture` tickets) screenshots
 were produced. Otherwise read `reasons` + `test_output`.
@@ -134,7 +145,7 @@ Adopt the technical-writer discipline
 ### 7. Finish (the tool)
 Draft a Conventional Commit message, then:
 ```
-python3 $SKILL/scripts/codoop_tools.py --config <toml> finish <ticket_id> --message "<conventional commit>"
+python3 $SKILL/scripts/codoop_tools.py --config <toml> finish <ticket_id> --lease <token> --message "<conventional commit>"
 ```
 This stages (excluding generated noise), commits on `dev/<ticket_id>`, moves the
 ticket to `done/`, and removes the worktree. **Pushing is the human's call** —
@@ -142,7 +153,7 @@ tell the user the branch is ready; only push if they ask.
 
 ### Fail (the tool) — when the healing budget is exhausted
 ```
-python3 $SKILL/scripts/codoop_tools.py --config <toml> fail <ticket_id> --report "<what failed, denoised>"
+python3 $SKILL/scripts/codoop_tools.py --config <toml> fail <ticket_id> --lease <token> --report "<what failed, denoised>"
 ```
 Writes `healing_report.md` into `failed/<ticket_id>/` and cleans the worktree.
 Report back so the human can intervene.
@@ -169,15 +180,37 @@ Claude Code, for example:
 /loop 5m run the codoop-flow skill against <toml>
 ```
 In Codex, use a recurring automation or explicitly ask Codex to run the skill
-again against the same config. The guardrail CLI only lets one `in_progress`
-ticket run at a time, so repeated invocations resume the active ticket instead
-of double-picking.
+again against the same config. The guardrail CLI holds a **lease** on each
+in_progress ticket: a run resumes it only when it presents the owning
+`lease_token` (or the ticket is unowned). If another active runner owns it,
+`pick` returns `blocked_by_active_runner` (exit non-zero) and the automation
+must stop cleanly — it will **not** skip ahead to another ticket. That's
+intentional: a stuck ticket waits for a human, it doesn't get silently bypassed.
+
+## When a ticket is stuck (human hand-off)
+
+Leases never expire on their own — liveness is your call. To see how far an
+in_progress ticket got:
+```
+python3 $SKILL/scripts/codoop_tools.py --config <toml> status
+```
+Each `in_progress` entry shows `held_by`, `acquired_at`, `todo` (e.g. `3/8`),
+`worktree_dirty`, and `dev_commits` — enough to judge "unfinished, needs a
+fresh runner." A ticket is by definition unfinished as long as it sits under
+`in_progress/` (finishing moves it to `done/`).
+
+To hand a stuck ticket to a new runner (voids the old lease, mints a new one):
+```
+python3 $SKILL/scripts/codoop_tools.py --config <toml> takeover <ticket_id>
+```
+Use the returned `lease_token` for the rest of that run.
 
 ## Guardrails recap (why the split)
 
 | Deterministic → `scripts/codoop_tools.py` | Intelligent → you (in-session) |
 |---|---|
 | pick / move folders / worktree lifecycle | write code, self-heal |
+| lease / ownership arbitration (one runner per ticket) | resume vs. stop decision (follow the CLI's `reason`) |
 | run tests + UI screenshot gate | review judgment (subagents if available, serial otherwise) |
 | commit / archive done\|failed | living-doc sync, commit message |
 

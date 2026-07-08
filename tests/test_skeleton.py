@@ -128,6 +128,134 @@ def test_pick_reports_when_in_progress_busy(root: Path, worktrees: Path) -> None
     _check((root / "docs/tickets/pending/ticket_b").exists(), "ticket_b untouched in pending/")
 
 
+def test_pick_mints_lease(root: Path, worktrees: Path) -> None:
+    print("[test] pick: first claim mints a lease token + lease file")
+    cfg = _write_config(root, worktrees)
+    _make_ticket(root, "ticket_l1", files_to_edit=["backend/**"], test_cmd="true")
+    code, data = _tool(cfg, "pick")
+    _check(code == 0 and data["picked"], "pick succeeded")
+    _check(bool(data.get("lease_token")), "pick returned a lease_token")
+    _check((worktrees / ".codoop-leases" / "ticket_l1.json").exists(), "lease file written")
+
+
+def test_pick_blocks_without_lease(root: Path, worktrees: Path) -> None:
+    print("[test] pick: resuming an owned ticket without the token is blocked")
+    cfg = _write_config(root, worktrees)
+    _make_ticket(root, "ticket_l2", files_to_edit=["backend/**"], test_cmd="true")
+    _, first = _tool(cfg, "pick")
+    wt = Path(first["worktree"])
+    # A second runner picks with no token -> blocked, worktree untouched.
+    (wt / "backend" / "owner_mark.txt").write_text("A", encoding="utf-8")
+    code, data = _tool(cfg, "pick")
+    _check(code != 0, "second pick without token exits non-zero")
+    _check(data["reason"] == "blocked_by_active_runner", "reports blocked_by_active_runner")
+    _check((wt / "backend" / "owner_mark.txt").read_text() == "A",
+           "worktree not clobbered/rebuilt by the blocked pick")
+
+
+def test_pick_resumes_with_lease(root: Path, worktrees: Path) -> None:
+    print("[test] pick: same runner resumes with its token")
+    cfg = _write_config(root, worktrees)
+    _make_ticket(root, "ticket_l3", files_to_edit=["backend/**"], test_cmd="true")
+    _, first = _tool(cfg, "pick")
+    token = first["lease_token"]
+    code, data = _tool(cfg, "pick", "--lease", token)
+    _check(code == 0, "resume with matching token exits 0")
+    _check(data["reason"] == "resumed", "reports resumed")
+    _check(data["lease_token"] == token, "same token returned")
+
+
+def test_takeover_rotates_token(root: Path, worktrees: Path) -> None:
+    print("[test] takeover: mints a new token; old token then rejected by verify")
+    cfg = _write_config(root, worktrees)
+    _make_ticket(root, "ticket_l4", files_to_edit=["backend/**"], test_cmd="true")
+    _, first = _tool(cfg, "pick")
+    old = first["lease_token"]
+    code, data = _tool(cfg, "takeover", "ticket_l4")
+    _check(code == 0 and data["ok"], "takeover succeeded")
+    _check(data["lease_token"] != old, "takeover minted a new token")
+    # Old token is now invalid for verify.
+    code2, vdata = _tool(cfg, "verify", "ticket_l4", "--lease", old)
+    _check(code2 != 0 and vdata.get("reason") == "lease_token_mismatch",
+           "old token rejected after takeover")
+
+
+def test_verify_no_token_warns_but_proceeds(root: Path, worktrees: Path) -> None:
+    print("[test] verify: omitting --lease proceeds (back-compat)")
+    cfg = _write_config(root, worktrees)
+    _make_ticket(root, "ticket_l5", files_to_edit=["backend/**"], test_cmd="true")
+    _tool(cfg, "pick")
+    code, data = _tool(cfg, "verify", "ticket_l5")
+    _check(code == 0 and data["ok"], "verify without token still runs")
+
+
+def test_finish_releases_lease(root: Path, worktrees: Path) -> None:
+    print("[test] finish: lease file removed after archiving to done/")
+    cfg = _write_config(root, worktrees)
+    _make_ticket(root, "ticket_l6", files_to_edit=["backend/**"], test_cmd="true")
+    _, picked = _tool(cfg, "pick")
+    token = picked["lease_token"]
+    (Path(picked["worktree"]) / "backend" / "f.txt").write_text("x", encoding="utf-8")
+    _tool(cfg, "finish", "ticket_l6", "--lease", token, "--message", "feat: x [ticket_l6]")
+    _check(not (worktrees / ".codoop-leases" / "ticket_l6.json").exists(),
+           "lease file removed after finish")
+
+
+def test_status_reports_in_progress_detail(root: Path, worktrees: Path) -> None:
+    print("[test] status: in_progress carries progress detail")
+    cfg = _write_config(root, worktrees)
+    tdir = _make_ticket(root, "ticket_l7", files_to_edit=["backend/**"], test_cmd="true")
+    (tdir / "todo.md").write_text(
+        "# Todo\n- [x] a\n- [x] b\n- [ ] c\n- [ ] d\n- [ ] e\n", encoding="utf-8")
+    _, picked = _tool(cfg, "pick", "--runner-note", "runner-X")
+    (Path(picked["worktree"]) / "backend" / "wip.txt").write_text("y", encoding="utf-8")
+    code, data = _tool(cfg, "status")
+    _check(code == 0, "status ran")
+    detail = next((d for d in data["in_progress"] if d["ticket_id"] == "ticket_l7"), None)
+    _check(detail is not None, "in_progress is a list of detail objects")
+    _check(detail["todo"] == "2/5", f"todo progress counted: {detail.get('todo')!r}")
+    _check(detail["worktree_dirty"] is True, "worktree_dirty reflects uncommitted edit")
+    _check(detail["held_by"] == "runner-X", "held_by carries the runner note")
+
+
+def test_concurrent_first_pick_no_double_claim(root: Path, worktrees: Path) -> None:
+    print("[test] pick: two concurrent first-picks -> exactly one claims, no crash")
+    cfg = _write_config(root, worktrees)
+    _make_ticket(root, "ticket_c1", files_to_edit=["backend/**"], test_cmd="true")
+    procs = [
+        subprocess.Popen(
+            [sys.executable, str(_TOOLS), "--config", str(cfg), "pick"],
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
+        )
+        for _ in range(2)
+    ]
+    outs = []
+    for p in procs:
+        out, _err = p.communicate()
+        try:
+            outs.append((p.returncode, json.loads(out)))
+        except json.JSONDecodeError:
+            outs.append((p.returncode, {"_raw": out}))
+    claimed = [d for _c, d in outs if d.get("picked")]
+    _check(len(claimed) == 1, f"exactly one pick claimed the ticket (got {len(claimed)})")
+    # The other must be a clean 'resumed'/'blocked', never a traceback.
+    others = [d for _c, d in outs if not d.get("picked")]
+    _check(all("_raw" not in d for d in others), "no process crashed with non-JSON output")
+
+
+def test_pick_adopts_legacy_in_progress(root: Path, worktrees: Path) -> None:
+    print("[test] pick: legacy in_progress with no lease is adopted")
+    cfg = _write_config(root, worktrees)
+    # Simulate a pre-lease ticket sitting directly in in_progress/.
+    tdir = _make_ticket(root, "ticket_l8", files_to_edit=["backend/**"], test_cmd="true")
+    import shutil as _sh
+    dest = root / "docs" / "tickets" / "in_progress"
+    _sh.move(str(tdir), str(dest / "ticket_l8"))
+    code, data = _tool(cfg, "pick")
+    _check(code == 0 and data["reason"] == "resumed", "legacy ticket resumed")
+    _check(bool(data.get("lease_token")), "lease minted on adopt")
+
+
 def test_verify_passes_in_scope(root: Path, worktrees: Path) -> None:
     print("[test] verify: passing tests + in-scope edit -> ok")
     cfg = _write_config(root, worktrees)
@@ -332,6 +460,15 @@ def main() -> int:
     tests = [
         test_pick_moves_and_creates_worktree,
         test_pick_reports_when_in_progress_busy,
+        test_pick_mints_lease,
+        test_pick_blocks_without_lease,
+        test_pick_resumes_with_lease,
+        test_takeover_rotates_token,
+        test_verify_no_token_warns_but_proceeds,
+        test_finish_releases_lease,
+        test_status_reports_in_progress_detail,
+        test_concurrent_first_pick_no_double_claim,
+        test_pick_adopts_legacy_in_progress,
         test_verify_passes_in_scope,
         test_verify_ignores_edit_scope,
         test_verify_fails_on_failing_tests,
