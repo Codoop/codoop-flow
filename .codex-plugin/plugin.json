@@ -1,6 +1,6 @@
 {
   "name": "codoop-flow",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Guardrailed AI coding ticket pipeline: pick, build, verify, multi-review, and archive one ticket at a time.",
   "author": {
     "name": "Codoop",
