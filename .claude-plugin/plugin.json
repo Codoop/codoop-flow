@@ -1,6 +1,6 @@
 {
   "name": "codoop-flow",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "In-session orchestration for the codoop-flow Agent-Centric ticket pipeline: pick -> build -> verify -> review -> ship, driven by a skill plus a deterministic guardrail CLI.",
   "homepage": "https://github.com/Codoop/codoop-flow",
   "repository": "https://github.com/Codoop/codoop-flow",

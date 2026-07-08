@@ -5,6 +5,33 @@ All notable changes to codoop-flow will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.3] - 2026-07-08
+
+### Added
+
+- **Ticket runner lease (concurrency guard).** `pick` now mints a random
+  `lease_token` when a ticket is claimed; the owning runner presents it on later
+  commands to prove ownership. A second runner that tries to resume an active
+  ticket without the token is turned away with `blocked_by_active_runner` (exit
+  non-zero) and the worktree is left untouched — closing the gap where two
+  runners could resume the same `in_progress` ticket and clobber each other's
+  worktree. Leases never expire (liveness is a human's call); a stuck ticket
+  waits for a manual `takeover` rather than being silently bypassed.
+- **`takeover <ticket_id>` command.** Human-triggered hand-off that voids the old
+  lease and mints a new one, handing the worktree to a fresh runner.
+- **`status` in_progress detail.** Each `in_progress` entry now reports
+  `held_by`, `acquired_at`, `todo` (e.g. `3/8`), `worktree_dirty`, and
+  `dev_commits` so a human can see how far a ticket got before deciding whether
+  to take it over.
+- `verify` / `finish` / `fail` accept an optional `--lease <token>` ownership
+  check; `finish` / `fail` release the lease on success.
+
+### Fixed
+
+- **Double-first-pick race.** The `pick` bookkeeping (read in_progress → move
+  pending → write lease) now runs under an atomic pipeline lock, so two
+  concurrent first-picks can no longer both claim the same pending ticket.
+
 ## [0.1.2] - 2026-07-07
 
 ### Added
