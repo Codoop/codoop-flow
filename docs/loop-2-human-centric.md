@@ -10,6 +10,21 @@
 
 ---
 
+## Ticket Types
+
+Every ticket carries a `ticket_type` in `metadata.json` (default `feature`). The type selects which documents are required, so the flow fits the work:
+
+| Type | For | Required docs | Recommended docs |
+|---|---|---|---|
+| `feature` (需求单) | A new capability driven by a business need | `module_prd.md` + `spec.md` | `plan.md`, `todo.md` |
+| `fix` (修复单) | Repairing an existing bug/defect | `bug_report.md` | `plan.md`, `todo.md` |
+
+`feature` runs the full three-phase flow below. `fix` is lighter: it skips the PRD and Spec phases and instead captures the defect in `bug_report.md` (Symptom / Reproduction / Root Cause / Expected Behavior / Scope), then proceeds to task breakdown, metadata inference, validate, and promote. A fix may voluntarily add a `spec.md` if it touches a contract/data-model change, but it is not required.
+
+`codoop-ticket` infers the type from your description and **always asks you to confirm** before scaffolding — the type is a routing switch, so a wrong guess would force rework. Via CLI, pass it explicitly with `--type feature|fix`.
+
+---
+
 ## Quick Start
 
 In any AI coding tool, say:
@@ -37,7 +52,7 @@ The skill orchestrates a PM and Architect with you as director, guiding you thro
 
 1. **trigger** — you confirm Phase 1 is done; `codoop-ticket` loads `/skill spec-driven-development`
 2. **design** — Architect agent writes `spec.md` based on the confirmed `module_prd.md`
-3. **content** — includes API contracts (per platform: backend/web/mobile/desktop), data schema field-level, UI interactions and state management, code examples, testing strategy, Always/Ask First/Never boundaries, and **crucially the `## Editable Files` section** listing globs for Loop 3's edit-scope guardrail
+3. **content** — includes API contracts (per platform: backend/web/mobile/desktop), data schema field-level, UI interactions and state management, code examples, testing strategy, Always/Ask First/Never boundaries, and the `## Editable Files` section listing globs that give Loop 3 an advisory edit-scope hint (guidance for the agent, not enforced by verify)
 4. **review** — you review and confirm or request changes
 
 ### Phase 3 — Task Breakdown (plan.md + todo.md)
@@ -77,11 +92,12 @@ docs/tickets/
 
 | File | Author | Required | Purpose |
 |---|---|---|---|
-| `metadata.json` | Auto-inferred; human confirms | Yes | Machine-readable config for Loop 3: modules, test commands, edit scope, self-heal budget, UI capture flag |
-| `module_prd.md` | PM agent + human | Yes (for promotion) | 100% pure-business description — user stories, state flows, acceptance criteria |
-| `spec.md` | Architect agent + human | Yes (for promotion) | Technical contract — APIs, data schema, UI interactions, `files_to_edit` whitelist |
-| `plan.md` | Auto-decomposed + human review | Recommended | Step-by-step implementation plan with phases and checkpoints |
-| `todo.md` | Auto-decomposed + human review | Recommended | Atomic checkbox task list, each ≤100 lines, with platform prefixes |
+| `metadata.json` | Auto-inferred; human confirms | Yes | Machine-readable config for Loop 3: ticket type, modules, test commands, edit scope, self-heal budget, UI capture flag |
+| `module_prd.md` | PM agent + human | Yes for `feature` | 100% pure-business description — user stories, state flows, acceptance criteria |
+| `spec.md` | Architect agent + human | Yes for `feature` | Technical contract — APIs, data schema, UI interactions, `files_to_edit` scope hint |
+| `bug_report.md` | Human (+ agent) | Yes for `fix` | Defect record — Symptom / Reproduction / Root Cause / Expected Behavior / Scope |
+| `plan.md` | Auto-decomposed + human review | Recommended (both) | Step-by-step implementation plan with phases and checkpoints |
+| `todo.md` | Auto-decomposed + human review | Recommended (both) | Atomic checkbox task list, each ≤100 lines, with platform prefixes |
 
 ---
 
@@ -130,15 +146,16 @@ Or directly call the skill in any AI coding tool:
 /skill codoop-ticket Design a work ticket for this feature
 ```
 
-### `codoop-ticket ticket init <ticket_id> --config <toml> [--title "..."] [--language auto|zh|en]`
+### `codoop-ticket ticket init <ticket_id> --config <toml> [--title "..."] [--language auto|zh|en] [--type feature|fix]`
 
 **Creates** `docs/tickets/drafts/<ticket_id>/` with:
-- `metadata.json` stub (placeholder values)
-- Empty `module_prd.md`, `spec.md`, `plan.md`, `todo.md` with scaffold headings
+- `metadata.json` stub (placeholder values, including `ticket_type`)
+- Scaffold docs per type: `feature` → `module_prd.md`, `spec.md`, `plan.md`, `todo.md`; `fix` → `bug_report.md`, `plan.md`, `todo.md`
 
 **Args:**
 - `--title` — ticket title (detected for language if `--language auto`)
 - `--language` — `auto` (default, detects CJK → `zh`, otherwise `en`), or explicit `zh` / `en`
+- `--type` — `feature` (default) or `fix`; selects the scaffold and the required-docs rule
 - `--config` — path to `codoop_flow.toml`
 
 **Exit codes:** 0 on success, raises `FileExistsError` if draft already exists.
@@ -148,8 +165,8 @@ Or directly call the skill in any AI coding tool:
 **Validates** a draft is ready to promote.
 
 **Checks (blocking):**
-- `metadata.json` parses cleanly and satisfies the full schema (all required fields present, correct types, every module has a test command)
-- `module_prd.md` and `spec.md` exist and contain meaningful (non-scaffold, non-empty) content
+- `metadata.json` parses cleanly and satisfies the full schema (all required fields present, correct types, every module has a test command, valid `ticket_type`)
+- The type's required docs exist and contain meaningful (non-scaffold, non-empty) content: `feature` → `module_prd.md` + `spec.md`; `fix` → `bug_report.md`
 
 **Checks (advisory warnings):**
 - `plan.md` and `todo.md` exist and are meaningfully filled
@@ -204,12 +221,13 @@ Every ticket's `metadata.json` must satisfy this schema:
 | `title` | string | Human-readable ticket title |
 | `modules` | list[string] | Which platform modules this ticket touches: `backend`, `web`, `mobile`, `desktop` |
 | `test_command` | dict[string, string] | Shell command to run tests per module (keys must cover all `modules` entries) |
-| `files_to_edit` | list[string] | Glob patterns listing files the agent is permitted to modify (edit-scope guardrail for Loop 3) |
+| `files_to_edit` | list[string] | Glob patterns hinting where the agent should focus edits (advisory scope for Loop 3; not enforced by verify) |
 
 **Optional fields:**
 
 | Field | Type | Default | Meaning |
 |---|---|---|---|
+| `ticket_type` | string | `"feature"` | `"feature"` (需求单) or `"fix"` (修复单). Selects required docs in Loop 2 and the commit prefix (`feat`/`fix`) in Loop 3 |
 | `coding_engine` | string or null | null | Which AI tool for this ticket: `claude`, `codex`, `cursor`. If absent, uses global default. |
 | `max_healing_attempts` | int | 3 | Maximum self-healing retries in Loop 3 before moving to `failed/` |
 | `ui_capture` | bool | false | If true, Loop 3's test script writes screenshots; review adds UI/UX personas |
@@ -284,6 +302,7 @@ The skill reads the spec, builds a dependency graph, slices vertically (feature-
 
 - **Deterministic Input for Deterministic Output** — High fidelity requirements enable Loop 3 to execute reliably without guessing.
 - **Three-Phase Human Collaboration** — Phase 1 (PRD) → Phase 2 (Spec) → Phase 3 (Tasks), with explicit human confirmation between each phase.
+- **Type-Fit Flow** — `feature` tickets run the full PRD → Spec → Tasks flow; `fix` tickets use a lighter `bug_report.md` flow. The type is confirmed with the human up front, never silently guessed.
 - **Metadata Auto-Inference** — Loop 2 automatically infers `metadata.json` from spec content, saving humans from manual, error-prone configuration.
 - **Dual-Mode Sub-Skills** — spec-driven-development and planning-and-task-breakdown work both standalone and as integrated phases of codoop-ticket.
 - **No Code Written** — Loop 2 is pure documentation. Code is written only in Loop 3.

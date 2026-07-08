@@ -2,8 +2,8 @@
 
 Engines run tests during build (e.g. pytest), which produces artifacts like
 __pycache__/*.pyc. These are not the engine's intended edits, so they must be
-excluded from both the edit-scope whitelist check (verify) and the review diff
-— otherwise every Python ticket gets spuriously rejected.
+excluded from the review diff (and any tooling that inspects changed files)
+— otherwise every Python ticket gets spuriously flagged.
 """
 
 from __future__ import annotations

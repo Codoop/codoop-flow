@@ -19,6 +19,41 @@ A ticket is a complete design document package for one feature module:
 | `todo.md` | Atomic task list (≤100 lines code/task) | Auto-inferred |
 | `metadata.json` | Ticket metadata (modules, test commands, edit scope) | Auto-inferred |
 
+The table above shows a **feature** ticket (需求单). A **fix** ticket (修复单) is
+lighter — see "Ticket Types" below.
+
+## Ticket Types
+
+Every ticket has a `ticket_type` (stored in `metadata.json`, default `feature`):
+
+| Type | For | Required docs | Skips |
+|------|-----|---------------|-------|
+| `feature` (需求单) | New capability from a business need | `module_prd.md` + `spec.md` | — |
+| `fix` (修复单) | Repairing an existing bug/defect | `bug_report.md` | PRD + Spec stages |
+
+`plan.md` + `todo.md` are recommended (not blocking) for **both** types.
+
+**Inferring the type — always confirm.** At the start, infer the type from the
+user's description (signals like "fix / bug / 报错 / 异常 / 坏了 / 回归 / 修复" →
+`fix`; otherwise `feature`), then **state your inference and ask the user to
+confirm** before scaffolding. Do not silently pick — `ticket_type` is a routing
+switch (it decides which docs are required and which flow runs), so a wrong
+guess forces rework. The user can correct it in one word.
+
+Example:
+
+```
+User: 搜索结果分页有时候会越界报错，帮我处理一下
+codoop-ticket: 这看起来是「修复单 (fix)」——已存在的 bug，我会用 bug_report.md
+              轻量流程（跳过 PRD/Spec）。确认吗？还是当作需求单 (feature)？
+User: 对，修 bug
+codoop-ticket: 好，创建 fix 类型草稿…
+```
+
+When initializing via CLI, pass the type explicitly:
+`codoop-ticket.py ticket init <id> --type fix --config <toml>` (no inference —
+the user already specified it).
+
 ## When to Use
 
 - ✅ Design a complete ticket from business requirements
@@ -30,6 +65,13 @@ A ticket is a complete design document package for one feature module:
 This skill uses shared modules from `_shared/codoop_lib_v1/` (which are also used by `codoop-execute`). The CLI automatically imports these from the parent `_shared/` directory, so you can invoke both `codoop-ticket.py` (Loop 2) and `codoop_tools.py` (Loop 3) without worrying about module location — they share the same library code.
 
 ## Three Stages of Ticket Design
+
+> **Applies to `feature` tickets.** For a `fix` ticket, skip Phase 1 (PRD) and
+> Phase 2 (Spec): scaffold `bug_report.md` and guide the user to fill in
+> Symptom / Reproduction / Root Cause / Expected Behavior / Scope, then go
+> straight to task breakdown (`plan.md` + `todo.md`), metadata inference,
+> validate, and promote. A fix may still add a `spec.md` voluntarily if it
+> touches a contract/data-model change, but it is not required.
 
 ### 【Phase 1】Requirement Design (module_prd.md)
 
@@ -71,7 +113,7 @@ PM agent output:
    - API interface design (backend, web, mobile platforms)
    - Database fields and data models
    - UI interaction flows
-   - Editable files whitelist (`files_to_edit`)
+   - Editable files scope hint (`files_to_edit`)
 3. You review, provide feedback, modify until satisfied
 
 **Example**:
@@ -214,7 +256,7 @@ These serve as context to PM and Architect agents, ensuring tickets align with t
 When the ticket is complete, Phase 3 receives via `metadata.json`:
 
 - `modules`: which test suites to run?
-- `files_to_edit`: edit scope whitelist (guardrails)
+- `files_to_edit`: advisory edit-scope hint for the agent (not enforced by verify)
 - `test_command`: verification standards
 
 Phase 3 automatically picks up the ticket and develops in a worktree.
@@ -259,9 +301,13 @@ No need for global consistency checks at ticket level (Phase 1's job).
 Loop 2 can be used independently via CLI without requiring codoop-flow:
 
 ```bash
-# Initialize a new ticket draft
+# Initialize a new ticket draft (feature by default)
 python skills/codoop-ticket/scripts/codoop-ticket.py \
   ticket init ticket_001 --config codoop_flow.toml --title "Add user search"
+
+# Initialize a fix ticket (scaffolds bug_report.md instead of PRD + Spec)
+python skills/codoop-ticket/scripts/codoop-ticket.py \
+  ticket init ticket_002 --type fix --config codoop_flow.toml --title "Fix pagination overflow"
 
 # Validate ticket completeness
 python skills/codoop-ticket/scripts/codoop-ticket.py \

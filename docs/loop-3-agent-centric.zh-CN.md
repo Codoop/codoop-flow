@@ -4,7 +4,7 @@
 
 **第三环**是 codoop-flow 三环系统的第三个也是最后一个环。是一套完全自动化的、端到端的工单执行管道，可靠地实现、验证、审查和发布软件工单。
 
-**解决的问题：** 让 AI 编码代理实现工单而不幻觉基础设施决策、不违反编辑范围守门或不发布未测试代码。第三环刻意分割劳动：智能（代理）写代码并推理设计；确定性（守栏 CLI）管理 git、运行测试、强制编辑范围、归档制品。代理唯一能做错而不破坏管道的事是写坏代码 — 那会被审查 personas 捕获。
+**解决的问题：** 让 AI 编码代理实现工单而不幻觉基础设施决策或不发布未测试代码。第三环刻意分割劳动：智能（代理）写代码并推理设计；确定性（守栏 CLI）管理 git、运行测试、归档制品。代理唯一能做错而不破坏管道的事是写坏代码 — 那会被审查 personas 捕获。
 
 **在管道中的位置：** 从 `docs/tickets/pending/<ticket_id>/` 读取第二环输出 → 在隔离 git worktree 上分支 `dev/<ticket_id>` 执行 → 生成代码提交 + 更新的活文档 + 归档到 `docs/tickets/done/`（或 `failed/`）。
 
@@ -71,7 +71,7 @@ python3 <SKILL>/scripts/codoop_tools.py --config <toml> pick
 
 **实现规律：** 使用 `/skill incremental-implementation` 工作流：实现一个细薄的垂直切片、测试、验证、移到下一个。按顺序通过 `todo.md` 项目，随着完成检查（`- [x]`）。
 
-**编辑范围规则：** 仅创建或修改与 `files_to_edit` globs 匹配的文件。任何在此列表外的文件都是验证时的硬门禁失败。
+**编辑范围指引：** 优先创建或修改与 `files_to_edit` globs（以及 `spec.md` 中描述的范围）匹配的文件。这仅作参考，`verify` 不强制——除非任务确实需要触及相邻文件，否则保持在范围内。
 
 ### 第 3 步 — 验证（CLI）
 
@@ -79,13 +79,11 @@ python3 <SKILL>/scripts/codoop_tools.py --config <toml> pick
 python3 <SKILL>/scripts/codoop_tools.py --config <toml> verify <ticket_id>
 ```
 
-**三个硬门顺序运行：**
+**两个硬门顺序运行**（编辑范围仅作参考，不强制）：
 
-1. **编辑范围白名单门** — 收集所有更改的文件（跟踪的 diff vs HEAD + 未跟踪）。任何不匹配 `files_to_edit` 中至少一个 glob 的文件都被标记。立即失败。
+1. **测试门** — 为 `modules` 中的每个模块运行 `test_command[module]`。所有必须退出 0。在第一个非零退出失败。
 
-2. **测试门** — 为 `modules` 中的每个模块运行 `test_command[module]`。所有必须退出 0。在第一个非零退出失败。
-
-3. **UI 截图门**（仅当 `ui_capture: true`） — 检查 `ticket_dir/public/qa-screenshots/` 是否至少有一个文件，具有识别的图像扩展名（`.png`、`.jpg`、`.jpeg`、`.webp`、`.gif`）。如果没有则失败。
+2. **UI 截图门**（仅当 `ui_capture: true`） — 检查 `ticket_dir/public/qa-screenshots/` 是否至少有一个文件，具有识别的图像扩展名（`.png`、`.jpg`、`.jpeg`、`.webp`、`.gif`）。如果没有则失败。
 
 **输出 JSON：**
 ```json
@@ -221,7 +219,7 @@ python3 <SKILL>/scripts/codoop_tools.py --config <toml> fail <ticket_id> --repor
 
 **输入：** 工单 ID（位置参数）。
 
-**行为：** 运行三个硬门：编辑范围白名单、测试、UI 截图（如果适用）。
+**行为：** 运行两个硬门：测试、UI 截图（如果适用）。编辑范围仅作参考，不强制。
 
 **输出：** 成功或失败及具体原因。
 
@@ -231,7 +229,7 @@ python3 <SKILL>/scripts/codoop_tools.py --config <toml> fail <ticket_id> --repor
 
 **输入：** 工单 ID，可选 `--message`。
 
-**行为：** 暂存（排除噪音）、提交、归档到 `done/`、删除 worktree。
+**行为：** 暂存（排除噪音）、提交、归档到 `done/`、删除 worktree。省略 `--message` 时，回退消息为 `<前缀>(<module>): <title> [<id>]`，其中 `ticket_type: "fix"` 用 `fix` 前缀，否则用 `feat`。
 
 **输出：** 提交 SHA 和最终状态。
 
@@ -350,9 +348,10 @@ python3 <SKILL>/scripts/codoop_tools.py --config <toml> fail <ticket_id> --repor
 |---|---|---|---|---|
 | `ticket_id` | 字符串 | 是 | — | 唯一标识符；匹配目录名称和分支名称 `dev/<ticket_id>` |
 | `title` | 字符串 | 是 | — | 人类可读标题；用于回退提交消息 |
+| `ticket_type` | 字符串 | 否 | `"feature"` | `"feature"` 或 `"fix"`；决定回退提交消息前缀（`feat`/`fix`） |
 | `modules` | 字符串列表 | 是 | — | 这个工单接触的模块：`backend`、`web`、`mobile`、`desktop` |
 | `test_command` | dict[字符串, 字符串] | 是 | — | 每个模块的 shell 命令；必须覆盖所有模块；所有必须退出 0 |
-| `files_to_edit` | 字符串列表 | 是 | — | Glob 模式；仅这些文件可被创建/修改 |
+| `files_to_edit` | 字符串列表 | 否 | `[]` | Glob 模式；给代理的编辑范围提示（`verify` 不强制） |
 | `coding_engine` | 字符串或 null | 否 | null | 信息性；哪个 AI 工具处理这个工单 |
 | `max_healing_attempts` | int | 否 | 3 | 最大自愈重试；代理计数（CLI 不强制） |
 | `ui_capture` | bool | 否 | false | 如果为真：激活截图门；注入 `CODOOP_QA_SCREENSHOT_DIR`；添加 UI personas |
@@ -411,7 +410,7 @@ python3 <SKILL>/scripts/codoop_tools.py --config <toml> fail <ticket_id> --repor
 
 关键测试：
 - `test_pick_moves_and_creates_worktree` — pick 把工单从 pending 移到 in_progress 并创建 worktree
-- `test_verify_fails_out_of_scope` — 编辑 `files_to_edit` 外的文件使验证失败
+- `test_verify_ignores_edit_scope` — 编辑 `files_to_edit` 外的文件仍能通过验证（编辑范围仅作参考，不强制）
 - `test_verify_fails_on_failing_tests` — 测试命令非零退出使验证失败
 - `test_ui_capture_gate` — UI 工单无截图失败；有截图通过
 - `test_finish_commits_and_archives` — finish 在 `dev/<id>` 提交、归档到 done/、删除 worktree
@@ -424,7 +423,7 @@ python3 <SKILL>/scripts/codoop_tools.py --config <toml> fail <ticket_id> --repor
 ## 关键设计原则
 
 - **确定性胜过聪慧** — CLI 很小、完全确定性、从不猜测。代理拥有所有智能。
-- **三个硬门顺序** — 编辑范围白名单 → 测试 → UI 截图（如果适用）。所有必须通过再审查。
+- **两个硬门顺序** — 测试 → UI 截图（如果适用）。所有必须通过再审查。编辑范围仅作参考，不强制。
 - **一致批准** — 审查仅在所有 personas 同意时进行。任何关键/重要阻止。
 - **预算内自愈** — 失败触发重试（如果预算允许），非立即失败。预算耗尽移到 failed/ 供人工干预。
 - **隔离 Worktrees** — 每个工单获得自己的分支和检出路径；主 repo 从不接触。

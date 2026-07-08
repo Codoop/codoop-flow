@@ -61,7 +61,7 @@ def _config_obj(root: Path, worktrees: Path) -> Config:
 
 def _make_ticket(
     root: Path, ticket_id: str, *, files_to_edit, test_cmd,
-    title="skeleton test", ui_capture=False,
+    title="skeleton test", ui_capture=False, ticket_type=None,
 ) -> Path:
     tdir = root / "docs" / "tickets" / "pending" / ticket_id
     tdir.mkdir(parents=True)
@@ -75,6 +75,8 @@ def _make_ticket(
     }
     if ui_capture:
         meta["ui_capture"] = True
+    if ticket_type:
+        meta["ticket_type"] = ticket_type
     (tdir / "metadata.json").write_text(json.dumps(meta), encoding="utf-8")
     (tdir / "module_prd.md").write_text("# PRD\nbuild a thing", encoding="utf-8")
     return tdir
@@ -137,17 +139,17 @@ def test_verify_passes_in_scope(root: Path, worktrees: Path) -> None:
     _check(code == 0 and data["ok"], "verify passed")
 
 
-def test_verify_fails_out_of_scope(root: Path, worktrees: Path) -> None:
-    print("[test] verify: out-of-scope edit -> fail")
+def test_verify_ignores_edit_scope(root: Path, worktrees: Path) -> None:
+    print("[test] verify: edit scope is advisory, not enforced -> out-of-scope edit passes")
     cfg = _write_config(root, worktrees)
     _make_ticket(root, "ticket_003", files_to_edit=["backend/**"], test_cmd="true")
     _, picked = _tool(cfg, "pick")
-    # Edit OUTSIDE the whitelist (web/).
+    # Edit OUTSIDE files_to_edit (web/): no longer a hard gate.
     (Path(picked["worktree"]) / "web").mkdir(exist_ok=True)
     (Path(picked["worktree"]) / "web" / "oops.txt").write_text("x", encoding="utf-8")
     code, data = _tool(cfg, "verify", "ticket_003")
-    _check(code != 0 and not data["ok"], "verify failed")
-    _check(any("whitelist" in r for r in data["reasons"]), "cites whitelist violation")
+    _check(code == 0 and data["ok"], "verify passes despite out-of-scope edit")
+    _check(not any("whitelist" in r for r in data["reasons"]), "no whitelist violation reported")
 
 
 def test_verify_fails_on_failing_tests(root: Path, worktrees: Path) -> None:
@@ -198,6 +200,23 @@ def test_finish_commits_and_archives(root: Path, worktrees: Path) -> None:
     _check("ticket_005" in log, "commit landed on dev/ticket_005")
 
 
+def test_finish_fix_uses_fix_prefix(root: Path, worktrees: Path) -> None:
+    print("[test] finish (fix): auto commit message uses fix(...) prefix")
+    cfg = _write_config(root, worktrees)
+    _make_ticket(root, "ticket_fix2", files_to_edit=["backend/**"], test_cmd="true",
+                 ticket_type="fix")
+    _, picked = _tool(cfg, "pick")
+    (Path(picked["worktree"]) / "backend" / "f.txt").write_text("x", encoding="utf-8")
+    # No --message: default template should derive the prefix from ticket_type.
+    code, data = _tool(cfg, "finish", "ticket_fix2")
+    _check(code == 0 and data["committed"], "fix ticket committed")
+    msg = subprocess.run(
+        ["git", "log", "-1", "--pretty=%s", "dev/ticket_fix2"],
+        cwd=str(root), capture_output=True, text=True,
+    ).stdout.strip()
+    _check(msg.startswith("fix(backend):"), f"commit prefixed fix(...): {msg!r}")
+
+
 def test_fail_archives_with_report(root: Path, worktrees: Path) -> None:
     print("[test] fail: move to failed/ + write healing_report")
     cfg = _write_config(root, worktrees)
@@ -234,6 +253,26 @@ def test_ticket_lifecycle(root: Path, worktrees: Path) -> None:
     dest = promote(cfg, "ticket_010")
     _check(dest == cfg.pending_dir / "ticket_010" and dest.exists(), "promoted to pending/")
     _check(not draft.exists(), "draft removed after promote")
+
+
+def test_fix_ticket_lifecycle(root: Path, worktrees: Path) -> None:
+    print("[test] lifecycle (fix): init --type fix -> only bug_report.md required")
+    from codoop_lib_v1.tickets_cli import init_draft, promote, validate_draft
+    from codoop_lib_v1.ticket import Ticket
+    cfg = _config_obj(root, worktrees)
+    draft = init_draft(cfg, "ticket_fix1", title="修复分页越界", ticket_type="fix")
+    _check(draft.exists(), "fix draft scaffolded")
+    _check((draft / "bug_report.md").exists(), "bug_report.md scaffolded")
+    _check(not (draft / "module_prd.md").exists(), "no module_prd.md for fix")
+    _check(not (draft / "spec.md").exists(), "no spec.md for fix")
+    _check(Ticket.load(draft).ticket_type == "fix", "metadata records ticket_type=fix")
+    # Empty scaffold fails; filling bug_report.md alone is enough (no PRD/spec).
+    _check(not validate_draft(cfg, "ticket_fix1").ok, "empty fix scaffold fails validation")
+    (draft / "bug_report.md").write_text(
+        "# 修复分页越界\n## 现象\n翻到最后一页会 500。\n", encoding="utf-8")
+    _check(validate_draft(cfg, "ticket_fix1").ok, "fix draft validates with just bug_report.md")
+    dest = promote(cfg, "ticket_fix1")
+    _check(dest.exists(), "fix ticket promoted to pending/")
 
 
 def test_promote_blocks_incomplete(root: Path, worktrees: Path) -> None:
@@ -294,13 +333,15 @@ def main() -> int:
         test_pick_moves_and_creates_worktree,
         test_pick_reports_when_in_progress_busy,
         test_verify_passes_in_scope,
-        test_verify_fails_out_of_scope,
+        test_verify_ignores_edit_scope,
         test_verify_fails_on_failing_tests,
         test_ui_capture_gate,
         test_finish_commits_and_archives,
+        test_finish_fix_uses_fix_prefix,
         test_fail_archives_with_report,
         test_status_reports_counts,
         test_ticket_lifecycle,
+        test_fix_ticket_lifecycle,
         test_promote_blocks_incomplete,
         # TODO: discover tests removed after refactoring to in-session skill mode
         # test_discover_claude_command_build,

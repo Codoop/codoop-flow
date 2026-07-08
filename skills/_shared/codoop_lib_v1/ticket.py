@@ -14,6 +14,9 @@ from pathlib import Path
 METADATA_FILE = "metadata.json"
 
 
+VALID_TICKET_TYPES = ("feature", "fix")
+
+
 @dataclass
 class Ticket:
     ticket_id: str
@@ -23,6 +26,9 @@ class Ticket:
     test_command: dict[str, str]
     # Whitelist of glob patterns the engine is allowed to edit.
     files_to_edit: list[str]
+    # "feature" (需求单) or "fix" (修复单). Drives which docs Loop 2 requires and
+    # which commit prefix Loop 3 uses. Defaults to "feature" for back-compat.
+    ticket_type: str = "feature"
     coding_engine: str | None = None
     max_healing_attempts: int = 3
     # When true, this ticket touches UI: tests must emit screenshots into the
@@ -55,7 +61,21 @@ class Ticket:
         _require(raw, "title", str, meta_path)
         _require(raw, "modules", list, meta_path)
         _require(raw, "test_command", dict, meta_path)
-        _require(raw, "files_to_edit", list, meta_path)
+        # files_to_edit is advisory (guidance the agent reads), not enforced by
+        # verify — so it's optional. Type-check only when present.
+        if "files_to_edit" in raw and not isinstance(raw["files_to_edit"], list):
+            raise ValueError(
+                f"{meta_path}: field 'files_to_edit' must be list, "
+                f"got {type(raw['files_to_edit']).__name__}"
+            )
+
+        # ticket_type is optional; defaults to "feature". Validate when present.
+        ticket_type = raw.get("ticket_type", "feature")
+        if ticket_type not in VALID_TICKET_TYPES:
+            raise ValueError(
+                f"{meta_path}: field 'ticket_type' must be one of "
+                f"{VALID_TICKET_TYPES}, got {ticket_type!r}"
+            )
 
         modules = raw["modules"]
         test_command = raw["test_command"]
@@ -71,7 +91,8 @@ class Ticket:
             title=raw["title"],
             modules=modules,
             test_command=test_command,
-            files_to_edit=raw["files_to_edit"],
+            files_to_edit=raw.get("files_to_edit", []),
+            ticket_type=ticket_type,
             coding_engine=raw.get("coding_engine"),
             max_healing_attempts=int(raw.get("max_healing_attempts", 3)),
             ui_capture=bool(raw.get("ui_capture", False)),

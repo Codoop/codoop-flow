@@ -10,10 +10,9 @@ design §5). You do the intelligent work **in this session**: writing code,
 self-healing, review judgment, and living-doc sync. A small guardrail CLI
 (`scripts/codoop_tools.py`, inside this skill) handles everything that must be
 100% deterministic — claiming tickets, moving folders, managing the isolated git
-worktree, running tests, enforcing the edit-scope whitelist, committing.
-**Never do the CLI's job by hand** (don't move ticket folders, create worktrees,
-or judge whitelist membership yourself) — always call the tool, because those
-steps must never be guessed.
+worktree, running tests, committing.
+**Never do the CLI's job by hand** (don't move ticket folders or create worktrees
+yourself) — always call the tool, because those steps must never be guessed.
 
 ## This skill uses shared libraries
 
@@ -71,7 +70,7 @@ pending, or a ticket already in_progress). If a ticket is already in_progress,
 that JSON still gives you its `ticket_dir` + `worktree` — resume it rather than
 picking a new one. On success you get: `ticket_id`, `ticket_dir` (holds
 module_prd.md / spec.md / plan.md / todo.md), `worktree` (the ISOLATED clone you
-must edit in), `files_to_edit` (glob whitelist), `ui_capture`, `screenshot_dir`.
+must edit in), `files_to_edit` (advisory edit-scope hint), `ui_capture`, `screenshot_dir`.
 
 ### 2. Build (your work)
 - Read the ticket's design docs from `ticket_dir`: `module_prd.md` (business),
@@ -80,17 +79,18 @@ must edit in), `files_to_edit` (glob whitelist), `ui_capture`, `screenshot_dir`.
   present — respect them as hard architectural boundaries.
 - Load `$SKILL/../../incremental-implementation/SKILL.md` discipline
   and implement the ticket **inside the `worktree` directory only**.
-- **Edit-scope rule:** only create/modify files matching the `files_to_edit`
-  globs. Editing anything outside will fail verify (hard gate) — don't do it.
+- **Edit-scope guidance:** prefer to create/modify files matching the
+  `files_to_edit` globs and the scope described in `spec.md`. This is advisory,
+  not enforced by verify — stay in scope unless the task genuinely requires
+  touching adjacent files.
 - Work the `todo.md` items in order; check them off (`- [x]`) as you go.
 
 ### 3. Verify (the tool)
 ```
 python3 $SKILL/scripts/codoop_tools.py --config <toml> verify <ticket_id>
 ```
-Exit 0 / `ok:true` = tests passed AND all edits were in-scope AND (for
-`ui_capture` tickets) screenshots were produced. Otherwise read `reasons` +
-`test_output`.
+Exit 0 / `ok:true` = tests passed AND (for `ui_capture` tickets) screenshots
+were produced. Otherwise read `reasons` + `test_output`.
 
 ### 4. Self-heal (your work) — on verify failure
 - Apply `$SKILL/../../debugging-and-error-recovery/SKILL.md` triage.
@@ -178,7 +178,7 @@ of double-picking.
 | Deterministic → `scripts/codoop_tools.py` | Intelligent → you (in-session) |
 |---|---|
 | pick / move folders / worktree lifecycle | write code, self-heal |
-| run tests + edit-scope whitelist gate | review judgment (subagents if available, serial otherwise) |
+| run tests + UI screenshot gate | review judgment (subagents if available, serial otherwise) |
 | commit / archive done\|failed | living-doc sync, commit message |
 
 Trust the tool for the deterministic parts; never re-derive them yourself.

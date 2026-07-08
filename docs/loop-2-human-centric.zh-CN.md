@@ -10,6 +10,21 @@
 
 ---
 
+## 工单类型
+
+每个工单在 `metadata.json` 中带有 `ticket_type`（缺省 `feature`）。类型决定哪些文档是必需项，从而让流程贴合工作性质：
+
+| 类型 | 适用 | 必需文档 | 推荐文档 |
+|---|---|---|---|
+| `feature`（需求单） | 由业务需求驱动的新能力 | `module_prd.md` + `spec.md` | `plan.md`、`todo.md` |
+| `fix`（修复单） | 修复一个已存在的 bug / 缺陷 | `bug_report.md` | `plan.md`、`todo.md` |
+
+`feature` 走下面完整的三阶段流程。`fix` 更轻量：跳过 PRD 与 Spec 阶段，改用 `bug_report.md` 记录缺陷（现象 / 复现 / 根因 / 预期行为 / 影响范围），然后进入任务拆解、metadata 推断、validate 与 promote。修复若确实涉及契约 / 数据模型变更，可自愿补一份 `spec.md`，但不强制。
+
+`codoop-ticket` 会根据你的描述推断类型，并在生成脚手架前**总是请你确认**——类型是分流开关，判错会造成返工。通过 CLI 时用 `--type feature|fix` 显式指定。
+
+---
+
 ## 快速开始
 
 在任何 AI 编码工具中，说：
@@ -37,7 +52,7 @@
 
 1. **触发** — 你确认阶段 1 完成；`codoop-ticket` 加载 `/skill spec-driven-development`
 2. **设计** — 架构师代理基于确认的 `module_prd.md` 写入 `spec.md`
-3. **内容** — 包括 API 契约（按平台：后端/网页/移动/桌面）、数据模式字段级、UI 交互和状态管理、代码示例、测试策略、Always/Ask First/Never 边界，以及**最关键的 `## 可编辑文件` 部分**列出第三环的编辑范围 glob
+3. **内容** — 包括 API 契约（按平台：后端/网页/移动/桌面）、数据模式字段级、UI 交互和状态管理、代码示例、测试策略、Always/Ask First/Never 边界，以及 `## 可编辑文件` 部分列出的 glob，为第三环提供编辑范围提示（给代理的参考，`verify` 不强制）
 4. **审查** — 你审查并确认或请求更改
 
 ### 阶段 3 — 任务分解（plan.md + todo.md）
@@ -77,11 +92,12 @@ docs/tickets/
 
 | 文件 | 作者 | 必需 | 用途 |
 |---|---|---|---|
-| `metadata.json` | 自动推断；人工确认 | 是 | 第三环的机器可读配置：模块、测试命令、编辑范围、自愈预算、UI 捕获标志 |
-| `module_prd.md` | PM 代理 + 人工 | 是（提升需要） | 100% 纯业务描述 — 用户故事、状态流、验收标准 |
-| `spec.md` | 架构师代理 + 人工 | 是（提升需要） | 技术契约 — API、数据模式、UI 交互、`files_to_edit` 白名单 |
-| `plan.md` | 自动分解 + 人工审查 | 推荐 | 分阶段实现计划，带检查点 |
-| `todo.md` | 自动分解 + 人工审查 | 推荐 | 原子检查框任务列表，每个 ≤100 行，带平台前缀 |
+| `metadata.json` | 自动推断；人工确认 | 是 | 第三环的机器可读配置：工单类型、模块、测试命令、编辑范围、自愈预算、UI 捕获标志 |
+| `module_prd.md` | PM 代理 + 人工 | `feature` 必需 | 100% 纯业务描述 — 用户故事、状态流、验收标准 |
+| `spec.md` | 架构师代理 + 人工 | `feature` 必需 | 技术契约 — API、数据模式、UI 交互、`files_to_edit` 范围提示 |
+| `bug_report.md` | 人工（+ 代理） | `fix` 必需 | 缺陷记录 — 现象 / 复现 / 根因 / 预期行为 / 影响范围 |
+| `plan.md` | 自动分解 + 人工审查 | 推荐（两类） | 分阶段实现计划，带检查点 |
+| `todo.md` | 自动分解 + 人工审查 | 推荐（两类） | 原子检查框任务列表，每个 ≤100 行，带平台前缀 |
 
 ---
 
@@ -130,15 +146,16 @@ python skills/codoop-ticket/scripts/codoop-ticket.py ticket <command> <args>
 /skill codoop-ticket 设计工单
 ```
 
-### `codoop-ticket ticket init <ticket_id> --config <toml> [--title "..."] [--language auto|zh|en]`
+### `codoop-ticket ticket init <ticket_id> --config <toml> [--title "..."] [--language auto|zh|en] [--type feature|fix]`
 
 **创建** `docs/tickets/drafts/<ticket_id>/`，包含：
-- `metadata.json` 存根（占位符值）
-- 空 `module_prd.md`、`spec.md`、`plan.md`、`todo.md`，带样板标题
+- `metadata.json` 存根（占位符值，含 `ticket_type`）
+- 按类型生成脚手架文档：`feature` → `module_prd.md`、`spec.md`、`plan.md`、`todo.md`；`fix` → `bug_report.md`、`plan.md`、`todo.md`
 
 **参数：**
 - `--title` — 工单标题（如果 `--language auto` 则检测语言）
 - `--language` — `auto`（默认，检测 CJK → `zh`，否则 `en`），或明确 `zh` / `en`
+- `--type` — `feature`（默认）或 `fix`；决定脚手架与必需文档规则
 - `--config` — `codoop_flow.toml` 的路径
 
 **退出码：** 成功返回 0，如果草稿已存在则抛出 `FileExistsError`。
@@ -148,8 +165,8 @@ python skills/codoop-ticket/scripts/codoop-ticket.py ticket <command> <args>
 **验证**草稿准备好提升。
 
 **检查（阻止性）：**
-- `metadata.json` 清洁解析并满足完整模式（所有必需字段存在、类型正确、每个模块都有测试命令）
-- `module_prd.md` 和 `spec.md` 存在并包含有意义的（非样板、非空）内容
+- `metadata.json` 清洁解析并满足完整模式（所有必需字段存在、类型正确、每个模块都有测试命令、`ticket_type` 合法）
+- 该类型的必需文档存在并包含有意义的（非样板、非空）内容：`feature` → `module_prd.md` + `spec.md`；`fix` → `bug_report.md`
 
 **检查（建议警告）：**
 - `plan.md` 和 `todo.md` 存在且有意义地填充
@@ -204,12 +221,13 @@ python skills/codoop-ticket/scripts/codoop-ticket.py ticket <command> <args>
 | `title` | 字符串 | 人类可读的工单标题 |
 | `modules` | 字符串列表 | 这个工单涉及的平台模块：`backend`、`web`、`mobile`、`desktop` |
 | `test_command` | dict[字符串, 字符串] | 每个模块的测试命令运行（键必须覆盖所有 `modules` 条目） |
-| `files_to_edit` | 字符串列表 | Glob 模式，列出代理被允许修改的文件（第三环的编辑范围守门） |
+| `files_to_edit` | 字符串列表 | Glob 模式，提示代理应把改动集中在哪里（第三环的编辑范围参考；`verify` 不强制） |
 
 **可选字段：**
 
 | 字段 | 类型 | 默认 | 含义 |
 |---|---|---|---|
+| `ticket_type` | 字符串 | `"feature"` | `"feature"`（需求单）或 `"fix"`（修复单）。决定第二环的必需文档，以及第三环的 commit 前缀（`feat`/`fix`） |
 | `coding_engine` | 字符串或 null | null | 这个工单用哪个 AI 工具：`claude`、`codex`、`cursor`。如果缺失，使用全局默认。 |
 | `max_healing_attempts` | int | 3 | 第三环的最大自愈重试次数，之后移到 `failed/` |
 | `ui_capture` | bool | false | 如果为真，第三环的测试脚本写入截图；审查添加 UI/UX personas |
@@ -284,6 +302,7 @@ python skills/codoop-ticket/scripts/codoop-ticket.py ticket <command> <args>
 
 - **确定性输入产生确定性输出** — 高保真需求使第三环能可靠执行而不猜测。
 - **三阶段人工协作** — 阶段 1（PRD）→ 阶段 2（规格）→ 阶段 3（任务），每个阶段之间有明确的人工确认。
+- **类型贴合流程** — `feature` 工单走完整的 PRD → Spec → 任务流程；`fix` 工单用更轻量的 `bug_report.md` 流程。类型在开始时与人工确认，绝不静默猜测。
 - **元数据自动推断** — 第二环从规格内容自动推断 `metadata.json`，省去人工手动、容易出错的配置。
 - **双模 Sub-Skills** — spec-driven-development 和 planning-and-task-breakdown 既可独立工作，也可作为 codoop-ticket 的集成阶段。
 - **不写代码** — 第二环是纯文档。代码仅在第三环写入。

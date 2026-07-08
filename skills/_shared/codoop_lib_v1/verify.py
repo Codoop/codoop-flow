@@ -1,18 +1,17 @@
-"""Verify stage: run per-module tests + enforce the files_to_edit whitelist.
+"""Verify stage: run per-module tests (+ UI screenshot gate).
 
-Both checks are deterministic conveyor-belt work — no AI involved.
+These checks are deterministic conveyor-belt work — no AI involved. Edit scope
+(``files_to_edit``) is NOT enforced here: it is advisory guidance the agent
+reads from spec.md / the ticket metadata, never a hard gate.
 """
 
 from __future__ import annotations
 
-import fnmatch
 import os
 import subprocess
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from .gitutil import git
-from .ignore import is_generated
 from .ticket import Ticket
 
 # Image extensions counted as captured screenshots for the UI gate.
@@ -24,29 +23,6 @@ class VerifyResult:
     ok: bool
     reasons: list[str] = field(default_factory=list)
     test_output: str = ""
-
-
-def _changed_files(worktree: Path) -> list[str]:
-    # Include staged, unstaged, and untracked changes relative to worktree root.
-    tracked = git("diff", "--name-only", "HEAD", cwd=worktree)
-    untracked = git(
-        "ls-files", "--others", "--exclude-standard", cwd=worktree
-    )
-    files = [
-        f for f in (tracked + untracked).splitlines()
-        if f.strip() and not is_generated(f.strip())
-    ]
-    return files
-
-
-def check_edit_scope(ticket: Ticket, worktree: Path) -> list[str]:
-    """Return list of files that fall OUTSIDE the files_to_edit whitelist."""
-    changed = _changed_files(worktree)
-    out_of_scope = []
-    for f in changed:
-        if not any(fnmatch.fnmatch(f, pat) for pat in ticket.files_to_edit):
-            out_of_scope.append(f)
-    return out_of_scope
 
 
 def run_tests(ticket: Ticket, worktree: Path) -> tuple[bool, str]:
@@ -88,19 +64,12 @@ def captured_screenshots(ticket: Ticket) -> list[Path]:
 def verify(ticket: Ticket, worktree: Path) -> VerifyResult:
     reasons: list[str] = []
 
-    # Hard gate 1: edit-scope whitelist.
-    out_of_scope = check_edit_scope(ticket, worktree)
-    if out_of_scope:
-        reasons.append(
-            "files edited outside files_to_edit whitelist: " + ", ".join(out_of_scope)
-        )
-
-    # Hard gate 2: tests must pass.
+    # Hard gate 1: tests must pass.
     tests_ok, test_output = run_tests(ticket, worktree)
     if not tests_ok:
         reasons.append("one or more module test commands failed")
 
-    # Hard gate 3: UI tickets must produce screenshots for the review personas.
+    # Hard gate 2: UI tickets must produce screenshots for the review personas.
     if ticket.ui_capture and not captured_screenshots(ticket):
         reasons.append(
             "ui_capture ticket produced no screenshots in "

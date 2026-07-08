@@ -8,8 +8,8 @@ and never hallucinate:
 
     pick    — claim the oldest pending ticket: move to in_progress/, create the
               isolated worktree, print the ticket + worktree paths (JSON).
-    verify  — run the ticket's tests + enforce the files_to_edit whitelist
-              (+ UI screenshot gate). Print pass/fail + output (JSON).
+    verify  — run the ticket's tests (+ UI screenshot gate). Print pass/fail +
+              output (JSON). Edit scope is advisory, not enforced.
     finish  — stage (excl. generated noise), commit on dev/<id>, move the
               ticket to done/, remove the worktree.
     fail    — move the ticket to failed/, write healing_report.md, remove wt.
@@ -152,8 +152,10 @@ def cmd_finish(config: Config, ticket_id: str, message: str) -> int:
     committed = bool(status.strip())
     sha = ""
     if committed:
+        # Prefix follows ticket_type: fix tickets get fix(...), else feat(...).
+        prefix = "fix" if ticket.ticket_type == "fix" else "feat"
         msg = message or (
-            f"feat({ticket.modules[0] if ticket.modules else 'core'}): "
+            f"{prefix}({ticket.modules[0] if ticket.modules else 'core'}): "
             f"{ticket.title} [{ticket.ticket_id}]"
         )
         git("commit", "-m", msg, cwd=worktree)
@@ -185,7 +187,7 @@ def main() -> int:
     sub.add_parser("status", help="show ticket counts per stage")
     sub.add_parser("pick", help="claim oldest pending ticket + create worktree")
 
-    p_verify = sub.add_parser("verify", help="run tests + edit-scope gate")
+    p_verify = sub.add_parser("verify", help="run tests (+ UI screenshot gate)")
     p_verify.add_argument("ticket_id")
 
     p_finish = sub.add_parser("finish", help="commit + archive to done/")

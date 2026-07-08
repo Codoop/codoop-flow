@@ -27,17 +27,35 @@ I want to design a user search feature for my e-commerce platform with keyword, 
 Ticket complete, ready for Phase 3 development ✅
 ```
 
+The flow above is for a **feature** ticket (需求单). A **fix** ticket (修复单)
+skips Phase 1 (PRD) and Phase 2 (Spec): it captures the defect in
+`bug_report.md`, then goes straight to task breakdown → metadata → validate →
+release. `codoop-ticket` infers the type from your description and asks you to
+confirm before scaffolding. See `SKILL.md` → "Ticket Types" for details.
+
 ## Final Outputs
 
 Ticket directory `docs/tickets/pending/ticket_001/`:
 
+Feature ticket:
+
 ```
 ticket_001/
-├── metadata.json      ← Auto-inferred: modules, test_command, files_to_edit
+├── metadata.json      ← Auto-inferred: ticket_type, modules, test_command, files_to_edit
 ├── module_prd.md      ← PM-written: business requirements (pure business)
 ├── spec.md            ← Architect-designed: technical spec (APIs, DB, UI)
 ├── plan.md            ← Auto-decomposed: implementation plan (steps)
 └── todo.md            ← Auto-decomposed: atomic task list (≤100 lines/task)
+```
+
+Fix ticket (`ticket_type: fix`):
+
+```
+ticket_002/
+├── metadata.json      ← ticket_type=fix, modules, test_command, files_to_edit
+├── bug_report.md      ← Symptom / Reproduction / Root Cause / Expected / Scope
+├── plan.md            ← Auto-decomposed: fix steps
+└── todo.md            ← Auto-decomposed: atomic task list
 ```
 
 ## Relationship with Other Skills
@@ -80,7 +98,7 @@ ticket_001/
 - Design API interfaces (for each platform: backend/web/mobile/desktop)
 - Design database fields and data models
 - Design UI interaction flows
-- Define editable files whitelist
+- Define editable files scope hint
 
 **You**:
 - Review `spec.md`

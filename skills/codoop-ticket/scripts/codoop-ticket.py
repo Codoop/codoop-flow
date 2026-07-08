@@ -20,12 +20,18 @@ from pathlib import Path
 # Add _shared to path for shared libraries
 sys.path.insert(0, str(Path(__file__).parents[2] / "_shared"))
 from codoop_lib_v1.config import load_config
+from codoop_lib_v1.ticket import Ticket
 from codoop_lib_v1.tickets_cli import init_draft, promote, validate_draft, update_metadata_from_docs, write_metadata
 
 
 def _cmd_ticket_init(args) -> int:
     config = load_config(args.config)
-    draft = init_draft(config, args.ticket_id, title=args.title or "", language=args.language or "auto")
+    draft = init_draft(
+        config, args.ticket_id,
+        title=args.title or "",
+        language=args.language or "auto",
+        ticket_type=args.type or "feature",
+    )
     print(f"created draft: {draft}")
     print("Fill module_prd.md + spec.md (+ plan/todo), then: "
           f"python codoop-ticket.py ticket promote {args.ticket_id} --config <toml>")
@@ -48,11 +54,39 @@ def _cmd_ticket_validate(args) -> int:
 def _cmd_ticket_promote(args) -> int:
     config = load_config(args.config)
     try:
+        result = validate_draft(config, args.ticket_id)
+        if not result.ok:
+            for e in result.errors:
+                print(f"error: {e}")
+            return 1
+
+        # Show summary before promoting
+        draft_dir = config.tickets_dir / "drafts" / args.ticket_id
+        ticket = Ticket.load(draft_dir)
+        print("\n📋 Ticket Summary:")
+        print(f"  ID: {ticket.ticket_id}")
+        print(f"  Title: {ticket.title}")
+        print(f"  Modules: {', '.join(ticket.modules)}")
+        print(f"  Files: {', '.join(ticket.files_to_edit)}")
+
+        if result.warnings:
+            print("\n⚠️  Warnings:")
+            for w in result.warnings:
+                print(f"  - {w}")
+
+        # Skip confirmation if --force flag is set
+        if not args.force:
+            print("\n" + "="*50)
+            response = input("Confirm promoting to pending? (yes/no): ").strip().lower()
+            if response not in ("yes", "y"):
+                print("Promotion cancelled.")
+                return 1
+
         dest = promote(config, args.ticket_id)
     except (ValueError, FileExistsError) as e:
         print(str(e))
         return 1
-    print(f"promoted to pending: {dest}")
+    print(f"\n✅ Promoted to pending: {dest}")
     print("Ready for Loop 3 execution.")
     return 0
 
@@ -91,6 +125,10 @@ def main() -> int:
             sp.add_argument("--title", default="", help="ticket title")
             sp.add_argument("--language", default="auto", choices=["auto", "zh", "en"],
                           help="template language: auto (detect from title), zh, or en")
+            sp.add_argument("--type", default="feature", choices=["feature", "fix"],
+                          help="ticket type: feature (需求单, default) or fix (修复单)")
+        if name == "promote":
+            sp.add_argument("--force", action="store_true", help="skip confirmation prompt")
         sp.set_defaults(func=func)
 
     args = parser.parse_args()

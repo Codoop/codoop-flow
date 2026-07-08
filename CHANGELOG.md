@@ -5,6 +5,29 @@ All notable changes to codoop-flow will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- **Ticket types: `feature` (需求单) and `fix` (修复单).** A new optional
+  `ticket_type` field in `metadata.json` (default `feature`) selects the Loop 2
+  flow: `feature` requires `module_prd.md` + `spec.md`; `fix` skips PRD/Spec and
+  uses a lightweight `bug_report.md` (Symptom / Reproduction / Root Cause /
+  Expected Behavior / Scope). `plan.md` + `todo.md` are recommended for both.
+  `codoop-ticket ticket init` gains `--type feature|fix`, and `codoop-ticket`
+  infers the type from the request but always confirms before scaffolding. Loop 3
+  derives the fallback commit prefix from the type (`feat` / `fix`). Fully
+  back-compatible: tickets without `ticket_type` behave as `feature`.
+
+### Changed
+
+- **`files_to_edit` is now advisory, not an enforced gate.** Loop 3 `verify` no
+  longer fails a ticket for edits outside the `files_to_edit` whitelist — the
+  edit scope defined in `spec.md` / `metadata.json` is guidance the agent reads,
+  not a hard gate. This unblocks tickets that legitimately need to touch adjacent
+  files. `verify` now has two hard gates: tests pass, and (for `ui_capture`
+  tickets) UI screenshots. `files_to_edit` is also now an optional metadata field.
+
 ## [0.1.1] - 2026-07-07
 
 ### Added
