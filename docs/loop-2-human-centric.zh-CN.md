@@ -52,7 +52,7 @@
 
 1. **触发** — 你确认阶段 1 完成；`codoop-ticket` 加载 `/skill spec-driven-development`
 2. **设计** — 架构师代理基于确认的 `module_prd.md` 写入 `spec.md`
-3. **内容** — 包括 API 契约（按平台：后端/网页/移动/桌面）、数据模式字段级、UI 交互和状态管理、代码示例、测试策略、Always/Ask First/Never 边界，以及 `## 可编辑文件` 部分列出的 glob，为第三环提供编辑范围提示（给代理的参考，`verify` 不强制）
+3. **内容** — 包括 API 契约（按平台：后端/网页/移动/桌面）、数据模式字段级、UI 交互和状态管理、代码示例、测试策略、Always/Ask First/Never 边界
 4. **审查** — 你审查并确认或请求更改
 
 ### 阶段 3 — 任务分解（plan.md + todo.md）
@@ -92,9 +92,9 @@ docs/tickets/
 
 | 文件 | 作者 | 必需 | 用途 |
 |---|---|---|---|
-| `metadata.json` | 自动推断；人工确认 | 是 | 第三环的机器可读配置：工单类型、模块、测试命令、编辑范围、自愈预算、UI 捕获标志 |
+| `metadata.json` | 自动推断；人工确认 | 是 | 第三环的机器可读配置：工单类型、模块、测试命令、自愈预算、UI 捕获标志 |
 | `module_prd.md` | PM 代理 + 人工 | `feature` 必需 | 100% 纯业务描述 — 用户故事、状态流、验收标准 |
-| `spec.md` | 架构师代理 + 人工 | `feature` 必需 | 技术契约 — API、数据模式、UI 交互、`files_to_edit` 范围提示 |
+| `spec.md` | 架构师代理 + 人工 | `feature` 必需 | 技术契约 — API、数据模式、UI 交互 |
 | `bug_report.md` | 人工（+ 代理） | `fix` 必需 | 缺陷记录 — 现象 / 复现 / 根因 / 预期行为 / 影响范围 |
 | `plan.md` | 自动分解 + 人工审查 | 推荐（两类） | 分阶段实现计划，带检查点 |
 | `todo.md` | 自动分解 + 人工审查 | 推荐（两类） | 原子检查框任务列表，每个 ≤100 行，带平台前缀 |
@@ -179,7 +179,6 @@ python skills/codoop-ticket/scripts/codoop-ticket.py ticket <command> <args>
 
 **推断逻辑：**
 - `modules` — 从 `spec.md` 标题扫描（`## 后端`、`## 网页`等），映射到：后端、网页、移动、桌面
-- `files_to_edit` — 从 `## 可编辑文件` 部分提取（如果部分缺失则回退：从模块名称派生）
 - `test_command` — 如果不存在则按模块用默认值填充（后端：`bash script/test-backend.sh`、网页：`npm test`、移动：`flutter test`、桌面：`cargo test`）
 
 通常在阶段 3 完成后、验证和提升前调用。
@@ -190,12 +189,15 @@ python skills/codoop-ticket/scripts/codoop-ticket.py ticket <command> <args>
 
 **内部：**
 - 首先调用 `validate`；如果任何错误则失败
+- 展示工单摘要（id / title / modules）并交互式确认（`--force` 跳过确认）
 - 使用 `shutil.move` 将 `docs/tickets/drafts/<ticket_id>/` 移到 `docs/tickets/pending/<ticket_id>/`
 - 拒绝覆盖既有的 pending 工单
 
+**必须经人工批准。** `pending/` 是第三环的拾取队列——未经审核的 promote 意味着 agent 可能基于未确认的设计开始开发。由 `codoop-ticket`（skill）驱动流程时，promote 前必须先征得用户确认，未经批准不得使用 `--force`。
+
 **输出：** 目标路径和 `codoop_tools.py pick` 将下一步拾取它的消息。
 
-**退出码：** 成功返回 0，验证或移动失败返回 1。
+**退出码：** 成功返回 0；验证失败、取消确认或移动失败返回 1。
 
 ---
 
@@ -221,7 +223,6 @@ python skills/codoop-ticket/scripts/codoop-ticket.py ticket <command> <args>
 | `title` | 字符串 | 人类可读的工单标题 |
 | `modules` | 字符串列表 | 这个工单涉及的平台模块：`backend`、`web`、`mobile`、`desktop` |
 | `test_command` | dict[字符串, 字符串] | 每个模块的测试命令运行（键必须覆盖所有 `modules` 条目） |
-| `files_to_edit` | 字符串列表 | Glob 模式，提示代理应把改动集中在哪里（第三环的编辑范围参考；`verify` 不强制） |
 
 **可选字段：**
 
@@ -253,7 +254,7 @@ python skills/codoop-ticket/scripts/codoop-ticket.py ticket <command> <args>
 
 `promote` 命令的文件系统移动（`drafts/` → `pending/`）是唯一的交接机制。第三环的调度器轮询 `pending/`，拾取最旧的工单，并消费：
 
-- `metadata.json` — 驱动所有调度器决策（模块、测试命令、files_to_edit、自愈预算、ui_capture 标志）
+- `metadata.json` — 驱动所有调度器决策（模块、测试命令、自愈预算、ui_capture 标志）
 - `module_prd.md` + `spec.md` — 在启动时逐步披露给编码引擎
 - `plan.md` + `todo.md` — 第三环逐步读取任务列表，随着完成检查项
 - `public/qa-screenshots/` — 由第三环的测试脚本在运行时创建（UI 工单）

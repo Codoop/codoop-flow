@@ -24,8 +24,6 @@ class Ticket:
     modules: list[str]
     # module name -> shell command. Scheduler runs one per module in `modules`.
     test_command: dict[str, str]
-    # Whitelist of glob patterns the engine is allowed to edit.
-    files_to_edit: list[str]
     # "feature" (需求单) or "fix" (修复单). Drives which docs Loop 2 requires and
     # which commit prefix Loop 3 uses. Defaults to "feature" for back-compat.
     ticket_type: str = "feature"
@@ -61,13 +59,6 @@ class Ticket:
         _require(raw, "title", str, meta_path)
         _require(raw, "modules", list, meta_path)
         _require(raw, "test_command", dict, meta_path)
-        # files_to_edit is advisory (guidance the agent reads), not enforced by
-        # verify — so it's optional. Type-check only when present.
-        if "files_to_edit" in raw and not isinstance(raw["files_to_edit"], list):
-            raise ValueError(
-                f"{meta_path}: field 'files_to_edit' must be list, "
-                f"got {type(raw['files_to_edit']).__name__}"
-            )
 
         # ticket_type is optional; defaults to "feature". Validate when present.
         ticket_type = raw.get("ticket_type", "feature")
@@ -91,7 +82,6 @@ class Ticket:
             title=raw["title"],
             modules=modules,
             test_command=test_command,
-            files_to_edit=raw.get("files_to_edit", []),
             ticket_type=ticket_type,
             coding_engine=raw.get("coding_engine"),
             max_healing_attempts=int(raw.get("max_healing_attempts", 3)),

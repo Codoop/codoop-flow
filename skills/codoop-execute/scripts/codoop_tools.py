@@ -9,7 +9,7 @@ and never hallucinate:
     pick    — claim the oldest pending ticket: move to in_progress/, create the
               isolated worktree, print the ticket + worktree paths (JSON).
     verify  — run the ticket's tests (+ UI screenshot gate). Print pass/fail +
-              output (JSON). Edit scope is advisory, not enforced.
+              output (JSON).
     finish  — stage (excl. generated noise), commit on dev/<id>, move the
               ticket to done/, remove the worktree.
     fail    — move the ticket to failed/, write healing_report.md, remove wt.
@@ -189,7 +189,6 @@ def cmd_pick(config: Config, lease_token: str | None = None,
                 "ticket_dir": str(existing),
                 "worktree": str(wt.path),
                 "lease_token": lease.token,
-                "files_to_edit": ticket.files_to_edit,
                 "ui_capture": ticket.ui_capture,
                 "screenshot_dir": str(ticket.screenshot_dir) if ticket.ui_capture else None,
             })
@@ -216,7 +215,6 @@ def cmd_pick(config: Config, lease_token: str | None = None,
         "branch": wt.branch,
         "lease_token": lease.token,
         "modules": ticket.modules,
-        "files_to_edit": ticket.files_to_edit,
         "ui_capture": ticket.ui_capture,
         "screenshot_dir": str(ticket.screenshot_dir) if ticket.ui_capture else None,
     })
@@ -242,7 +240,6 @@ def cmd_takeover(config: Config, ticket_id: str, runner_note: str = "") -> int:
         "ticket_dir": str(tdir),
         "worktree": str(wt.path),
         "lease_token": lease.token,
-        "files_to_edit": ticket.files_to_edit,
         "ui_capture": ticket.ui_capture,
         "screenshot_dir": str(ticket.screenshot_dir) if ticket.ui_capture else None,
     })

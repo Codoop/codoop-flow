@@ -3,7 +3,7 @@
 The intelligent work (writing PRD / spec / plan / todo) is the human's + their
 product agent's job. This module only does the conveyor-belt plumbing around
 that: scaffold a draft, validate it's complete, and promote it to pending/
-(which the codoop-flow skill then picks up via codoop_tools.py).
+(which the codoop-execute skill then picks up via codoop_tools.py).
 
     drafts/<id>/  --init-->  (human/AI fills docs)  --validate-->  --promote-->  pending/<id>/
 """
@@ -84,7 +84,6 @@ def init_draft(
         "ticket_type": ticket_type,
         "modules": ["backend"],
         "test_command": {"backend": "bash script/test-backend.sh"},
-        "files_to_edit": ["backend/**"],
         "max_healing_attempts": 3,
         "ui_capture": False,
     }
@@ -100,8 +99,7 @@ def init_draft(
                 "## 复现步骤 (Reproduction)\n> 1. ... 2. ... 3. → 出现 X(期望 Y)\n\n"
                 "## 根因 (Root Cause)\n> 定位到的原因(可在修复中补充)。\n\n"
                 "## 预期行为 (Expected Behavior)\n> 修好之后应该是什么样。\n\n"
-                "## 影响范围 (Scope)\n> 受影响的模块 / 文件(对应 metadata 里可选的 "
-                "files_to_edit 编辑范围提示)。\n",
+                "## 影响范围 (Scope)\n> 受影响的模块 / 文件。\n",
                 encoding="utf-8",
             )
         else:
@@ -114,9 +112,8 @@ def init_draft(
             )
             (draft / "spec.md").write_text(
                 "# 技术规格 (Spec)\n\n> 基于 module_prd.md,定义 API 契约 / 数据 Schema / "
-                "UI 交互 / files_to_edit 编辑范围提示。\n\n"
-                "## API 契约\n\n## 数据 Schema\n\n## UI 交互约定\n\n"
-                "## 编辑范围 (files_to_edit)\n",
+                "UI 交互。\n\n"
+                "## API 契约\n\n## 数据 Schema\n\n## UI 交互约定\n",
                 encoding="utf-8",
             )
         (draft / "plan.md").write_text(
@@ -133,8 +130,7 @@ def init_draft(
                 "## Reproduction\n> 1. ... 2. ... 3. → X happens (expected Y)\n\n"
                 "## Root Cause\n> The identified cause (may be filled in during the fix).\n\n"
                 "## Expected Behavior\n> What it should do once fixed.\n\n"
-                "## Scope\n> Affected modules / files (matches the optional "
-                "files_to_edit hint in metadata).\n",
+                "## Scope\n> Affected modules / files.\n",
                 encoding="utf-8",
             )
         else:
@@ -147,9 +143,8 @@ def init_draft(
             )
             (draft / "spec.md").write_text(
                 "# Technical Spec\n\n> Based on module_prd.md, define API contract / data schema / "
-                "UI interactions / files_to_edit scope hint.\n\n"
-                "## API Contract\n\n## Data Schema\n\n## UI Interactions\n\n"
-                "## Editable Files (files_to_edit)\n",
+                "UI interactions.\n\n"
+                "## API Contract\n\n## Data Schema\n\n## UI Interactions\n",
                 encoding="utf-8",
             )
         (draft / "plan.md").write_text(
@@ -218,7 +213,6 @@ def update_metadata_from_docs(config: Config, ticket_id: str) -> dict:
 
     Infers:
     - modules: extracted from spec.md's "## Backend", "## Web", etc. section headers
-    - files_to_edit: extracted from spec.md's "## Editable Files" section or inferred from modules
     - test_command: recommended based on modules (can be overridden by user)
 
     Returns the updated metadata dict (but does NOT write to disk yet).
@@ -256,50 +250,11 @@ def update_metadata_from_docs(config: Config, ticket_id: str) -> dict:
                 if any(m in section for m in ["desktop", "electron", "tauri"]):
                     modules.add("desktop")
 
-        # If no modules inferred from headers, extract from explicit "## Editable Files" section
-        if not modules:
-            in_editable_section = False
-            for line in spec_lines:
-                if line.startswith("## ") and "editable" in line.lower():
-                    in_editable_section = True
-                elif line.startswith("## "):
-                    in_editable_section = False
-                elif in_editable_section and line.strip().startswith("-"):
-                    # e.g., "- backend/**" → infer module
-                    if "backend" in line:
-                        modules.add("backend")
-                    if "web" in line or "frontend" in line:
-                        modules.add("web")
-                    if "mobile" in line:
-                        modules.add("mobile")
-                    if "desktop" in line:
-                        modules.add("desktop")
-
     # Default to backend if nothing inferred
     if not modules:
         modules = {"backend"}
 
     modules = sorted(list(modules))
-
-    # Infer files_to_edit from spec.md's explicit section
-    files_to_edit = metadata.get("files_to_edit", [])
-    if spec_path.exists():
-        spec_text = spec_path.read_text(encoding="utf-8")
-        in_editable_section = False
-        for line in spec_text.splitlines():
-            if "## " in line and "editable" in line.lower():
-                in_editable_section = True
-            elif line.startswith("## "):
-                in_editable_section = False
-            elif in_editable_section and line.strip().startswith("-"):
-                pattern = line.strip()[1:].strip()  # "- backend/**" → "backend/**"
-                if pattern not in files_to_edit:
-                    files_to_edit.append(pattern)
-
-    # If no explicit files_to_edit in spec, infer from modules
-    if not files_to_edit:
-        for module in modules:
-            files_to_edit.append(f"{module}/**")
 
     # Infer test_command for each module (can be overridden by user)
     test_command = metadata.get("test_command", {})
@@ -319,9 +274,9 @@ def update_metadata_from_docs(config: Config, ticket_id: str) -> dict:
     updated = {
         **metadata,
         "modules": modules,
-        "files_to_edit": files_to_edit,
         "test_command": test_command,
     }
+    updated.pop("files_to_edit", None)
 
     return updated
 
@@ -337,7 +292,7 @@ def write_metadata(config: Config, ticket_id: str, metadata: dict) -> None:
 
 
 def promote(config: Config, ticket_id: str) -> Path:
-    """Validate, then move drafts/<id> -> pending/<id> so the codoop-flow skill
+    """Validate, then move drafts/<id> -> pending/<id> so the codoop-execute skill
     can pick it up. Raises ValueError if validation fails."""
     result = validate_draft(config, ticket_id)
     if not result.ok:

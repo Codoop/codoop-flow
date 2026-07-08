@@ -40,7 +40,6 @@ For ticket orchestration scenarios, particularly important to include:
 - **API Contract** — Interface definitions for each platform (Backend/Web/Mobile/Desktop)
 - **Data Schema** — Database field changes and data model design
 - **UI Interactions** — Frontend interaction flows and state management
-- **Editable Files** — `files_to_edit` scope hint (advisory for Phase 3; not enforced by verify)
 
 ## Relationship with planning-and-task-breakdown
 

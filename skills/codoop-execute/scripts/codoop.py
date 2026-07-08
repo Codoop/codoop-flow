@@ -9,8 +9,8 @@ Covers the human-driven ticket lifecycle (design §4.1):
 
 The Venture-Discovery loop (design §2) is now invoked in-session via the
 codoop-discover skill. The Agent-Centric loop (build/verify/review/ship) is
-driven via the codoop-flow skill (skills/codoop-flow/SKILL.md), which calls
-the guardrail CLI codoop_tools.py.
+driven via the codoop-execute skill (skills/codoop-execute/SKILL.md), which
+calls the guardrail CLI codoop_tools.py.
 """
 
 from __future__ import annotations
@@ -38,7 +38,7 @@ def _cmd_setup(args) -> int:
     print(f"created config: {cfg_path}")
     print(f"ticket pipeline ready under: {config.tickets_dir}")
     print("Next: add a ticket to pending/, then in Codex or Claude Code say")
-    print(f'  "use the codoop-flow skill and run a ticket against {cfg_path}"')
+    print(f'  "use the codoop-execute skill and run a ticket against {cfg_path}"')
     return 0
 
 
@@ -72,7 +72,7 @@ def _cmd_ticket_promote(args) -> int:
         print(str(e))
         return 1
     print(f"promoted to pending: {dest}")
-    print("The codoop-flow skill will pick it up via `codoop_tools.py pick`.")
+    print("The codoop-execute skill will pick it up via `codoop_tools.py pick`.")
     return 0
 
 

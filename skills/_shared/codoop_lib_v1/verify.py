@@ -1,8 +1,6 @@
 """Verify stage: run per-module tests (+ UI screenshot gate).
 
-These checks are deterministic conveyor-belt work — no AI involved. Edit scope
-(``files_to_edit``) is NOT enforced here: it is advisory guidance the agent
-reads from spec.md / the ticket metadata, never a hard gate.
+These checks are deterministic conveyor-belt work — no AI involved.
 """
 
 from __future__ import annotations

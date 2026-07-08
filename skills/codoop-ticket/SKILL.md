@@ -17,7 +17,7 @@ A ticket is a complete design document package for one feature module:
 | `spec.md` | Technical specification (APIs, DB, implementation details) | Architect agent |
 | `plan.md` | Implementation plan (steps) | Auto-inferred |
 | `todo.md` | Atomic task list (≤100 lines code/task) | Auto-inferred |
-| `metadata.json` | Ticket metadata (modules, test commands, edit scope) | Auto-inferred |
+| `metadata.json` | Ticket metadata (modules, test commands) | Auto-inferred |
 
 The table above shows a **feature** ticket (需求单). A **fix** ticket (修复单) is
 lighter — see "Ticket Types" below.
@@ -113,7 +113,6 @@ PM agent output:
    - API interface design (backend, web, mobile platforms)
    - Database fields and data models
    - UI interaction flows
-   - Editable files scope hint (`files_to_edit`)
 3. You review, provide feedback, modify until satisfied
 
 **Example**:
@@ -132,11 +131,6 @@ spec.md includes:
 - SearchBar component: keyword input + filter sidebar
 - ResultsList component: grid/list view toggle
 - ResultItem component: product card with quick add-to-cart
-
-## Editable Files
-- backend/**
-- web/src/**
-- mobile/lib/**
 ```
 
 ### 【Phase 3】Task Breakdown (plan.md + todo.md)
@@ -171,7 +165,6 @@ todo.md:
 **Process**:
 1. Automatically infer from `spec.md`:
    - `modules`: extract from spec headers (## Backend → backend, ## Web → web)
-   - `files_to_edit`: extract from "## Editable Files" section
    - `test_command`: generate defaults based on modules
 2. Show inferred metadata.json; you confirm or modify
 
@@ -181,7 +174,6 @@ todo.md:
   "ticket_id": "ticket_001",
   "title": "E-commerce Product Search Feature",
   "modules": ["backend", "web", "mobile"],
-  "files_to_edit": ["backend/**", "web/src/**", "mobile/lib/**"],
   "test_command": {
     "backend": "npm run test -- backend",
     "web": "npm run test -- web",
@@ -196,8 +188,16 @@ todo.md:
 
 **Process**:
 1. Call `tickets_cli validate` to verify ticket completeness
-2. Call `tickets_cli promote` to move to `pending/`
-3. Ticket complete, ready for Phase 3 development
+2. Show the ticket summary (id / title / modules) and **ask the
+   user to confirm** promotion
+3. Only after explicit approval, call `tickets_cli promote` to move to `pending/`
+4. Ticket complete, ready for Phase 3 development
+
+**Promote requires explicit user approval.** Never promote a draft to
+`pending/` without the user confirming in the current conversation. Do not
+pass `--force` (or pipe `yes` into the prompt) unless the user has already
+approved — `pending/` is the Loop 3 pickup queue, so an unreviewed promote
+means an agent may start building from an unapproved design.
 
 ---
 
@@ -256,7 +256,6 @@ These serve as context to PM and Architect agents, ensuring tickets align with t
 When the ticket is complete, Phase 3 receives via `metadata.json`:
 
 - `modules`: which test suites to run?
-- `files_to_edit`: advisory edit-scope hint for the agent (not enforced by verify)
 - `test_command`: verification standards
 
 Phase 3 automatically picks up the ticket and develops in a worktree.
@@ -327,5 +326,5 @@ python skills/codoop-ticket/scripts/codoop-ticket.py \
 Loop 2 has no dependencies on Loop 3 (codoop-flow). 
 Only requirement: a `codoop_flow.toml` pointing to the target project.
 
-For setup, use: `python skills/codoop-flow/scripts/codoop_tools.py setup <target-repo>`
+For setup, use: `python skills/codoop-execute/scripts/codoop.py setup <target-repo>`
 

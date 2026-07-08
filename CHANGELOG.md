@@ -5,6 +5,36 @@ All notable changes to codoop-flow will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Removed
+
+- **`files_to_edit` removed entirely.** The concept (introduced as a permission
+  whitelist, downgraded to an advisory hint in 0.1.2) is gone from the whole
+  pipeline: the `Ticket` model no longer carries the field, `ticket init` no
+  longer scaffolds it, the spec.md template drops its "Editable Files" section,
+  `update-metadata` no longer infers it (and actively strips a stale field from
+  older tickets), and `pick`/`takeover` JSON output no longer includes it.
+  Edit-scope guidance now lives solely in `spec.md` prose — the agent stays
+  within the scope the spec describes. Old tickets that still contain the field
+  keep working: unknown metadata fields are ignored.
+
+### Added
+
+- **Promote requires explicit user approval (skill rule).** `codoop-ticket`'s
+  Finalize stage now mandates showing the ticket summary and getting user
+  confirmation before `ticket promote`, and forbids `--force` without prior
+  approval — `pending/` is the Loop 3 pickup queue, so an unreviewed promote
+  means an agent may start building from an unapproved design.
+
+### Fixed
+
+- README links to the removed `LOOP3_EXECUTION_GUIDE.md` now point to
+  `docs/loop-3-agent-centric.md`; stale `skills/codoop-flow/scripts/` CLI paths
+  updated to the actual `codoop-ticket`/`codoop-execute` script locations; the
+  removed `discover --agent` CLI example replaced with the in-session
+  `/skill codoop-discover` invocation.
+
 ## [0.1.3] - 2026-07-08
 
 ### Added

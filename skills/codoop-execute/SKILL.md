@@ -80,8 +80,7 @@ Parse the JSON, then branch on `reason`:
 
 On a claim/resume you get: `ticket_id`, `lease_token`, `ticket_dir` (holds
 module_prd.md / spec.md / plan.md / todo.md), `worktree` (the ISOLATED clone you
-must edit in), `files_to_edit` (advisory edit-scope hint), `ui_capture`,
-`screenshot_dir`.
+must edit in), `ui_capture`, `screenshot_dir`.
 
 ### 2. Build (your work)
 - Read the ticket's design docs from `ticket_dir`: `module_prd.md` (business),
@@ -90,9 +89,8 @@ must edit in), `files_to_edit` (advisory edit-scope hint), `ui_capture`,
   present — respect them as hard architectural boundaries.
 - Load `$SKILL/../../incremental-implementation/SKILL.md` discipline
   and implement the ticket **inside the `worktree` directory only**.
-- **Edit-scope guidance:** prefer to create/modify files matching the
-  `files_to_edit` globs and the scope described in `spec.md`. This is advisory,
-  not enforced by verify — stay in scope unless the task genuinely requires
+- **Edit-scope guidance:** prefer to create/modify files within the scope
+  described in `spec.md` — stay in scope unless the task genuinely requires
   touching adjacent files.
 - Work the `todo.md` items in order; check them off (`- [x]`) as you go.
 
@@ -105,7 +103,7 @@ were produced. Otherwise read `reasons` + `test_output`.
 
 ### 4. Self-heal (your work) — on verify failure
 - Apply `$SKILL/../../debugging-and-error-recovery/SKILL.md` triage.
-  Denoise `test_output` to the real traceback / assertion / out-of-scope file.
+  Denoise `test_output` to the real traceback / assertion.
 - Fix the **root cause** with a minimal change; stay in scope; don't add
   unrelated features. Re-run verify.
 - Budget: retry up to the ticket's `max_healing_attempts` (default 3). If still
@@ -177,7 +175,7 @@ python3 $SKILL/scripts/codoop.py ticket promote  <id> --config <toml>
 To keep working the queue, use the host agent's scheduler/loop facility. In
 Claude Code, for example:
 ```
-/loop 5m run the codoop-flow skill against <toml>
+/loop 5m run the codoop-execute skill against <toml>
 ```
 In Codex, use a recurring automation or explicitly ask Codex to run the skill
 again against the same config. The guardrail CLI holds a **lease** on each

@@ -22,7 +22,7 @@
   "interface": {
     "displayName": "codoop-flow",
     "shortDescription": "Guardrailed AI ticket pipeline",
-    "longDescription": "Run AI coding work as a guarded ticket pipeline. codoop-flow lets Codex pick one pending ticket, build in an isolated git worktree, verify tests and edit-scope whitelists, run review personas, sync living docs, and archive the ticket to done or failed.",
+    "longDescription": "Run AI coding work as a guarded ticket pipeline. codoop-flow lets Codex pick one pending ticket, build in an isolated git worktree, verify tests, run review personas, sync living docs, and archive the ticket to done or failed.",
     "developerName": "Codoop",
     "category": "Developer Tools",
     "capabilities": [

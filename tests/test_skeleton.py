@@ -60,7 +60,7 @@ def _config_obj(root: Path, worktrees: Path) -> Config:
 
 
 def _make_ticket(
-    root: Path, ticket_id: str, *, files_to_edit, test_cmd,
+    root: Path, ticket_id: str, *, test_cmd,
     title="skeleton test", ui_capture=False, ticket_type=None,
 ) -> Path:
     tdir = root / "docs" / "tickets" / "pending" / ticket_id
@@ -70,7 +70,6 @@ def _make_ticket(
         "title": title,
         "modules": ["backend"],
         "test_command": {"backend": test_cmd},
-        "files_to_edit": files_to_edit,
         "max_healing_attempts": 3,
     }
     if ui_capture:
@@ -106,7 +105,7 @@ def _check(cond: bool, msg: str) -> None:
 def test_pick_moves_and_creates_worktree(root: Path, worktrees: Path) -> None:
     print("[test] pick: pending -> in_progress + worktree")
     cfg = _write_config(root, worktrees)
-    _make_ticket(root, "ticket_001", files_to_edit=["backend/**"], test_cmd="true")
+    _make_ticket(root, "ticket_001", test_cmd="true")
     code, data = _tool(cfg, "pick")
     _check(code == 0 and data["picked"], "pick succeeded")
     _check(data["ticket_id"] == "ticket_001", "picked the pending ticket")
@@ -119,9 +118,9 @@ def test_pick_moves_and_creates_worktree(root: Path, worktrees: Path) -> None:
 def test_pick_reports_when_in_progress_busy(root: Path, worktrees: Path) -> None:
     print("[test] pick: reports existing in_progress instead of double-picking")
     cfg = _write_config(root, worktrees)
-    _make_ticket(root, "ticket_a", files_to_edit=["backend/**"], test_cmd="true")
+    _make_ticket(root, "ticket_a", test_cmd="true")
     _tool(cfg, "pick")  # claims ticket_a
-    _make_ticket(root, "ticket_b", files_to_edit=["backend/**"], test_cmd="true")
+    _make_ticket(root, "ticket_b", test_cmd="true")
     code, data = _tool(cfg, "pick")
     _check(not data["picked"], "second pick does not claim a new ticket")
     _check(data["ticket_id"] == "ticket_a", "reports the busy in_progress ticket")
@@ -131,7 +130,7 @@ def test_pick_reports_when_in_progress_busy(root: Path, worktrees: Path) -> None
 def test_pick_mints_lease(root: Path, worktrees: Path) -> None:
     print("[test] pick: first claim mints a lease token + lease file")
     cfg = _write_config(root, worktrees)
-    _make_ticket(root, "ticket_l1", files_to_edit=["backend/**"], test_cmd="true")
+    _make_ticket(root, "ticket_l1", test_cmd="true")
     code, data = _tool(cfg, "pick")
     _check(code == 0 and data["picked"], "pick succeeded")
     _check(bool(data.get("lease_token")), "pick returned a lease_token")
@@ -141,7 +140,7 @@ def test_pick_mints_lease(root: Path, worktrees: Path) -> None:
 def test_pick_blocks_without_lease(root: Path, worktrees: Path) -> None:
     print("[test] pick: resuming an owned ticket without the token is blocked")
     cfg = _write_config(root, worktrees)
-    _make_ticket(root, "ticket_l2", files_to_edit=["backend/**"], test_cmd="true")
+    _make_ticket(root, "ticket_l2", test_cmd="true")
     _, first = _tool(cfg, "pick")
     wt = Path(first["worktree"])
     # A second runner picks with no token -> blocked, worktree untouched.
@@ -156,7 +155,7 @@ def test_pick_blocks_without_lease(root: Path, worktrees: Path) -> None:
 def test_pick_resumes_with_lease(root: Path, worktrees: Path) -> None:
     print("[test] pick: same runner resumes with its token")
     cfg = _write_config(root, worktrees)
-    _make_ticket(root, "ticket_l3", files_to_edit=["backend/**"], test_cmd="true")
+    _make_ticket(root, "ticket_l3", test_cmd="true")
     _, first = _tool(cfg, "pick")
     token = first["lease_token"]
     code, data = _tool(cfg, "pick", "--lease", token)
@@ -168,7 +167,7 @@ def test_pick_resumes_with_lease(root: Path, worktrees: Path) -> None:
 def test_takeover_rotates_token(root: Path, worktrees: Path) -> None:
     print("[test] takeover: mints a new token; old token then rejected by verify")
     cfg = _write_config(root, worktrees)
-    _make_ticket(root, "ticket_l4", files_to_edit=["backend/**"], test_cmd="true")
+    _make_ticket(root, "ticket_l4", test_cmd="true")
     _, first = _tool(cfg, "pick")
     old = first["lease_token"]
     code, data = _tool(cfg, "takeover", "ticket_l4")
@@ -183,7 +182,7 @@ def test_takeover_rotates_token(root: Path, worktrees: Path) -> None:
 def test_verify_no_token_warns_but_proceeds(root: Path, worktrees: Path) -> None:
     print("[test] verify: omitting --lease proceeds (back-compat)")
     cfg = _write_config(root, worktrees)
-    _make_ticket(root, "ticket_l5", files_to_edit=["backend/**"], test_cmd="true")
+    _make_ticket(root, "ticket_l5", test_cmd="true")
     _tool(cfg, "pick")
     code, data = _tool(cfg, "verify", "ticket_l5")
     _check(code == 0 and data["ok"], "verify without token still runs")
@@ -192,7 +191,7 @@ def test_verify_no_token_warns_but_proceeds(root: Path, worktrees: Path) -> None
 def test_finish_releases_lease(root: Path, worktrees: Path) -> None:
     print("[test] finish: lease file removed after archiving to done/")
     cfg = _write_config(root, worktrees)
-    _make_ticket(root, "ticket_l6", files_to_edit=["backend/**"], test_cmd="true")
+    _make_ticket(root, "ticket_l6", test_cmd="true")
     _, picked = _tool(cfg, "pick")
     token = picked["lease_token"]
     (Path(picked["worktree"]) / "backend" / "f.txt").write_text("x", encoding="utf-8")
@@ -204,7 +203,7 @@ def test_finish_releases_lease(root: Path, worktrees: Path) -> None:
 def test_status_reports_in_progress_detail(root: Path, worktrees: Path) -> None:
     print("[test] status: in_progress carries progress detail")
     cfg = _write_config(root, worktrees)
-    tdir = _make_ticket(root, "ticket_l7", files_to_edit=["backend/**"], test_cmd="true")
+    tdir = _make_ticket(root, "ticket_l7", test_cmd="true")
     (tdir / "todo.md").write_text(
         "# Todo\n- [x] a\n- [x] b\n- [ ] c\n- [ ] d\n- [ ] e\n", encoding="utf-8")
     _, picked = _tool(cfg, "pick", "--runner-note", "runner-X")
@@ -221,7 +220,7 @@ def test_status_reports_in_progress_detail(root: Path, worktrees: Path) -> None:
 def test_concurrent_first_pick_no_double_claim(root: Path, worktrees: Path) -> None:
     print("[test] pick: two concurrent first-picks -> exactly one claims, no crash")
     cfg = _write_config(root, worktrees)
-    _make_ticket(root, "ticket_c1", files_to_edit=["backend/**"], test_cmd="true")
+    _make_ticket(root, "ticket_c1", test_cmd="true")
     procs = [
         subprocess.Popen(
             [sys.executable, str(_TOOLS), "--config", str(cfg), "pick"],
@@ -247,7 +246,7 @@ def test_pick_adopts_legacy_in_progress(root: Path, worktrees: Path) -> None:
     print("[test] pick: legacy in_progress with no lease is adopted")
     cfg = _write_config(root, worktrees)
     # Simulate a pre-lease ticket sitting directly in in_progress/.
-    tdir = _make_ticket(root, "ticket_l8", files_to_edit=["backend/**"], test_cmd="true")
+    tdir = _make_ticket(root, "ticket_l8", test_cmd="true")
     import shutil as _sh
     dest = root / "docs" / "tickets" / "in_progress"
     _sh.move(str(tdir), str(dest / "ticket_l8"))
@@ -256,34 +255,20 @@ def test_pick_adopts_legacy_in_progress(root: Path, worktrees: Path) -> None:
     _check(bool(data.get("lease_token")), "lease minted on adopt")
 
 
-def test_verify_passes_in_scope(root: Path, worktrees: Path) -> None:
-    print("[test] verify: passing tests + in-scope edit -> ok")
+def test_verify_passes(root: Path, worktrees: Path) -> None:
+    print("[test] verify: passing tests -> ok")
     cfg = _write_config(root, worktrees)
-    _make_ticket(root, "ticket_002", files_to_edit=["backend/**"], test_cmd="true")
+    _make_ticket(root, "ticket_002", test_cmd="true")
     _, picked = _tool(cfg, "pick")
-    # Edit in scope inside the worktree.
     (Path(picked["worktree"]) / "backend" / "feature.txt").write_text("x", encoding="utf-8")
     code, data = _tool(cfg, "verify", "ticket_002")
     _check(code == 0 and data["ok"], "verify passed")
 
 
-def test_verify_ignores_edit_scope(root: Path, worktrees: Path) -> None:
-    print("[test] verify: edit scope is advisory, not enforced -> out-of-scope edit passes")
-    cfg = _write_config(root, worktrees)
-    _make_ticket(root, "ticket_003", files_to_edit=["backend/**"], test_cmd="true")
-    _, picked = _tool(cfg, "pick")
-    # Edit OUTSIDE files_to_edit (web/): no longer a hard gate.
-    (Path(picked["worktree"]) / "web").mkdir(exist_ok=True)
-    (Path(picked["worktree"]) / "web" / "oops.txt").write_text("x", encoding="utf-8")
-    code, data = _tool(cfg, "verify", "ticket_003")
-    _check(code == 0 and data["ok"], "verify passes despite out-of-scope edit")
-    _check(not any("whitelist" in r for r in data["reasons"]), "no whitelist violation reported")
-
-
 def test_verify_fails_on_failing_tests(root: Path, worktrees: Path) -> None:
     print("[test] verify: failing test command -> fail")
     cfg = _write_config(root, worktrees)
-    _make_ticket(root, "ticket_004", files_to_edit=["backend/**"], test_cmd="false")
+    _make_ticket(root, "ticket_004", test_cmd="false")
     _tool(cfg, "pick")
     code, data = _tool(cfg, "verify", "ticket_004")
     _check(not data["ok"], "verify failed on failing tests")
@@ -293,7 +278,7 @@ def test_ui_capture_gate(root: Path, worktrees: Path) -> None:
     print("[test] verify: ui_capture with/without screenshots")
     cfg = _write_config(root, worktrees)
     # No screenshots -> fail.
-    _make_ticket(root, "ticket_ui1", files_to_edit=["backend/**"], test_cmd="true", ui_capture=True)
+    _make_ticket(root, "ticket_ui1", test_cmd="true", ui_capture=True)
     _tool(cfg, "pick")
     _, data = _tool(cfg, "verify", "ticket_ui1")
     _check(not data["ok"] and any("screenshot" in r.lower() for r in data["reasons"]),
@@ -302,7 +287,7 @@ def test_ui_capture_gate(root: Path, worktrees: Path) -> None:
 
     # Writes a screenshot via the injected env var -> pass.
     _make_ticket(
-        root, "ticket_ui2", files_to_edit=["backend/**"], ui_capture=True,
+        root, "ticket_ui2", ui_capture=True,
         test_cmd='mkdir -p "$CODOOP_QA_SCREENSHOT_DIR" && printf x > "$CODOOP_QA_SCREENSHOT_DIR/desktop.png"',
     )
     _tool(cfg, "pick")
@@ -313,7 +298,7 @@ def test_ui_capture_gate(root: Path, worktrees: Path) -> None:
 def test_finish_commits_and_archives(root: Path, worktrees: Path) -> None:
     print("[test] finish: commit on dev branch + move to done/ + clean worktree")
     cfg = _write_config(root, worktrees)
-    _make_ticket(root, "ticket_005", files_to_edit=["backend/**"], test_cmd="true")
+    _make_ticket(root, "ticket_005", test_cmd="true")
     _, picked = _tool(cfg, "pick")
     (Path(picked["worktree"]) / "backend" / "f.txt").write_text("x", encoding="utf-8")
     code, data = _tool(cfg, "finish", "ticket_005", "--message", "feat(backend): x [ticket_005]")
@@ -331,7 +316,7 @@ def test_finish_commits_and_archives(root: Path, worktrees: Path) -> None:
 def test_finish_fix_uses_fix_prefix(root: Path, worktrees: Path) -> None:
     print("[test] finish (fix): auto commit message uses fix(...) prefix")
     cfg = _write_config(root, worktrees)
-    _make_ticket(root, "ticket_fix2", files_to_edit=["backend/**"], test_cmd="true",
+    _make_ticket(root, "ticket_fix2", test_cmd="true",
                  ticket_type="fix")
     _, picked = _tool(cfg, "pick")
     (Path(picked["worktree"]) / "backend" / "f.txt").write_text("x", encoding="utf-8")
@@ -348,7 +333,7 @@ def test_finish_fix_uses_fix_prefix(root: Path, worktrees: Path) -> None:
 def test_fail_archives_with_report(root: Path, worktrees: Path) -> None:
     print("[test] fail: move to failed/ + write healing_report")
     cfg = _write_config(root, worktrees)
-    _make_ticket(root, "ticket_006", files_to_edit=["backend/**"], test_cmd="true")
+    _make_ticket(root, "ticket_006", test_cmd="true")
     picked = _tool(cfg, "pick")[1]
     code, data = _tool(cfg, "fail", "ticket_006", "--report", "root cause: boom")
     _check(code == 0 and data["state"] == "failed", "fail returned failed")
@@ -360,7 +345,7 @@ def test_fail_archives_with_report(root: Path, worktrees: Path) -> None:
 def test_status_reports_counts(root: Path, worktrees: Path) -> None:
     print("[test] status: reports tickets per stage")
     cfg = _write_config(root, worktrees)
-    _make_ticket(root, "ticket_007", files_to_edit=["backend/**"], test_cmd="true")
+    _make_ticket(root, "ticket_007", test_cmd="true")
     code, data = _tool(cfg, "status")
     _check(code == 0, "status ran")
     _check("ticket_007" in data["pending"], "pending count includes the ticket")
@@ -469,8 +454,7 @@ def main() -> int:
         test_status_reports_in_progress_detail,
         test_concurrent_first_pick_no_double_claim,
         test_pick_adopts_legacy_in_progress,
-        test_verify_passes_in_scope,
-        test_verify_ignores_edit_scope,
+        test_verify_passes,
         test_verify_fails_on_failing_tests,
         test_ui_capture_gate,
         test_finish_commits_and_archives,

@@ -67,7 +67,6 @@ def _cmd_ticket_promote(args) -> int:
         print(f"  ID: {ticket.ticket_id}")
         print(f"  Title: {ticket.title}")
         print(f"  Modules: {', '.join(ticket.modules)}")
-        print(f"  Files: {', '.join(ticket.files_to_edit)}")
 
         if result.warnings:
             print("\n⚠️  Warnings:")

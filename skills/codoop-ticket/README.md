@@ -41,7 +41,7 @@ Feature ticket:
 
 ```
 ticket_001/
-├── metadata.json      ← Auto-inferred: ticket_type, modules, test_command, files_to_edit
+├── metadata.json      ← Auto-inferred: ticket_type, modules, test_command
 ├── module_prd.md      ← PM-written: business requirements (pure business)
 ├── spec.md            ← Architect-designed: technical spec (APIs, DB, UI)
 ├── plan.md            ← Auto-decomposed: implementation plan (steps)
@@ -52,7 +52,7 @@ Fix ticket (`ticket_type: fix`):
 
 ```
 ticket_002/
-├── metadata.json      ← ticket_type=fix, modules, test_command, files_to_edit
+├── metadata.json      ← ticket_type=fix, modules, test_command
 ├── bug_report.md      ← Symptom / Reproduction / Root Cause / Expected / Scope
 ├── plan.md            ← Auto-decomposed: fix steps
 └── todo.md            ← Auto-decomposed: atomic task list
@@ -98,7 +98,6 @@ ticket_002/
 - Design API interfaces (for each platform: backend/web/mobile/desktop)
 - Design database fields and data models
 - Design UI interaction flows
-- Define editable files scope hint
 
 **You**:
 - Review `spec.md`
@@ -125,7 +124,6 @@ ticket_002/
 
 **codoop-ticket automatically**:
 - Extract `modules` from spec.md (## Backend, ## Web, etc. sections)
-- Extract `files_to_edit` from spec.md (## Editable Files section)
 - Generate `test_command` defaults based on modules
 
 **You**:

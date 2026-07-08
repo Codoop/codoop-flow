@@ -52,7 +52,7 @@ The skill orchestrates a PM and Architect with you as director, guiding you thro
 
 1. **trigger** — you confirm Phase 1 is done; `codoop-ticket` loads `/skill spec-driven-development`
 2. **design** — Architect agent writes `spec.md` based on the confirmed `module_prd.md`
-3. **content** — includes API contracts (per platform: backend/web/mobile/desktop), data schema field-level, UI interactions and state management, code examples, testing strategy, Always/Ask First/Never boundaries, and the `## Editable Files` section listing globs that give Loop 3 an advisory edit-scope hint (guidance for the agent, not enforced by verify)
+3. **content** — includes API contracts (per platform: backend/web/mobile/desktop), data schema field-level, UI interactions and state management, code examples, testing strategy, Always/Ask First/Never boundaries
 4. **review** — you review and confirm or request changes
 
 ### Phase 3 — Task Breakdown (plan.md + todo.md)
@@ -92,9 +92,9 @@ docs/tickets/
 
 | File | Author | Required | Purpose |
 |---|---|---|---|
-| `metadata.json` | Auto-inferred; human confirms | Yes | Machine-readable config for Loop 3: ticket type, modules, test commands, edit scope, self-heal budget, UI capture flag |
+| `metadata.json` | Auto-inferred; human confirms | Yes | Machine-readable config for Loop 3: ticket type, modules, test commands, self-heal budget, UI capture flag |
 | `module_prd.md` | PM agent + human | Yes for `feature` | 100% pure-business description — user stories, state flows, acceptance criteria |
-| `spec.md` | Architect agent + human | Yes for `feature` | Technical contract — APIs, data schema, UI interactions, `files_to_edit` scope hint |
+| `spec.md` | Architect agent + human | Yes for `feature` | Technical contract — APIs, data schema, UI interactions |
 | `bug_report.md` | Human (+ agent) | Yes for `fix` | Defect record — Symptom / Reproduction / Root Cause / Expected Behavior / Scope |
 | `plan.md` | Auto-decomposed + human review | Recommended (both) | Step-by-step implementation plan with phases and checkpoints |
 | `todo.md` | Auto-decomposed + human review | Recommended (both) | Atomic checkbox task list, each ≤100 lines, with platform prefixes |
@@ -179,7 +179,6 @@ Or directly call the skill in any AI coding tool:
 
 **Inference logic:**
 - `modules` — scanned from `spec.md` headers (`## Backend`, `## Web`, etc.) mapped to: backend, web, mobile, desktop
-- `files_to_edit` — extracted from `## Editable Files` section (fallback: derives from module names if section absent)
 - `test_command` — populated with defaults per module if not present (backend: `bash script/test-backend.sh`, web: `npm test`, mobile: `flutter test`, desktop: `cargo test`)
 
 Typically called after Phase 3 is complete, before validating and promoting.
@@ -190,12 +189,15 @@ Typically called after Phase 3 is complete, before validating and promoting.
 
 **Internally:**
 - Calls `validate` first; fails if any error
+- Shows the ticket summary (id / title / modules) and asks for interactive confirmation (`--force` skips the prompt)
 - Moves `docs/tickets/drafts/<ticket_id>/` to `docs/tickets/pending/<ticket_id>/` using `shutil.move`
 - Refuses to clobber existing pending tickets
 
+**Human approval is required.** `pending/` is Loop 3's pickup queue — an unreviewed promote means an agent may start building from an unapproved design. When `codoop-ticket` (the skill) drives the flow, it must ask the user to confirm before promoting and must not use `--force` without prior approval.
+
 **Output:** Path to destination and message that `codoop_tools.py pick` will pick it up next.
 
-**Exit codes:** 0 on success, 1 on validation or move failure.
+**Exit codes:** 0 on success, 1 on validation failure, cancelled confirmation, or move failure.
 
 ---
 
@@ -221,7 +223,6 @@ Every ticket's `metadata.json` must satisfy this schema:
 | `title` | string | Human-readable ticket title |
 | `modules` | list[string] | Which platform modules this ticket touches: `backend`, `web`, `mobile`, `desktop` |
 | `test_command` | dict[string, string] | Shell command to run tests per module (keys must cover all `modules` entries) |
-| `files_to_edit` | list[string] | Glob patterns hinting where the agent should focus edits (advisory scope for Loop 3; not enforced by verify) |
 
 **Optional fields:**
 
@@ -253,7 +254,7 @@ This anchors every ticket to the global product strategy rather than inventing i
 
 The `promote` command's filesystem move (`drafts/` → `pending/`) is the only handoff mechanism. Loop 3's scheduler polls `pending/`, picks the oldest ticket, and consumes:
 
-- `metadata.json` — drives all scheduler decisions (modules, test commands, files_to_edit, self-heal budget, ui_capture flag)
+- `metadata.json` — drives all scheduler decisions (modules, test commands, self-heal budget, ui_capture flag)
 - `module_prd.md` + `spec.md` — progressively disclosed to the coding engine at startup
 - `plan.md` + `todo.md` — Loop 3 reads the todo list step-by-step and checks off items as they complete
 - `public/qa-screenshots/` — created at runtime by Loop 3's test scripts (for UI tickets)

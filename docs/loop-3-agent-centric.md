@@ -51,7 +51,6 @@ python3 <SKILL>/scripts/codoop_tools.py --config <toml> pick
   "worktree": "/abs/path/to/worktrees/ticket_001",
   "branch": "dev/ticket_001",
   "modules": ["backend", "web"],
-  "files_to_edit": ["backend/**", "web/src/**"],
   "ui_capture": false,
   "screenshot_dir": null
 }
@@ -63,7 +62,7 @@ python3 <SKILL>/scripts/codoop_tools.py --config <toml> pick
 
 The agent reads the ticket package from `ticket_dir`:
 - `module_prd.md` — 100% business description
-- `spec.md` — API contract, data schema, UI interactions, files_to_edit whitelist
+- `spec.md` — API contract, data schema, UI interactions
 - `plan.md` — step-by-step execution plan
 - `todo.md` — atomic checkbox tasks
 
@@ -71,7 +70,7 @@ The agent also reads project architectural boundaries from `docs/tech/project-st
 
 **Implementation discipline:** Use the `/skill incremental-implementation` workflow: implement one thin vertical slice, test, verify, then move to the next. Work through `todo.md` items in order, checking them off as you go (`- [x]`).
 
-**Edit-scope guidance:** Prefer to create or modify files matching the `files_to_edit` globs (and the scope described in `spec.md`). This is advisory, not enforced by verify — stay in scope unless the task genuinely requires touching adjacent files.
+**Edit-scope guidance:** Prefer to create or modify files within the scope described in `spec.md` — stay in scope unless the task genuinely requires touching adjacent files.
 
 ### Step 3 — Verify (CLI)
 
@@ -79,7 +78,7 @@ The agent also reads project architectural boundaries from `docs/tech/project-st
 python3 <SKILL>/scripts/codoop_tools.py --config <toml> verify <ticket_id>
 ```
 
-**Two hard gates run sequentially** (edit scope is advisory, not enforced):
+**Two hard gates run sequentially**:
 
 1. **Tests gate** — Runs `test_command[module]` for each module in `modules`. All must exit 0. Fails on first non-zero exit.
 
@@ -111,7 +110,7 @@ Or on failure:
 
 On verify failure, the agent applies `/skill debugging-and-error-recovery`:
 
-1. Denoise `test_output` to find the real traceback or out-of-scope file
+1. Denoise `test_output` to find the real traceback
 2. Fix only the **root cause** with a minimal change; stay in scope
 3. Re-run `verify`
 
@@ -219,7 +218,7 @@ Exit 0 always.
 
 **Input:** Ticket ID (positional arg).
 
-**Behavior:** Runs two hard gates: tests, UI screenshot (if applicable). Edit scope is advisory, not enforced.
+**Behavior:** Runs two hard gates: tests, UI screenshot (if applicable).
 
 **Output:** Success or failure with specific reasons.
 
@@ -351,7 +350,6 @@ The ticket pipeline directories (`pending/`, `in_progress/`, `done/`, `failed/`)
 | `ticket_type` | string | No | `"feature"` | `"feature"` or `"fix"`; selects the fallback commit prefix (`feat`/`fix`) |
 | `modules` | list[string] | Yes | — | Modules this ticket touches: `backend`, `web`, `mobile`, `desktop` |
 | `test_command` | dict[str, str] | Yes | — | Shell command per module; must cover all modules; all must exit 0 |
-| `files_to_edit` | list[string] | No | `[]` | Glob patterns; advisory scope hint for the agent (not enforced by verify) |
 | `coding_engine` | string or null | No | null | Informational; which AI tool handles this ticket |
 | `max_healing_attempts` | int | No | 3 | Max self-heal retries; agent counts (CLI does not enforce) |
 | `ui_capture` | bool | No | false | If true: activates screenshot gate; injects `CODOOP_QA_SCREENSHOT_DIR`; adds UI personas |
@@ -410,7 +408,6 @@ The project includes `tests/test_skeleton.py` which exercises only the determini
 
 Key tests:
 - `test_pick_moves_and_creates_worktree` — pick moves ticket from pending to in_progress and creates worktree
-- `test_verify_ignores_edit_scope` — editing files outside `files_to_edit` still passes verify (scope is advisory, not enforced)
 - `test_verify_fails_on_failing_tests` — test command non-zero exit fails verify
 - `test_ui_capture_gate` — UI ticket without screenshots fails; with screenshots passes
 - `test_finish_commits_and_archives` — finish commits on `dev/<id>`, archives to done/, removes worktree
@@ -423,7 +420,7 @@ Run with: `python tests/test_skeleton.py` (no pytest needed).
 ## Key Design Principles
 
 - **Determinism Over Cleverness** — The CLI is small, fully deterministic, never guesses. The agent owns all intelligence.
-- **Two Hard Gates in Sequence** — tests → UI screenshot (if applicable). All must pass before review. Edit scope is advisory, not enforced.
+- **Two Hard Gates in Sequence** — tests → UI screenshot (if applicable). All must pass before review.
 - **Unanimous Approval** — Review is only done when all personas agree. Any Critical/Important blocks.
 - **Self-Heal Within Budget** — Failures trigger retry (if budget permits), not immediate failure. Budget exhaustion moves to failed/ for human intervention.
 - **Isolated Worktrees** — Each ticket gets its own branch and checkout path; main repo is never touched.
