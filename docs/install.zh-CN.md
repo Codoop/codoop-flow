@@ -2,7 +2,7 @@
 
 [English](./install.md) · **简体中文**
 
-codoop-flow 包含**六个独立 skill**，分别应对 AI 驱动开发的不同阶段：
+codoop-flow 包含**七个核心独立 skill**，分别应对 AI 驱动开发的不同阶段：
 
 | Skill | 用途 | 阶段 |
 |-------|------|------|
@@ -12,6 +12,7 @@ codoop-flow 包含**六个独立 skill**，分别应对 AI 驱动开发的不同
 | **planning-and-task-breakdown** | 分解规格为有序任务 | 工单设计 / 独立使用 |
 | **definition-of-done** | 项目级完成标准检查清单 | 质量守门 |
 | **codoop-execute** | 代码实现与交付（隔离 worktree） | 编码 & 发布 |
+| **codoop-ux-walkthrough** | 用指定 persona 体验流程并产出非阻塞体验报告 | 独立使用 / 第三环批准后 |
 
 每个 skill 都是**自包含**的：带了编排说明书(`SKILL.md`)、确定性 CLI 和共享的 sub-agent personas。所以无论装到哪个 agent，只要那个目录能被读到、且能跑 `python3`，技能就能工作。
 
@@ -21,7 +22,7 @@ codoop-flow 包含**六个独立 skill**，分别应对 AI 驱动开发的不同
 
 ---
 
-## 一键安装（全部 6 个 skill）
+## 一键安装（全部 7 个核心 skill）
 
 克隆一次，然后运行：
 
@@ -30,7 +31,7 @@ git clone https://github.com/Codoop/codoop-flow.git
 bash codoop-flow/scripts/install-skills.sh
 ```
 
-这会把所有 6 个 skill 复制到 `~/.codex/skills/` 和 `~/.claude/skills/`。再跑一次就是原地更新。用 `--agent codex` 或 `--agent claude` 只装到某一个 agent。用 `--dry-run` 预览但不实际复制。
+这会把所有 7 个核心 skill 复制到 `~/.codex/skills/` 和 `~/.claude/skills/`。再跑一次就是原地更新。用 `--agent codex` 或 `--agent claude` 只装到某一个 agent。用 `--dry-run` 预览但不实际复制。
 
 ---
 
@@ -76,7 +77,7 @@ git clone https://github.com/Codoop/codoop-flow.git
 claude --plugin-dir /path/to/codoop-flow
 ```
 
-装好后，可以在会话内直接调用六个 skill：
+装好后，可以在会话内直接调用核心 skill：
 
 **1. codoop-discover**（第一环：产品设计）— 在会话内调用：
 ```
@@ -113,17 +114,23 @@ claude --plugin-dir /path/to/codoop-flow
 /loop 5m 使用 codoop-execute skill，针对 /path/to/codoop_flow.toml 跑下一张工单
 ```
 
+**7. codoop-ux-walkthrough**（独立使用 / 技术批准后的洞察）— 让指定 persona 体验任务，写一份非阻塞报告：
+```
+/skill codoop-ux-walkthrough 请以首次使用的运营人员身份体验这个功能，并写入 experience_report.md。
+```
+
 ---
 
 ## 通用拷贝(Cursor / Gemini / 其他)
 
-每个 skill 都是自包含目录，任何 agent 都可以把全部 6 个拷进自己的技能/规则目录:
+每个 skill 都是自包含目录，任何 agent 都可以把全部 7 个核心 skill 拷进自己的技能/规则目录:
 
 ```bash
 git clone https://github.com/Codoop/codoop-flow.git
-# 拷全部 6 个 skill — 每个都自带 SKILL.md
+# 拷全部 7 个核心 skill — 每个都自带 SKILL.md
 for skill in codoop-discover codoop-ticket spec-driven-development \
-             planning-and-task-breakdown definition-of-done codoop-execute; do
+             planning-and-task-breakdown definition-of-done codoop-execute \
+             codoop-ux-walkthrough; do
   cp -R "codoop-flow/skills/$skill"  <目标 agent 的技能目录>/
 done
 # _shared 被 codoop-discover 用相对路径引用

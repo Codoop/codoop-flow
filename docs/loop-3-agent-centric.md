@@ -138,7 +138,17 @@ The agent runs review personas from `<SKILL>/_shared/agents/` against the `git d
 
 **If any reviewer rejects:** Findings are fed back to the agent for a fix → re-verify → re-review (still within healing budget).
 
-### Step 6 — Ship Living Docs (Agent, after unanimous approval)
+### Step 6 — Experience Walkthrough (Agent, optional and non-blocking)
+
+After technical approval, a runnable ticket with user-visible behavior may load
+`codoop-ux-walkthrough`. It passes the ticket's PRD role, goal, scope, and
+acceptance criteria as task context to an independently chosen persona, then
+saves `experience_report.md` in the ticket directory. The report is a
+qualitative product insight for human review: it never blocks release, triggers
+self-heal, changes code, or creates a new ticket. Pure infrastructure,
+refactoring, and internal-only tickets skip this step.
+
+### Step 7 — Ship Living Docs (Agent, after unanimous approval)
 
 Before finishing, the agent syncs living documentation **inside the worktree**:
 
@@ -148,7 +158,7 @@ Before finishing, the agent syncs living documentation **inside the worktree**:
 
 Style: second person, present tense, active voice, one concept per section, no broken code examples.
 
-### Step 7 — Finish (CLI)
+### Step 8 — Finish (CLI)
 
 ```
 python3 <SKILL>/scripts/codoop_tools.py --config <toml> finish <ticket_id> --message "<conventional commit>"
@@ -391,6 +401,7 @@ Loop 3 picks a ticket from `docs/tickets/pending/<ticket_id>/` and consumes:
 
 **Archived to `done/<ticket_id>/`:**
 - The entire ticket directory: `metadata.json`, `module_prd.md`, `spec.md`, `plan.md`, `todo.md` (all checkboxes ticked), and for UI tickets, `public/qa-screenshots/` with all visual evidence
+- `experience_report.md` when an optional user experience walkthrough ran; it is advisory product input for human review, not a release verdict
 
 ### On `fail`
 
@@ -425,4 +436,3 @@ Run with: `python tests/test_skeleton.py` (no pytest needed).
 - **Self-Heal Within Budget** — Failures trigger retry (if budget permits), not immediate failure. Budget exhaustion moves to failed/ for human intervention.
 - **Isolated Worktrees** — Each ticket gets its own branch and checkout path; main repo is never touched.
 - **Living Docs Kept in Sync** — After code ships, living docs (`docs/prd/`, `docs/tech/`) are updated so they remain authoritative.
-

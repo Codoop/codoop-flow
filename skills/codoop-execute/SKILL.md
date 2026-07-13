@@ -131,7 +131,26 @@ diff (and screenshot dir for the UI two), and require a verdict. If **any**
 reviewer rejects, collect the findings and go back to **Self-heal** (still
 within the healing budget) to fix them, then re-verify and re-review.
 
-### 6. Ship living docs (your work) — after unanimous approval
+### 6. Experience walkthrough (optional, non-blocking)
+After unanimous technical approval, decide whether the ticket has a runnable,
+user-visible behavior. For such tickets, load
+`$SKILL/../codoop-ux-walkthrough/SKILL.md` and follow its Loop 3
+integration instructions:
+
+- Read `module_prd.md` and pass its user role, goal, scope, and acceptance
+  criteria to the walkthrough as runtime task context.
+- Keep the selected persona independent of the PRD role; record whether it is
+  a core, adjacent, or stress-test persona.
+- Write `experience_report.md` directly in `ticket_dir` so it moves to `done/`
+  with the completed ticket.
+- The report is advisory only. Its findings never reject the ticket, trigger
+  self-healing, modify code, expand scope, or create another ticket.
+
+Skip this step for infrastructure, refactoring, and internal-only tickets, or
+when no runnable evidence exists. Record the reason in a short
+`experience_report.md` only when the walkthrough was requested for that ticket.
+
+### 7. Ship living docs (your work) — after unanimous approval
 Before finishing, sync the target repo's living docs inside the worktree (only
 under `docs/prd/` and `docs/tech/`, never source):
 - Update `docs/prd/` with changed business logic.
@@ -140,7 +159,7 @@ under `docs/prd/` and `docs/tech/`, never source):
 Adopt the technical-writer discipline
 (`$SKILL/../../_shared/agents/engineering-technical-writer.md`).
 
-### 7. Finish (the tool)
+### 8. Finish (the tool)
 Draft a Conventional Commit message, then:
 ```
 python3 $SKILL/scripts/codoop_tools.py --config <toml> finish <ticket_id> --lease <token> --message "<conventional commit>"

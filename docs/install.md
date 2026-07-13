@@ -2,7 +2,7 @@
 
 **English** · [简体中文](./install.zh-CN.md)
 
-codoop-flow includes **nine independent skills**, each addressing a different stage of AI-driven development:
+codoop-flow includes **ten independent skills**, each addressing a different stage of AI-driven development:
 
 **Core Loop Skills:**
 
@@ -14,6 +14,7 @@ codoop-flow includes **nine independent skills**, each addressing a different st
 | **planning-and-task-breakdown** | Break specs into ordered tasks | Loop 2 / standalone |
 | **definition-of-done** | Project-level completion standards | Reference |
 | **codoop-execute** | Code implementation in isolated worktree | Loop 3 |
+| **codoop-ux-walkthrough** | Persona-based experience report; advisory only | Standalone / Loop 3 after approval |
 
 **Loop 3 Engineering Disciplines:**
 
@@ -29,7 +30,7 @@ Each skill is **self-contained**: it carries the orchestration guide (`SKILL.md`
 
 ---
 
-## One-shot install (all 6 skills)
+## One-shot install (all 7 core skills)
 
 Clone the repo once, then run:
 
@@ -38,7 +39,7 @@ git clone https://github.com/Codoop/codoop-flow.git
 bash codoop-flow/scripts/install-skills.sh
 ```
 
-This copies all 6 skills to `~/.codex/skills/` and `~/.claude/skills/`. Re-running updates skills in-place. Use `--agent codex` or `--agent claude` to target one agent. Use `--dry-run` to preview.
+This copies all 7 core skills to `~/.codex/skills/` and `~/.claude/skills/`. Re-running updates skills in-place. Use `--agent codex` or `--agent claude` to target one agent. Use `--dry-run` to preview.
 
 ---
 
@@ -84,7 +85,7 @@ git clone https://github.com/Codoop/codoop-flow.git
 claude --plugin-dir /path/to/codoop-flow
 ```
 
-Once installed, you can invoke the six skills:
+Once installed, you can invoke the core skills and engineering disciplines:
 
 **1. codoop-discover** (Phase 1: Product Design) — invoke in-session:
 ```
@@ -121,17 +122,22 @@ Or schedule continuously with:
 /loop 5m run the codoop-execute skill against /path/to/codoop_flow.toml
 ```
 
-**7. incremental-implementation** (Loop 3 Engineering Discipline) — standalone or Loop 3 build:
+**7. codoop-ux-walkthrough** (Standalone / post-approval insight) — simulate a task as a chosen persona and write a non-blocking report:
+```
+/skill codoop-ux-walkthrough Experience this feature as a first-time operations manager and write experience_report.md.
+```
+
+**8. incremental-implementation** (Loop 3 Engineering Discipline) — standalone or Loop 3 build:
 ```
 /skill incremental-implementation How do I break down this large refactoring into verifiable slices?
 ```
 
-**8. debugging-and-error-recovery** (Loop 3 Engineering Discipline) — standalone or Loop 3 debug:
+**9. debugging-and-error-recovery** (Loop 3 Engineering Discipline) — standalone or Loop 3 debug:
 ```
 /skill debugging-and-error-recovery The test failed with an obscure stack trace. Help me find the root cause.
 ```
 
-**9. test-driven-development** (Loop 3 Engineering Discipline) — standalone or Loop 3 verify:
+**10. test-driven-development** (Loop 3 Engineering Discipline) — standalone or Loop 3 verify:
 ```
 /skill test-driven-development How should I write tests for this feature to ensure high coverage?
 ```
@@ -140,14 +146,15 @@ Or schedule continuously with:
 
 ## Generic copy (Cursor / Gemini / others)
 
-Each skill is a self-contained directory; any agent can copy all nine into its own skills/rules directory:
+Each skill is a self-contained directory; any agent can copy all ten into its own skills/rules directory:
 
 ```bash
 git clone https://github.com/Codoop/codoop-flow.git
-# Copy all 9 skills — each brings its own SKILL.md
+# Copy all 10 skills — each brings its own SKILL.md
 for skill in codoop-discover codoop-ticket spec-driven-development \
              planning-and-task-breakdown definition-of-done codoop-execute \
-             incremental-implementation debugging-and-error-recovery test-driven-development; do
+             codoop-ux-walkthrough incremental-implementation \
+             debugging-and-error-recovery test-driven-development; do
   cp -R "codoop-flow/skills/$skill"  <the agent's skills directory>/
 done
 # _shared is referenced by all skills via relative path

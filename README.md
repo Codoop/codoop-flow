@@ -130,6 +130,16 @@ Design work tickets through three stages: requirements (PRD) → technical spec 
 /skill definition-of-done Check if completed work meets quality standards
 ```
 
+**User experience walkthrough** — use it independently after a feature is
+runnable, or let Loop 3 invoke it after technical approval. It simulates a
+chosen persona completing a task and writes an advisory `experience_report.md`;
+only a human decides whether an idea becomes a new ticket.
+
+```
+/skill codoop-ux-walkthrough
+Experience this feature as a first-time operations manager and write an experience report.
+```
+
 These skills work independently or as phases in the codoop-ticket workflow.
 
 **Output**: Ticket specifications in `docs/tickets/pending/` ready for Loop 3
@@ -258,6 +268,11 @@ Once installed you barely need to remember commands — **the skill is written f
    - `evidence-collector` — UI/UX validation (UI tickets only)
    - `reality-checker` — deployment readiness (UI tickets only)
 
+4. **Experience walkthrough** (`codoop-ux-walkthrough`): After technical
+   approval, a runnable user-facing ticket may be experienced by a chosen
+   persona. The resulting `experience_report.md` is archived with the ticket
+   and is advisory only: it never blocks release or changes code automatically.
+
 **Approval must be unanimous** — any rejection triggers self-heal (automatic retry within budget).
 
 ### Design Philosophy
@@ -359,6 +374,7 @@ codoop-flow/
 │   ├── codoop-execute/            # ★Loop 3: Agent-Centric code execution
 │   ├── codoop-ticket/             # ★Loop 2: Human-Centric ticket design  
 │   ├── codoop-discover/           # ★Loop 1: Venture-Discovery product design
+│   ├── codoop-ux-walkthrough/     # ★Persona-based, non-blocking experience insight
 │   └── [6 other skills]/          # standalone disciplines
 ├── tests/test_skeleton.py         # 14 skeleton tests (subprocess CLI calls, no AI)
 ├── LICENSE                         # MIT
@@ -456,6 +472,7 @@ Open `failed/<id>/healing_report.md` for why self-heal ran out of budget — usu
 - [`skills/codoop-discover/README.md`](./skills/codoop-discover/README.md) — Loop 1 details
 - [`skills/codoop-ticket/README.md`](./skills/codoop-ticket/README.md) — Loop 2 details
 - [`skills/codoop-execute/SKILL.md`](./skills/codoop-execute/SKILL.md) — Loop 3 instructions (what the Agent reads)
+- [`skills/codoop-ux-walkthrough/SKILL.md`](./skills/codoop-ux-walkthrough/SKILL.md) — Persona walkthrough and experience report
 
 ---
 

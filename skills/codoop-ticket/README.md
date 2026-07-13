@@ -133,9 +133,14 @@ privacy, payments/costs, compliance, and irreversible behavior.
 **codoop-ticket automatically**:
 - Extract `modules` from spec.md (## Backend, ## Web, etc. sections)
 - Generate `test_command` defaults based on modules
+- Detect whether the confirmed spec changes user-visible screens, interactions,
+  or flows
 
 **You**:
 - Review the inferred metadata.json
+- For user-visible work, confirm whether delivery should also inspect actual
+  screens and interactions with saved screenshots; codoop-ticket recommends
+  this check when it applies
 - Modify if needed
 - Say "OK, publish ticket"
 

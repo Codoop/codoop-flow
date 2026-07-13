@@ -138,7 +138,11 @@ python3 <SKILL>/scripts/codoop_tools.py --config <toml> verify <ticket_id>
 
 **如果任何审查员拒绝：** 发现被反馈给代理以修复 → 重新验证 → 重新审查（仍在自愈预算内）。
 
-### 第 6 步 — 发布活文档（代理，一致批准后）
+### 第 6 步 — 体验走查（代理，可选且非阻塞）
+
+技术批准后，具备可运行、用户可感知行为的工单可以加载 `codoop-ux-walkthrough`。它把 PRD 中的用户角色、目标、范围和验收条件作为任务上下文交给一个独立选择的 persona，并在工单目录写入 `experience_report.md`。这是一份供人工审阅的定性产品洞察：不阻塞发布、不触发自愈、不修改代码，也不会自动创建新工单。纯基础设施、重构和内部功能工单跳过此步骤。
+
+### 第 7 步 — 发布活文档（代理，一致批准后）
 
 完成前，代理同步活文档**在 worktree 内**：
 
@@ -148,7 +152,7 @@ python3 <SKILL>/scripts/codoop_tools.py --config <toml> verify <ticket_id>
 
 风格：第二人称、现在时、主动语态、每部分一个概念、无破坏代码示例。
 
-### 第 7 步 — 完成（CLI）
+### 第 8 步 — 完成（CLI）
 
 ```
 python3 <SKILL>/scripts/codoop_tools.py --config <toml> finish <ticket_id> --message "<conventional commit>"
@@ -366,12 +370,13 @@ python3 <SKILL>/scripts/codoop_tools.py --config <toml> fail <ticket_id> --repor
 - `module_prd.md` + `spec.md` — 在启动时逐步披露给代理
 - `plan.md` + `todo.md` — 代理读取并完成时检查项
 - `public/qa-screenshots/` — （对 UI 工单）在运行时创建；由审查 personas 读取
+- `experience_report.md` — （若运行体验走查）供人工审阅的定性体验报告，不是发布结论
 
 ### 输出（完成后）
 
 **成功（完成）：**
 - 提交到 `dev/<ticket_id>` 分支：所有更改 + 活文档更新 + 常规提交消息
-- 归档到 `done/<ticket_id>/`：完整工单目录 + `public/qa-screenshots/`（如果 UI 工单）
+- 归档到 `done/<ticket_id>/`：完整工单目录 + `public/qa-screenshots/`（如果 UI 工单）+ `experience_report.md`（如果运行体验走查；仅供人工参考）
 - 返回提交 SHA；分支准备推送（你决定是否推送）
 
 **失败（失败）：**
@@ -425,4 +430,3 @@ python3 <SKILL>/scripts/codoop_tools.py --config <toml> fail <ticket_id> --repor
 - **预算内自愈** — 失败触发重试（如果预算允许），非立即失败。预算耗尽移到 failed/ 供人工干预。
 - **隔离 Worktrees** — 每个工单获得自己的分支和检出路径；主 repo 从不接触。
 - **活文档保持同步** — 代码发布后，活文档（`docs/prd/`、`docs/tech/`）被更新所以保持权威。
-

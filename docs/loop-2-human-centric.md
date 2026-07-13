@@ -66,7 +66,7 @@ The skill orchestrates a PM and Architect with you as director, guiding you thro
 
 ### Post-Phase 3 — Metadata Auto-Inference
 
-After Phase 3, `codoop-ticket` calls `update_metadata_from_docs` to automatically infer `metadata.json` from your `spec.md` and task files. The human reviews the result and confirms or modifies before validation.
+After Phase 3, `codoop-ticket` calls `update_metadata_from_docs` to automatically infer `metadata.json` from your `spec.md` and task files. It also checks whether the confirmed spec changes user-visible screens, interactions, or task flows. If it does, it asks in plain language whether delivery should inspect the actual experience with saved screenshots and UI/UX review; it recommends enabling that check. Backend-only, infrastructure, refactoring, and internal-only work keep it off without an unnecessary question. The human reviews the result and confirms or modifies before validation.
 
 ### Validation & Promotion
 
@@ -307,4 +307,3 @@ The skill reads the spec, builds a dependency graph, slices vertically (feature-
 - **Metadata Auto-Inference** — Loop 2 automatically infers `metadata.json` from spec content, saving humans from manual, error-prone configuration.
 - **Dual-Mode Sub-Skills** — spec-driven-development and planning-and-task-breakdown work both standalone and as integrated phases of codoop-ticket.
 - **No Code Written** — Loop 2 is pure documentation. Code is written only in Loop 3.
-

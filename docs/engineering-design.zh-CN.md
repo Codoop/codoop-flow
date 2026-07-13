@@ -82,7 +82,12 @@ flowchart TD
         A5 --> A6{"五方全票 APPROVED?"}
         
         A6 -->|Reject 存在缺陷/标注意见| A4
-        A6 -->|Approve| A7["自动同步常青与 Ship
+        A6 -->|Approve| A9["可选 Persona 体验走查
+        读取 PRD 任务上下文，模拟可运行用户流程
+        写入只供人工审阅的 experience_report.md
+        不自动修复或建工单
+        Skill: codoop-ux-walkthrough"]
+        A9 --> A7["自动同步常青与 Ship
         Subagent: technical-writer
         Subagent: git-workflow-master
         移至 done/ 归档 强制清理 Worktree"]
@@ -119,6 +124,7 @@ flowchart TD
     style A6 fill:#e8f5e9,stroke:#388e3c,stroke-width:2px,color:#000
     style A7 fill:#e8f5e9,stroke:#388e3c,stroke-width:2px,color:#000
     style A8 fill:#e8f5e9,stroke:#388e3c,stroke-width:2px,color:#000
+    style A9 fill:#e8f5e9,stroke:#388e3c,stroke-width:2px,color:#000
 ```
 
 
@@ -311,6 +317,12 @@ codoop-project-repo/            # 项目主 Git 仓库 (唯一可信源 + 核心
 
 ---
 
+### 5.4 可选 Persona 体验走查（仅供参考）
+
+技术批准后，具备可运行、用户可感知行为的工单可以调用 `codoop-ux-walkthrough`。它把工单 PRD 中的用户角色、目标、范围和验收条件作为任务上下文交给一个独立选择的 persona，并在工单目录写入 `experience_report.md`。这是一份供人工审阅的定性产品洞察：不阻塞发布、不触发自愈、不修改代码，也不会自动创建新工单。
+
+---
+
 ## 6. 三环交互与状态同步 (Triple-Loop Interaction)
 
 三个循环之间不存在直接的人机阻塞打扰，它们通过一套**基于文件系统状态机的“双向交互协议”**进行动态对齐，确保流水线的全自动、零冲突：
@@ -378,5 +390,3 @@ codoop-project-repo/            # 项目主 Git 仓库 (唯一可信源 + 核心
 | **6. 分端即时反馈自愈 (Debug)**      | `debugging-and-error-recovery`                                                            | **调度器去噪模型** + **抽象 AI 编码引擎**                                                                                                                                                                                                                                                                                                  | 1. **智能错误清洗**：提取、去噪各种测试框架的原始报错或编译堆栈，过滤日志噪音，提炼高价值 Exception 细节。 2. **即时反馈闭环**：以高密度结构化 Debug Prompt 重塑后即时注入给当前编码引擎，开启最大 3 次隔离自愈。                                                                                                                                                                       |
 | **7. 多维并行评审门禁 (Review)**     | `code-review-and-quality` `security-and-hardening` `evidence-collector` `reality-checker` | **五大 Parallel Subagents (并行扇出)**： 1. `code-reviewer` (五轴代码) 2. `security-auditor` (OWASP安全) 3. `test-engineer` (单元及覆盖率) 4. `evidence-collector` (UI视觉验收) 5. `reality-checker` (UX交互体验)                                                                                                                                        | 1. **静态 + 动态联合评审门禁**：并行调起 5 个独立专家 Agent，静态组评审 `git diff` 源码，动态组通过 `responsive-*.png` 与交互对比截图对 UI 还原度和 UX 体验流进行极度苛刻的审查验收。 2. **一票否决**：任意一方拒绝（如发现视觉严重错位或交互阻碍）即触发 `REJECT`，合并缺陷反馈并打回自愈修复。                                                                                                               |
 | **8. 自动提交发布 (Ship)**         | `git-workflow-and-versioning` `documentation-and-adrs`                                    | **Technical Writer** + **Git Workflow Master** (由主进程加载 Subagents 角色)                                                                                                                                                                                                                                                          | 1. **常青树文档自动对齐**：使用 `technical-writer` 提取 `git diff` 自动更新 `docs/prd/` 核心业务逻辑，重绘并刷新 `docs/tech/project-structure.md` 架构拓扑树，向 `docs/tech/changelog.md` 追加变更日志。 2. **Conventional Commits 提交**：由 `git-workflow-master` 根据包含代码与文档的 `git diff` 自动生成 Conventional Commit Message 并推送分支，随后强制清理并释放 Worktree。 |
-
-

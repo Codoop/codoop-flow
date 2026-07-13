@@ -11,7 +11,8 @@ SKILLS=(
   spec-driven-development
   planning-and-task-breakdown
   definition-of-done
-  codoop-flow
+  codoop-ux-walkthrough
+  codoop-execute
 )
 
 DRY_RUN=0
@@ -74,7 +75,8 @@ Copy each skill directory into your agent's rules/skills location:
   cp -R skills/spec-driven-development        <agent-skills-dir>/
   cp -R skills/planning-and-task-breakdown    <agent-skills-dir>/
   cp -R skills/definition-of-done             <agent-skills-dir>/
-  cp -R skills/codoop-flow                    <agent-skills-dir>/
+  cp -R skills/codoop-ux-walkthrough          <agent-skills-dir>/
+  cp -R skills/codoop-execute                 <agent-skills-dir>/
   cp -R skills/_shared                        <agent-skills-dir>/
 
 Cursor: place each SKILL.md in .cursor/rules/, or point the agent at skills/.

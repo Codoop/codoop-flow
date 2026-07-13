@@ -208,7 +208,25 @@ todo.md:
 1. Automatically infer from `spec.md`:
    - `modules`: extract from spec headers (## Backend → backend, ## Web → web)
    - `test_command`: generate defaults based on modules
-2. Show inferred metadata.json; you confirm or modify
+2. Inspect the confirmed spec for new or changed user-visible screens,
+   interactions, or task flows:
+   - If present, explain in plain language that the delivery can also check the
+     actual screens and interactions, save screenshots, and have UI/UX reviewers
+     inspect them. Recommend enabling it and ask the user to confirm.
+   - If the work is backend-only, infrastructure, refactoring, or otherwise has
+     no user-visible behavior, keep it off and state that no screenshot check is
+     needed.
+3. Set `ui_capture` from that decision, then show the complete inferred
+   `metadata.json`; the user confirms or modifies it.
+
+Ask about the outcome, not the field name. For example:
+
+```text
+This change affects what people see and click. Should delivery also check the
+actual screens and interactions? If enabled, the test run saves screenshots and
+UI/UX reviewers inspect them, which can catch layout and flow problems. I
+recommend enabling it. Confirm?
+```
 
 **Example**:
 ```json
@@ -222,9 +240,13 @@ todo.md:
     "mobile": "flutter test"
   },
   "max_healing_attempts": 3,
-  "ui_capture": false
+  "ui_capture": true
 }
 ```
+
+`ui_capture: true` requires the target project's test script to write
+screenshots to `$CODOOP_QA_SCREENSHOT_DIR`; no screenshots is a verification
+failure. Use `false` when no user-visible behavior needs checking.
 
 ### 【Finalize】Validate & Release
 

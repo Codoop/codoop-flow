@@ -50,7 +50,8 @@ flowchart TD
         A5 --> A6{"Unanimous APPROVED from All Five?"}
         
         A6 -->|"Reject (Defects Present / Annotated Feedback)"| A4
-        A6 -->|"Approve"| A7["5. Auto-Sync Evergreen & Ship (Ship)<br>Subagent: technical-writer (sync PRD/tech)<br>Subagent: git-workflow-master (push code)<br>Move to done/ for archival, force-clean Worktree"]
+        A6 -->|"Approve"| A9["5. Optional Persona Experience Walkthrough<br>Read PRD task context, simulate a runnable user flow<br>Write advisory experience_report.md; no auto-fix or ticket creation<br>Skill: codoop-ux-walkthrough"]
+        A9 --> A7["6. Auto-Sync Evergreen & Ship (Ship)<br>Subagent: technical-writer (sync PRD/tech)<br>Subagent: git-workflow-master (push code)<br>Move to done/ for archival, force-clean Worktree"]
     end
 
     V5 -->|"5. Consult evergreen-docs standards<br>Begin manual/assisted ticket breakdown"| H1
@@ -84,6 +85,7 @@ flowchart TD
     style A6 fill:#e8f5e9,stroke:#388e3c,stroke-width:2px,color:#000
     style A7 fill:#e8f5e9,stroke:#388e3c,stroke-width:2px,color:#000
     style A8 fill:#e8f5e9,stroke:#388e3c,stroke-width:2px,color:#000
+    style A9 fill:#e8f5e9,stroke:#388e3c,stroke-width:2px,color:#000
 ```
 
 
@@ -276,6 +278,17 @@ This loop runs entirely within an **isolated local temporary work tree (Git Work
 
 ---
 
+### 5.4 Optional Persona Experience Walkthrough (Advisory)
+
+After technical approval, a runnable user-facing ticket may invoke
+`codoop-ux-walkthrough`. It provides the ticket's PRD role, goal, scope, and
+acceptance criteria as task context to an independently selected persona and
+writes `experience_report.md` inside the ticket directory. This is a qualitative
+product insight for human review only: it does not block release, trigger
+self-healing, modify code, or create a new ticket.
+
+---
+
 ## 6. Triple-Loop Interaction and State Synchronization
 
 There is no direct human-machine blocking interruption between the three loops; they dynamically align through a set of **"bidirectional interaction protocols" based on a file-system state machine**, ensuring the pipeline is fully automated and conflict-free:
@@ -343,4 +356,3 @@ To fully engineer the `agent-skills` specifications into production, the lifecyc
 | **6. Per-Platform Instant Feedback Self-Healing (Debug)**      | `debugging-and-error-recovery`                                                            | **Scheduler Denoising Model** + **Abstract AI Coding Engine**                                                                                                                                                                                                                                                                                                  | 1. **Intelligent Error Cleaning**: Extracts and denoises the raw errors or compilation stacks of various test frameworks, filters out log noise, and distills high-value Exception details. 2. **Instant Feedback Loop**: After reshaping into a high-density structured Debug Prompt, immediately injects it into the current coding engine, initiating a maximum of 3 isolated self-healing attempts.                                                                                                                                       |
 | **7. Multi-Dimensional Parallel Review Gate (Review)**     | `code-review-and-quality` `security-and-hardening` `evidence-collector` `reality-checker` | **Five Parallel Subagents (parallel fan-out)**: 1. `code-reviewer` (five-axis code) 2. `security-auditor` (OWASP security) 3. `test-engineer` (unit & coverage) 4. `evidence-collector` (UI visual acceptance) 5. `reality-checker` (UX interaction experience)                                                                                                                                        | 1. **Static + Dynamic Combined Review Gate**: Spins up 5 independent expert Agents in parallel; the static group reviews the `git diff` source code, and the dynamic group conducts extremely rigorous review and acceptance of UI fidelity and UX experience flow via `responsive-*.png` and interaction comparison screenshots. 2. **One-Vote Veto**: A rejection from any party (such as finding severe visual misalignment or interaction obstruction) triggers `REJECT`, merging the defect feedback and returning it for self-healing repair.                                                                                                               |
 | **8. Automated Commit & Release (Ship)**         | `git-workflow-and-versioning` `documentation-and-adrs`                                    | **Technical Writer** + **Git Workflow Master** (Subagent roles loaded by the main process)                                                                                                                                                                                                                                                          | 1. **Automatic Evergreen-Docs Alignment**: Uses `technical-writer` to extract the `git diff` and automatically update the core business logic in `docs/prd/`, redraw and refresh the architecture topology tree in `docs/tech/project-structure.md`, and append the changelog to `docs/tech/changelog.md`. 2. **Conventional Commits Commit**: `git-workflow-master` automatically generates a Conventional Commit Message based on the `git diff` containing code and docs and pushes the branch, then forcibly cleans up and releases the Worktree. |
-
