@@ -103,6 +103,48 @@ PM agent output:
        ✅ module_prd.md: business needs, user stories, acceptance criteria
 ```
 
+### User-Facing Clarification Policy
+
+**Keep asking; change the language, not the rigor.** In codoop-ticket
+conversations, the user decides product outcomes, while the agent owns routine
+implementation choices. These rules also apply when this skill invokes
+`spec-driven-development` or `planning-and-task-breakdown`.
+
+| Decision | How to handle it |
+|----------|------------------|
+| User goal, business rule, scope, priority, or acceptance experience | Ask the user in plain language. |
+| Privacy, compliance, payment/cost, destructive or irreversible behavior | Explain the user-facing consequence and ask explicitly. |
+| API shape, database/index choice, framework pattern, state management, or test layout | Inspect existing project conventions, choose a sound approach, and record it in `spec.md`; do not ask by default. |
+| A technical choice that materially changes user experience, delivery scope, cost, or a global architecture contract | Ask about that consequence in plain language; keep the implementation detail as supporting context only if useful. |
+
+Before asking a question, first use the ticket context and existing codebase to
+resolve what can be resolved. Do not turn an internal uncertainty into a user
+question merely because there are several valid technical implementations.
+
+**Question format.** Ask at most 1–3 high-value questions at a time. State the
+user-visible situation, give 2–3 everyday-language choices, and recommend one
+when appropriate. Avoid unexplained terms such as API, schema, JWT, index,
+AND/OR logic, or state management.
+
+```text
+Avoid: “Should the filters use AND or OR?”
+
+Ask: “When someone chooses ‘running shoes’ and ‘under ¥300’, should the list
+show only products that meet both conditions, or products that meet either one?
+I recommend ‘both’, so the results feel more precise.”
+```
+
+The agent may translate the user's plain-language answer into formal user
+stories, acceptance criteria, BDD, and technical constraints in the documents.
+`module_prd.md` remains business-only; `spec.md` remains precise and technical.
+
+**Review summaries.** At each phase gate, lead with a short plain-language
+summary: what users can do, what is intentionally out of scope, and which
+decision (if any) needs approval. Offer the detailed PRD, spec, or plan for
+review rather than requiring the user to understand it before they can respond.
+The existing explicit approvals for ticket type, phase progression, and
+promotion remain mandatory.
+
 ### 【Phase 2】Technical Spec (spec.md)
 
 **Goal**: Design the technical contract and ensure implementation alignment.
@@ -327,4 +369,3 @@ Loop 2 has no dependencies on Loop 3 (codoop-flow).
 Only requirement: a `codoop_flow.toml` pointing to the target project.
 
 For setup, use: `python skills/codoop-execute/scripts/codoop.py setup <target-repo>`
-

@@ -84,9 +84,16 @@ ticket_002/
 
 **codoop-ticket + PM agent**:
 - Parse your description
-- Ask clarifying questions (scope, goals, acceptance criteria)
+- Ask 1–3 plain-language clarifying questions at a time (scope, goals,
+  acceptance experience)
 - Read Phase 1 product/design specs
 - Write business requirements document (pure business, no technical details)
+
+The questions are about outcomes you can judge directly. For example, instead
+of asking how a filter should be implemented, codoop-ticket asks what someone
+should see after choosing two filters, then records the technical approach
+itself in `spec.md`. It still asks explicitly about product rules, scope,
+privacy, payments/costs, compliance, and irreversible behavior.
 
 ### Phase 2: Technical Spec
 
@@ -100,7 +107,8 @@ ticket_002/
 - Design UI interaction flows
 
 **You**:
-- Review `spec.md`
+- Review a plain-language summary first, then `spec.md` when you want the
+  technical detail
 - Provide feedback and modifications
 - Say "OK, move to next phase"
 
@@ -134,7 +142,7 @@ ticket_002/
 ## Best Practices
 
 1. **Phase 1 focus on business** — Don't include technical details in module_prd.md; that's Phase 2's job
-2. **Discuss requirements thoroughly** — Ask "why" multiple times before locking PRD to avoid spec changes later
+2. **Ask outcome questions in plain language** — Keep technical implementation choices with the agent unless they change product behavior, cost, safety, or scope
 3. **Make specs explicit** — Use tables rather than paragraphs for APIs; complete field lists
 4. **Keep tasks small** — If a task takes more than 2 hours, break it into smaller pieces
 5. **Reference DoD early** — Don't wait until Phase 3 to think about "what is done"; reference definition-of-done in phase 3
@@ -157,4 +165,3 @@ test_command for backend should be "npm run test:backend"
 
 ### Q: Ticket spec conflicts with Phase 1 standards. What happens?
 A: codoop-ticket will alert you. If you truly need to break Phase 1 guidelines, explicit user confirmation is required.
-
