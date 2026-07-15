@@ -254,8 +254,11 @@ failure. Use `false` when no user-visible behavior needs checking.
 1. Call `tickets_cli validate` to verify ticket completeness
 2. Show the ticket summary (id / title / modules) and **ask the
    user to confirm** promotion
-3. Only after explicit approval, call `tickets_cli promote` to move to `pending/`
-4. Ticket complete, ready for Phase 3 development
+3. Only after explicit approval, run `codoop-ticket.py ticket promote` to move
+   the ticket to `pending/` and create a dedicated `docs(ticket): add <ticket_id>`
+   commit. The command stages and commits only that ticket directory; it must
+   not include other working-tree changes.
+4. Ticket complete, committed, and ready for Phase 3 development
 
 **Promote requires explicit user approval.** Never promote a draft to
 `pending/` without the user confirming in the current conversation. Do not
@@ -376,7 +379,7 @@ python skills/codoop-ticket/scripts/codoop-ticket.py \
 python skills/codoop-ticket/scripts/codoop-ticket.py \
   ticket validate ticket_001 --config codoop_flow.toml
 
-# Promote ticket from drafts/ to pending/
+# Promote a confirmed ticket from drafts/ to pending/ and commit that ticket
 python skills/codoop-ticket/scripts/codoop-ticket.py \
   ticket promote ticket_001 --config codoop_flow.toml
 

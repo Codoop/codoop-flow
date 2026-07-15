@@ -27,6 +27,7 @@ sys.path.insert(0, str(_SHARED))
 from codoop_lib_v1.config import Config  # noqa: E402
 
 _TOOLS = _SCRIPTS / "codoop_tools.py"
+_TICKET_CLI = _ROOT / "skills" / "codoop-ticket" / "scripts" / "codoop-ticket.py"
 
 
 def _git(*args: str, cwd: Path) -> None:
@@ -92,6 +93,14 @@ def _tool(cfg: Path, *args: str) -> tuple[int, dict]:
     except json.JSONDecodeError:
         data = {"_raw": proc.stdout, "_stderr": proc.stderr}
     return proc.returncode, data
+
+
+def _ticket_cli(cfg: Path, *args: str) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(
+        [sys.executable, str(_TICKET_CLI), "ticket", *args, "--config", str(cfg)],
+        capture_output=True,
+        text=True,
+    )
 
 
 def _check(cond: bool, msg: str) -> None:
@@ -368,6 +377,34 @@ def test_ticket_lifecycle(root: Path, worktrees: Path) -> None:
     _check(not draft.exists(), "draft removed after promote")
 
 
+def test_confirmed_promotion_commits_only_ticket(root: Path, worktrees: Path) -> None:
+    print("[test] ticket promote: confirmed promotion commits only the ticket")
+    from codoop_lib_v1.tickets_cli import init_draft
+
+    config_path = _write_config(root, worktrees)
+    cfg = _config_obj(root, worktrees)
+    draft = init_draft(cfg, "ticket_012", title="commit confirmed ticket")
+    (draft / "module_prd.md").write_text("# PRD\nUsers can confirm tickets.\n", encoding="utf-8")
+    (draft / "spec.md").write_text("# Spec\nPOST /tickets/confirm\n", encoding="utf-8")
+    (root / "unrelated.txt").write_text("do not commit me\n", encoding="utf-8")
+
+    proc = _ticket_cli(config_path, "promote", "ticket_012", "--force")
+    _check(proc.returncode == 0, f"confirmed promotion succeeded: {proc.stderr}")
+    _check((cfg.pending_dir / "ticket_012").exists(), "ticket moved to pending/")
+    message = subprocess.run(
+        ["git", "log", "-1", "--pretty=%s"],
+        cwd=str(root), capture_output=True, text=True, check=True,
+    ).stdout.strip()
+    _check("ticket_012" in message, "ticket commit names the ticket")
+    committed_files = subprocess.run(
+        ["git", "show", "--pretty=", "--name-only", "HEAD"],
+        cwd=str(root), capture_output=True, text=True, check=True,
+    ).stdout.splitlines()
+    _check(committed_files and all(path.startswith("docs/tickets/pending/ticket_012/") for path in committed_files),
+           "ticket commit contains no unrelated files")
+    _check((root / "unrelated.txt").exists(), "unrelated working-tree file preserved")
+
+
 def test_fix_ticket_lifecycle(root: Path, worktrees: Path) -> None:
     print("[test] lifecycle (fix): init --type fix -> only bug_report.md required")
     from codoop_lib_v1.tickets_cli import init_draft, promote, validate_draft
@@ -462,6 +499,7 @@ def main() -> int:
         test_fail_archives_with_report,
         test_status_reports_counts,
         test_ticket_lifecycle,
+        test_confirmed_promotion_commits_only_ticket,
         test_fix_ticket_lifecycle,
         test_promote_blocks_incomplete,
         # TODO: discover tests removed after refactoring to in-session skill mode

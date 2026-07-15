@@ -304,7 +304,7 @@ After `setup`, you can also use the human-facing CLI to turn an idea into a tick
 python3 skills/codoop-ticket/scripts/codoop-ticket.py ticket init ticket_001 --config codoop_flow.toml --title "add hello module"
 # Edit drafts/ticket_001/: module_prd.md (business), spec.md (contract)
 python3 skills/codoop-ticket/scripts/codoop-ticket.py ticket validate ticket_001 --config codoop_flow.toml   # check required docs
-python3 skills/codoop-ticket/scripts/codoop-ticket.py ticket promote  ticket_001 --config codoop_flow.toml   # drafts → pending
+python3 skills/codoop-ticket/scripts/codoop-ticket.py ticket promote  ticket_001 --config codoop_flow.toml   # confirmed drafts → pending + dedicated ticket commit
 ```
 
 To explore a brand-new idea (multi-role design session, output to `docs/backlog/`), invoke the skill in-session:

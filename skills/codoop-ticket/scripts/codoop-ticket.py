@@ -20,6 +20,7 @@ from pathlib import Path
 # Add _shared to path for shared libraries
 sys.path.insert(0, str(Path(__file__).parents[2] / "_shared"))
 from codoop_lib_v1.config import load_config
+from codoop_lib_v1.gitutil import GitError, git
 from codoop_lib_v1.ticket import Ticket
 from codoop_lib_v1.tickets_cli import init_draft, promote, validate_draft, update_metadata_from_docs, write_metadata
 
@@ -82,10 +83,18 @@ def _cmd_ticket_promote(args) -> int:
                 return 1
 
         dest = promote(config, args.ticket_id)
-    except (ValueError, FileExistsError) as e:
+        ticket_path = dest.relative_to(config.target_repo)
+        git("add", "--", str(ticket_path), cwd=config.target_repo)
+        git(
+            "commit", "--only", "-m", f"docs(ticket): add {ticket.ticket_id}",
+            "--", str(ticket_path), cwd=config.target_repo,
+        )
+        commit = git("rev-parse", "--short", "HEAD", cwd=config.target_repo).strip()
+    except (ValueError, FileExistsError, GitError) as e:
         print(str(e))
         return 1
     print(f"\n✅ Promoted to pending: {dest}")
+    print(f"✅ Committed ticket: {commit}")
     print("Ready for Loop 3 execution.")
     return 0
 
