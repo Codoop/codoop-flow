@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.5-alpha.2] - 2026-07-15
+
+### Added
+
+- **Confirmed ticket commits.** Promoting an explicitly approved ticket now
+  creates a dedicated `docs(ticket): add <ticket_id>` commit that stages only
+  the promoted ticket directory.
+
+### Changed
+
+- **Failed worktrees are retained for recovery.** When self-healing is
+  exhausted, the ticket moves to `failed/` and its lease is released, while the
+  worktree and uncommitted changes remain available. `healing_report.md` now
+  records the recovery worktree path and branch.
+
 ## [0.1.5-alpha.1] - 2026-07-13
 
 ### Added
