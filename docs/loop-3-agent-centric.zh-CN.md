@@ -242,7 +242,7 @@ python3 <SKILL>/scripts/codoop_tools.py --config <toml> fail <ticket_id> --repor
 
 **输入：** 工单 ID，可选 `--report`。
 
-**行为：** 归档到 `failed/`，写入 healing_report.md，删除 worktree。
+**行为：** 归档到 `failed/`，写入 `healing_report.md`，释放 lease，并保留 worktree（包括未提交改动）供人工恢复。报告会记录 worktree 路径和分支。
 
 **输出：** 报告路径。
 
@@ -260,7 +260,7 @@ python3 <SKILL>/scripts/codoop_tools.py --config <toml> fail <ticket_id> --repor
 
 1. 第一个 `pick`：`git worktree add -b dev/<ticket_id> <path>`（创建分支并附加 worktree）
 2. 恢复：`git reset --hard HEAD` 清除任何脏状态
-3. `finish` 或 `fail`：`git worktree remove --force <path>`（尽力清理；`git worktree prune` 在下次运行时调和）
+3. `finish`：`git worktree remove --force <path>`（尽力清理；`git worktree prune` 在下次运行时调和）。`fail` 时保留 worktree 以便恢复。
 
 **Worktree 根位置：** `<worktree_root>/<ticket_id>`（默认：`~/codoop_tickets/worktrees/ticket_001`）。通过 `codoop_flow.toml` 设置。
 

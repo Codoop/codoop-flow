@@ -12,7 +12,8 @@ and never hallucinate:
               output (JSON).
     finish  — stage (excl. generated noise), commit on dev/<id>, move the
               ticket to done/, remove the worktree.
-    fail    — move the ticket to failed/, write healing_report.md, remove wt.
+    fail    — move the ticket to failed/, write healing_report.md, retain wt
+              so a human can continue the investigation.
     status  — print what's in pending/ and in_progress/ (JSON).
 
 All commands take --config <toml>. Output is JSON so the skill can parse it.
@@ -337,13 +338,25 @@ def cmd_fail(config: Config, ticket_id: str, report: str,
         return guard
     ticket, wt = _load_in_progress(config, ticket_id)
     dest = _move(config.in_progress_dir / ticket_id, config.failed_dir)
+    recovery = (
+        "\n\n## Recovery workspace\n"
+        f"- Worktree: `{wt.path}`\n"
+        f"- Branch: `{wt.branch}`\n"
+        "- Status: retained with its working-tree changes for human recovery.\n"
+    )
     (dest / "healing_report.md").write_text(
-        report or f"# Healing report for {ticket_id}\n\n(no detail provided)\n",
+        (report or f"# Healing report for {ticket_id}\n\n(no detail provided)\n")
+        + recovery,
         encoding="utf-8",
     )
-    wt.remove()
     release_lease(config.worktree_root, ticket_id)
-    _emit({"ticket_id": ticket_id, "state": "failed", "report": str(dest / "healing_report.md")})
+    _emit({
+        "ticket_id": ticket_id,
+        "state": "failed",
+        "report": str(dest / "healing_report.md"),
+        "worktree": str(wt.path),
+        "branch": wt.branch,
+    })
     return 0
 
 

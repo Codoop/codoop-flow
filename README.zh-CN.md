@@ -347,7 +347,7 @@ python3 skills/codoop-ticket/scripts/codoop-ticket.py ticket promote  ticket_001
 | `pick` | 挑最旧 pending 工单 → 搬进 in_progress → 建 worktree（`dev/<id>` 分支）。已有 in_progress 则报告它、不新挑 |
 | `verify <id>` | 在 worktree 跑测试 + (UI) 截图硬门禁 |
 | `finish <id> --message` | 排除生成物后 commit 到 `dev/<id>` → 搬到 done → 删 worktree |
-| `fail <id> --report` | 搬到 failed → 写 `healing_report.md` → 删 worktree |
+| `fail <id> --report` | 搬到 failed → 写 `healing_report.md` → 释放 lease 并保留 worktree 供人工恢复 |
 
 </details>
 
@@ -434,7 +434,7 @@ skill 是自包含目录，任何有"读文件 + 跑 Bash"能力的 coding agent
 可以。手动跑单个工单："使用 codoop-execute skill 跑一轮工单"。Agent 处理一个工单，问你是否合并，然后停止。
 
 **验证/评审失败会怎样？**
-Agent 自动重试（默认预算 3 次）。全部失败后，工单搬到 `failed/` 并写 `healing_report.md` 说明原因。你可以编辑工单重新提交。
+Agent 自动重试（默认预算 3 次）。全部失败后，工单搬到 `failed/` 并写 `healing_report.md` 说明原因。worktree 及未提交改动会保留给人工恢复，报告中会给出对应路径和分支。
 
 **能多个 agent 并行处理工单吗？**
 目前不行 — 同时只有一个 in_progress 工单。未来版本可能支持。

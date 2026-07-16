@@ -353,7 +353,7 @@ Every subcommand takes `--config <toml>` and emits JSON.
 | `pick` | Claim the oldest pending ticket → move to in_progress → create worktree (`dev/<id>` branch). If one is already in_progress, report it instead of picking a new one |
 | `verify <id>` | In the worktree: run tests + (UI) screenshot hard gate |
 | `finish <id> --message` | Commit (excluding generated noise) to `dev/<id>` → move to done → remove worktree |
-| `fail <id> --report` | Move to failed → write `healing_report.md` → remove worktree |
+| `fail <id> --report` | Move to failed → write `healing_report.md` → release lease and retain the worktree for human recovery |
 
 </details>
 
@@ -440,7 +440,7 @@ Yes. Just populate `docs/tickets/pending/` with the required structure. Loop 2 g
 Run single tickets manually: "Use the codoop-execute skill to run a ticket." Agent processes one ticket, asks to merge, then stops.
 
 **What happens if verify/review fails?**
-Agent automatically retries (up to 3 times by default). If still failing after budget exhausted, ticket moves to `failed/` with `healing_report.md` explaining why. You can edit the ticket and re-submit.
+Agent automatically retries (up to 3 times by default). If still failing after budget exhausted, the ticket moves to `failed/` with `healing_report.md` explaining why. Its worktree and uncommitted changes are retained for human recovery; the report gives its path and branch.
 
 **Can multiple agents process tickets in parallel?**
 Currently no — only one ticket in `in_progress/` at a time. Future version could support multiple.

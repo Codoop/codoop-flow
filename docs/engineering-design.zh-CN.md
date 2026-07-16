@@ -371,7 +371,7 @@ codoop-project-repo/            # 项目主 Git 仓库 (唯一可信源 + 核心
     - 自动重绘并更新技术常青树 `docs/tech/project-structure.md` 中的架构拓扑；
     - 自动提炼高密度的架构和技术演进日志，追加进 `docs/tech/changelog.md`。
   2. **规范化提交与清理**：调用 `git-workflow-master` 智能体（读取 `./source/agency-agents-main/engineering/engineering-git-workflow-master.md`）进行冲突排查，在隔离 Worktree 中以规范的 Conventional Commits（如 `docs(tech/prd): sync living documentation for ticket_001`）提交所有代码及技术/业务文档修改，并直接向远端 Push 分支。随后，调度器执行 `git worktree remove --force` 彻底抹除临时工作树，将工单文件夹从 `in_progress/` 转移归档到 `done/` 目录。
-    工单失败中断自愈**：若自愈失败或测试重试耗尽，流水线停止。调度器在工单目录下输出 `healing_report.md`（记录各阶段 diff 变化与自愈报错详情），执行 `git worktree remove`，将工单文件夹移入 `failed/`。人类提单人只需观察 `failed/` 目录，阅读 `healing_report.md` 即可精准介入修复。
+    工单失败中断自愈**：若自愈失败或测试重试耗尽，流水线停止。调度器将工单文件夹移入 `failed/`，输出记录恢复 worktree 路径和分支的 `healing_report.md`，释放 lease，并保留含未提交改动的 worktree。人类提单人可打开报告中记录的 worktree 精准介入修复。
 
 ---
 

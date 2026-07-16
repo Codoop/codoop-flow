@@ -248,7 +248,9 @@ Exit 0 on success.
 
 **Input:** Ticket ID, optional `--report`.
 
-**Behavior:** Archives to `failed/`, writes healing_report.md, removes worktree.
+**Behavior:** Archives to `failed/`, writes `healing_report.md`, releases the
+lease, and retains the worktree (including uncommitted changes) for human
+recovery. The report records the worktree path and branch.
 
 **Output:** Path to report.
 
@@ -266,7 +268,7 @@ Each ticket executes in its own **isolated `git worktree`** — a full independe
 
 1. On first `pick`: `git worktree add -b dev/<ticket_id> <path>` (creates branch and attaches worktree)
 2. On resume: `git reset --hard HEAD` to scrub any dirty state
-3. On `finish` or `fail`: `git worktree remove --force <path>` (best-effort cleanup; `git worktree prune` reconciles refs on next run)
+3. On `finish`: `git worktree remove --force <path>` (best-effort cleanup; `git worktree prune` reconciles refs on next run). On `fail`, retain the worktree for recovery.
 
 **Worktree root location:** `<worktree_root>/<ticket_id>` (default: `~/codoop_tickets/worktrees/ticket_001`). Set via `codoop_flow.toml`.
 

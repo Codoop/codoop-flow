@@ -339,16 +339,25 @@ def test_finish_fix_uses_fix_prefix(root: Path, worktrees: Path) -> None:
     _check(msg.startswith("fix(backend):"), f"commit prefixed fix(...): {msg!r}")
 
 
-def test_fail_archives_with_report(root: Path, worktrees: Path) -> None:
-    print("[test] fail: move to failed/ + write healing_report")
+def test_fail_archives_with_report_and_preserves_worktree(root: Path, worktrees: Path) -> None:
+    print("[test] fail: archive report + preserve worktree for recovery")
     cfg = _write_config(root, worktrees)
     _make_ticket(root, "ticket_006", test_cmd="true")
     picked = _tool(cfg, "pick")[1]
+    worktree = Path(picked["worktree"])
+    (worktree / "backend" / "unfinished.txt").write_text("keep this work\n", encoding="utf-8")
     code, data = _tool(cfg, "fail", "ticket_006", "--report", "root cause: boom")
     _check(code == 0 and data["state"] == "failed", "fail returned failed")
     report = (root / "docs/tickets/failed/ticket_006/healing_report.md").read_text()
     _check("boom" in report, "healing_report carries the reason")
-    _check(not Path(picked["worktree"]).exists(), "worktree removed on fail")
+    _check(str(worktree) in report and picked["branch"] in report,
+           "healing_report identifies the recovery worktree and branch")
+    _check(worktree.exists(), "worktree remains available after fail")
+    _check((worktree / "backend" / "unfinished.txt").read_text() == "keep this work\n",
+           "unfinished work is preserved for recovery")
+    _check(not (worktrees / ".codoop-leases" / "ticket_006.json").exists(),
+           "lease released so a later recovery can claim the ticket")
+    _check(data["worktree"] == str(worktree), "fail output identifies the preserved worktree")
 
 
 def test_status_reports_counts(root: Path, worktrees: Path) -> None:
@@ -496,7 +505,7 @@ def main() -> int:
         test_ui_capture_gate,
         test_finish_commits_and_archives,
         test_finish_fix_uses_fix_prefix,
-        test_fail_archives_with_report,
+        test_fail_archives_with_report_and_preserves_worktree,
         test_status_reports_counts,
         test_ticket_lifecycle,
         test_confirmed_promotion_commits_only_ticket,

@@ -172,8 +172,11 @@ tell the user the branch is ready; only push if they ask.
 ```
 python3 $SKILL/scripts/codoop_tools.py --config <toml> fail <ticket_id> --lease <token> --report "<what failed, denoised>"
 ```
-Writes `healing_report.md` into `failed/<ticket_id>/` and cleans the worktree.
-Report back so the human can intervene.
+Writes `healing_report.md` into `failed/<ticket_id>/`, releases the lease, and
+retains the worktree with its uncommitted changes. The report identifies the
+worktree path and branch so a human can continue the investigation. Report back
+so the human can intervene; do not move the failed ticket back to `pending/`
+with the ordinary `pick` flow, because that flow resets a reused worktree.
 
 ## Human-facing CLI (out of the autonomous loop)
 
