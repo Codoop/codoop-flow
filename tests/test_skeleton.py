@@ -376,6 +376,9 @@ def test_ticket_lifecycle(root: Path, worktrees: Path) -> None:
     from codoop_lib_v1.tickets_cli import init_draft, promote, validate_draft
     cfg = _config_obj(root, worktrees)
     draft = init_draft(cfg, "ticket_010", title="demo")
+    metadata = json.loads((draft / "metadata.json").read_text(encoding="utf-8"))
+    metadata["test_command"] = {"backend": "true"}
+    (draft / "metadata.json").write_text(json.dumps(metadata), encoding="utf-8")
     _check(draft.exists(), "draft scaffolded")
     _check(not validate_draft(cfg, "ticket_010").ok, "empty scaffold fails validation")
     (draft / "module_prd.md").write_text("# PRD\n用户看到欢迎语。\n", encoding="utf-8")
@@ -386,6 +389,18 @@ def test_ticket_lifecycle(root: Path, worktrees: Path) -> None:
     _check(not draft.exists(), "draft removed after promote")
 
 
+def test_ticket_test_commands_are_explicit(root: Path, worktrees: Path) -> None:
+    print("[test] ticket test commands are explicit")
+    from codoop_lib_v1.tickets_cli import init_draft, update_metadata_from_docs
+    cfg = _config_obj(root, worktrees)
+    draft = init_draft(cfg, "ticket_013", title="explicit tests")
+    metadata = json.loads((draft / "metadata.json").read_text(encoding="utf-8"))
+    _check(metadata["test_command"] == {}, "new draft has no default test command")
+    (draft / "spec.md").write_text("# Spec\n## Backend\n", encoding="utf-8")
+    updated = update_metadata_from_docs(cfg, "ticket_013")
+    _check(updated["test_command"] == {}, "metadata update does not infer test commands")
+
+
 def test_confirmed_promotion_commits_only_ticket(root: Path, worktrees: Path) -> None:
     print("[test] ticket promote: confirmed promotion commits only the ticket")
     from codoop_lib_v1.tickets_cli import init_draft
@@ -393,6 +408,9 @@ def test_confirmed_promotion_commits_only_ticket(root: Path, worktrees: Path) ->
     config_path = _write_config(root, worktrees)
     cfg = _config_obj(root, worktrees)
     draft = init_draft(cfg, "ticket_012", title="commit confirmed ticket")
+    metadata = json.loads((draft / "metadata.json").read_text(encoding="utf-8"))
+    metadata["test_command"] = {"backend": "true"}
+    (draft / "metadata.json").write_text(json.dumps(metadata), encoding="utf-8")
     (draft / "module_prd.md").write_text("# PRD\nUsers can confirm tickets.\n", encoding="utf-8")
     (draft / "spec.md").write_text("# Spec\nPOST /tickets/confirm\n", encoding="utf-8")
     (root / "unrelated.txt").write_text("do not commit me\n", encoding="utf-8")
@@ -420,6 +438,9 @@ def test_fix_ticket_lifecycle(root: Path, worktrees: Path) -> None:
     from codoop_lib_v1.ticket import Ticket
     cfg = _config_obj(root, worktrees)
     draft = init_draft(cfg, "ticket_fix1", title="修复分页越界", ticket_type="fix")
+    metadata = json.loads((draft / "metadata.json").read_text(encoding="utf-8"))
+    metadata["test_command"] = {"backend": "true"}
+    (draft / "metadata.json").write_text(json.dumps(metadata), encoding="utf-8")
     _check(draft.exists(), "fix draft scaffolded")
     _check((draft / "bug_report.md").exists(), "bug_report.md scaffolded")
     _check(not (draft / "module_prd.md").exists(), "no module_prd.md for fix")
@@ -508,6 +529,7 @@ def main() -> int:
         test_fail_archives_with_report_and_preserves_worktree,
         test_status_reports_counts,
         test_ticket_lifecycle,
+        test_ticket_test_commands_are_explicit,
         test_confirmed_promotion_commits_only_ticket,
         test_fix_ticket_lifecycle,
         test_promote_blocks_incomplete,

@@ -83,7 +83,7 @@ def init_draft(
         "title": title or ticket_id,
         "ticket_type": ticket_type,
         "modules": ["backend"],
-        "test_command": {"backend": "bash script/test-backend.sh"},
+        "test_command": {},
         "max_healing_attempts": 3,
         "ui_capture": False,
     }
@@ -213,7 +213,7 @@ def update_metadata_from_docs(config: Config, ticket_id: str) -> dict:
 
     Infers:
     - modules: extracted from spec.md's "## Backend", "## Web", etc. section headers
-    - test_command: recommended based on modules (can be overridden by user)
+    - test_command: preserved for the user to define per project and ticket
 
     Returns the updated metadata dict (but does NOT write to disk yet).
     User can review and accept/modify before validate().
@@ -256,19 +256,8 @@ def update_metadata_from_docs(config: Config, ticket_id: str) -> dict:
 
     modules = sorted(list(modules))
 
-    # Infer test_command for each module (can be overridden by user)
+    # Test commands are project- and ticket-specific; never infer paths here.
     test_command = metadata.get("test_command", {})
-    for module in modules:
-        if module not in test_command:
-            # Provide sensible defaults
-            if module == "backend":
-                test_command[module] = "bash script/test-backend.sh"
-            elif module == "web":
-                test_command[module] = "npm test -- --coverage"
-            elif module == "mobile":
-                test_command[module] = "flutter test"
-            elif module == "desktop":
-                test_command[module] = "cargo test"
 
     # Update metadata dict
     updated = {
