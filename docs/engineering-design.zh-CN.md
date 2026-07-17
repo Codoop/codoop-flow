@@ -62,7 +62,7 @@ flowchart TD
         Skill: incremental-implementation"]
         A1 <-->|读写修改| WTCode["临时隔离 Worktree"]
         A1 -->|局部测试沙盒| A2["自适应测试沙盒 Verify
-        执行 script/test-module.sh
+        执行工单显式配置的 test_command
         自适应无头截图 无像素大小限制
         Skill: test-driven-development"]
         A2 --> A3{"自动化测试全绿?"}
@@ -228,7 +228,13 @@ codoop-project-repo/            # 项目主 Git 仓库 (唯一可信源 + 核心
 ├── web/                        # 网页端前端代码目录 (在其内部独立管理依赖)
 ├── desktop/                    # PC端/桌面端代码目录 (在其内部独立管理依赖)
 ├── mobile/                     # 移动端代码目录 (在其内部独立管理依赖)
-├── script/                     # 项目自动化与测试沙盒脚本目录 (由各端自定义实现)
+├── deploy/                     # 按业务组织的部署与运维脚本
+│   ├── README.md                # 业务索引、入口、前置条件与使用说明
+│   └── <business-name>/         # 用户自行命名的业务目录，不预设平台名称
+├── resources/                  # 跨端共享的产品资源
+│   ├── README.md                # 资源索引、使用方、来源与许可说明
+│   ├── audio/                  # 共享音频资源
+│   └── <resource-group>/        # 用户自定义分组，如 branding、icons、images 或 fonts
 └── .gitignore                  # Git 忽略配置
 ```
 
@@ -285,7 +291,7 @@ codoop-project-repo/            # 项目主 Git 仓库 (唯一可信源 + 核心
 2. **自动化沙盒校验与视觉捕获阶段 (Verify)**：
   - **规范遵循**：遵循 `test-driven-development`。
   - **自适应多端测试与工具链映射**：根据当前工单 `metadata.json` 所声明涉及的平台子系统，调度系统自适应运行特定的自动化测试：
-    - 运行修改模块对应的单元或集成测试脚本 `bash script/test-[module].sh`。脚本需具备沙盒隔离能力（如使用轻量级隔离数据库、虚拟沙盒环境等），避免产生任何脏数据污染。
+    - 运行 `metadata.json` 中为每个修改模块显式配置的 `test_command`。项目自行决定命令及其位置；需要时命令必须具备沙盒隔离能力，避免产生脏数据污染。
     - **自适应 UI/UX 视觉捕获**：当工单修改涉及到前端、用户界面或 UI 交互时，该测试脚本必须自动拉起对应的捕获和渲染工具：
       - **网页端 (Web)**：直接拉起 **Playwright / Cypress / Puppeteer** 等无头浏览器在本地完成功能断言与视觉截图。
       - **移动端 (Mobile)**：自动拉起对应的 iOS / Android **物理模拟器 (Simulator/Emulator) 或 Appium 自动化测试代理** 进行交互驱动和状态捕获。
@@ -385,7 +391,7 @@ codoop-project-repo/            # 项目主 Git 仓库 (唯一可信源 + 核心
 | **2. 需求设计定义 (Define)**       | `spec-driven-development` `api-and-interface-design`                                      | **人类提单人主导 + Product Agent 协同** (读取 `source/agency-agents-main/product/product-sprint-prioritizer.md` 中的产品总监角色)                                                                                                                                                                                                                | 1. **纯业务 PRD (module_prd.md)**：人类协同 PM 编写纯粹的业务描述说明书，100% 纯业务属性，绝不涉及代码或数据库细节。 2. **规格驱动 Spec (spec.md)**：遵循 `spec-driven-development` 规格驱动开发原则，针对业务 PRD 编制技术规格规范（spec.md），声明 API 契约与 UI 交互准则，确立开发刚性硬约束边界。                                                                        |
 | **3. 任务规划分解 (Plan)**         | `planning-and-task-breakdown`                                                             | **人类提单人主导 / 辅助分解模型**                                                                                                                                                                                                                                                                                                          | 1. **步骤规划 (plan.md)**：基于 `spec.md` 契约，用 plan.md 规范多端协作或分步开发路径。 2. **原子任务 (todo.md)**：采用 `planning-and-task-breakdown` 将 Plan 细化为单项修改不超过 100 行代码的原子 checkbox `- [ ]` 列表。必须带明确的子系统模块前缀 `[backend]`, `[web]`, `[desktop]`, `[mobile]` 等。并在设计完成后由 `drafts/` 迁移至 `pending/` 唤醒调度器。                        |
 | **4. 隔离渐进开发 (Build)**        | `incremental-implementation` `context-engineering`                                        | **抽象 AI 编码引擎** (仅支持 Claude Code CLI, Codex CLI/API, Cursor CLI)                                                                                                                                                                                                                                                               | 1. **渐进披露**：调度器启动编码引擎时只向其披露该工单局部工作树内的 `module_prd.md`、`spec.md`，杜绝上下文膨胀与大范围修改。 2. **编辑沙箱限制**：在 System Prompt 级别强约束编码工具只允许编辑 spec 限制的文件白名单（如 `backend/` 内部），保证范围纪律。                                                                                                                                   |
-| **5. 自动化校验与视觉捕获 (Verify)**   | `test-driven-development`                                                                 | **分端测试执行器** (`script/test-[module].sh`) + **自适应多端自动化测试与捕获代理工具**                                                                                                                                                                                                                                                               | 1. **沙盒功能校验**：自动化单元与集成测试运行全绿。 2. **自适应 UI/UX 视觉捕获**：系统根据工单所属子系统智能匹配测试工具（Web 端拉起 Playwright，移动端拉起模拟器/Appium，PC 桌面端视架构而定拉起对应驱动）。 3. **局部路径隔离**：截图不限制任何图像分辨率尺寸，无暗黑模式截图硬性限制，截图强制保存在局部隔离路径下，完全规避冲突。                                                                                                       |
+| **5. 自动化校验与视觉捕获 (Verify)**   | `test-driven-development`                                                                 | **工单测试执行器**（显式 `test_command`）+ **自适应多端自动化测试与捕获代理工具**                                                                                                                                                                                                                                                               | 1. **沙盒功能校验**：自动化单元与集成测试运行全绿。 2. **自适应 UI/UX 视觉捕获**：系统根据工单所属子系统智能匹配测试工具（Web 端拉起 Playwright，移动端拉起模拟器/Appium，PC 桌面端视架构而定拉起对应驱动）。 3. **局部路径隔离**：截图不限制任何图像分辨率尺寸，无暗黑模式截图硬性限制，截图强制保存在局部隔离路径下，完全规避冲突。                                                                                                       |
 | **6. 分端即时反馈自愈 (Debug)**      | `debugging-and-error-recovery`                                                            | **调度器去噪模型** + **抽象 AI 编码引擎**                                                                                                                                                                                                                                                                                                  | 1. **智能错误清洗**：提取、去噪各种测试框架的原始报错或编译堆栈，过滤日志噪音，提炼高价值 Exception 细节。 2. **即时反馈闭环**：以高密度结构化 Debug Prompt 重塑后即时注入给当前编码引擎，开启最大 3 次隔离自愈。                                                                                                                                                                       |
 | **7. 多维并行评审门禁 (Review)**     | `code-review-and-quality` `security-and-hardening` `evidence-collector` `reality-checker` | **五大 Parallel Subagents (并行扇出)**： 1. `code-reviewer` (五轴代码) 2. `security-auditor` (OWASP安全) 3. `test-engineer` (单元及覆盖率) 4. `evidence-collector` (UI视觉验收) 5. `reality-checker` (UX交互体验)                                                                                                                                        | 1. **静态 + 动态联合评审门禁**：并行调起 5 个独立专家 Agent，静态组评审 `git diff` 源码，动态组通过 `responsive-*.png` 与交互对比截图对 UI 还原度和 UX 体验流进行极度苛刻的审查验收。 2. **一票否决**：任意一方拒绝（如发现视觉严重错位或交互阻碍）即触发 `REJECT`，合并缺陷反馈并打回自愈修复。                                                                                                               |
 | **8. 自动提交发布 (Ship)**         | `git-workflow-and-versioning` `documentation-and-adrs`                                    | **Technical Writer** + **Git Workflow Master** (由主进程加载 Subagents 角色)                                                                                                                                                                                                                                                          | 1. **常青树文档自动对齐**：使用 `technical-writer` 提取 `git diff` 自动更新 `docs/prd/` 核心业务逻辑，重绘并刷新 `docs/tech/project-structure.md` 架构拓扑树，向 `docs/tech/changelog.md` 追加变更日志。 2. **Conventional Commits 提交**：由 `git-workflow-master` 根据包含代码与文档的 `git diff` 自动生成 Conventional Commit Message 并推送分支，随后强制清理并释放 Worktree。 |

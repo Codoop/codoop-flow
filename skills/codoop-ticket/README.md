@@ -132,7 +132,7 @@ privacy, payments/costs, compliance, and irreversible behavior.
 
 **codoop-ticket automatically**:
 - Extract `modules` from spec.md (## Backend, ## Web, etc. sections)
-- Generate `test_command` defaults based on modules
+- Preserve user-defined `test_command` entries; require one explicit command per module before validation
 - Detect whether the confirmed spec changes user-visible screens, interactions,
   or flows
 

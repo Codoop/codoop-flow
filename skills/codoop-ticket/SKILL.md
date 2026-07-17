@@ -207,7 +207,7 @@ todo.md:
 **Process**:
 1. Automatically infer from `spec.md`:
    - `modules`: extract from spec headers (## Backend → backend, ## Web → web)
-   - `test_command`: generate defaults based on modules
+   - `test_command`: preserve the user-defined commands; require one explicit command per module before validation
 2. Inspect the confirmed spec for new or changed user-visible screens,
    interactions, or task flows:
    - If present, explain in plain language that the delivery can also check the

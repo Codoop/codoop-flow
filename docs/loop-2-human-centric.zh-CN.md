@@ -187,7 +187,7 @@ python skills/codoop-ticket/scripts/codoop-ticket.py ticket <command> <args>
 
 **推断逻辑：**
 - `modules` — 从 `spec.md` 标题扫描（`## 后端`、`## 网页`等），映射到：后端、网页、移动、桌面
-- `test_command` — 如果不存在则按模块用默认值填充（后端：`bash script/test-backend.sh`、网页：`npm test`、移动：`flutter test`、桌面：`cargo test`）
+- `test_command` — 保留已有配置；验证前必须为每个已声明模块明确填写命令，不推断默认值
 
 通常在阶段 3 完成后、验证和提升前调用。
 

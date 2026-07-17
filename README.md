@@ -324,7 +324,7 @@ To explore a brand-new idea (multi-role design session, output to `docs/backlog/
   "title": "add hello module",
   "ticket_type": "feature",
   "modules": ["backend"],
-  "test_command": {"backend": "bash script/test-backend.sh"},
+  "test_command": {"backend": "<project-specific test command>"},
   "max_healing_attempts": 3,
   "ui_capture": false
 }
@@ -334,7 +334,7 @@ To explore a brand-new idea (multi-role design session, output to `docs/backlog/
 |---|---|
 | `ticket_type` | `feature` (需求单, default) or `fix` (修复单). Selects required docs in Loop 2 and the commit prefix (`feat`/`fix`) in Loop 3 |
 | `modules` | Modules involved; each must have an entry in `test_command` |
-| `test_command` | module → shell command; `verify` runs one per module |
+| `test_command` | module → explicitly configured shell command; `verify` runs one per module (no default is inferred) |
 | `max_healing_attempts` | self-heal retry budget (default 3) |
 | `ui_capture` | when true: the test script must write screenshots to `$CODOOP_QA_SCREENSHOT_DIR` (no screenshots = hard fail), and review adds 2 UI personas that actually look at the images |
 

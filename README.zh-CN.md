@@ -318,7 +318,7 @@ python3 skills/codoop-ticket/scripts/codoop-ticket.py ticket promote  ticket_001
   "title": "add hello module",
   "ticket_type": "feature",
   "modules": ["backend"],
-  "test_command": {"backend": "bash script/test-backend.sh"},
+  "test_command": {"backend": "<项目指定的测试命令>"},
   "max_healing_attempts": 3,
   "ui_capture": false
 }
@@ -328,7 +328,7 @@ python3 skills/codoop-ticket/scripts/codoop-ticket.py ticket promote  ticket_001
 |---|---|
 | `ticket_type` | `feature`（需求单，默认）或 `fix`（修复单）。决定第二环的必需文档与第三环的 commit 前缀（`feat`/`fix`） |
 | `modules` | 涉及的模块，每项都必须在 `test_command` 里有对应命令 |
-| `test_command` | 模块 → shell 命令；`verify` 对每个模块跑一次 |
+| `test_command` | 模块 → 显式配置的 shell 命令；`verify` 对每个模块跑一次（不推断默认值） |
 | `max_healing_attempts` | 自愈重试预算（默认 3） |
 | `ui_capture` | 为 true 时：测试脚本须往 `$CODOOP_QA_SCREENSHOT_DIR` 写截图（没截图硬 fail），评审额外加 2 个 UI persona 真看图 |
 

@@ -179,7 +179,7 @@ Or directly call the skill in any AI coding tool:
 
 **Inference logic:**
 - `modules` — scanned from `spec.md` headers (`## Backend`, `## Web`, etc.) mapped to: backend, web, mobile, desktop
-- `test_command` — populated with defaults per module if not present (backend: `bash script/test-backend.sh`, web: `npm test`, mobile: `flutter test`, desktop: `cargo test`)
+- `test_command` — preserved as provided; define one command for every listed module before validation (no default is inferred)
 
 Typically called after Phase 3 is complete, before validating and promoting.
 
