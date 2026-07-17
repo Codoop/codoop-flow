@@ -1,6 +1,6 @@
 ---
 name: codoop-discover
-description: Launch a collaborative product discovery session with multi-role experts (PM, GTM, UX/UI, Architect). Use when exploring 0-to-1 design for a new product or feature. Orchestrates expert agents in-session to draft comprehensive backlog documentation through SNAP clarification, multi-perspective analysis, and consistency auditing.
+description: Launch a collaborative product discovery session with multi-role experts (PM, GTM, UI, Architect). Use when exploring 0-to-1 design for a new product or feature. Orchestrates expert agents in-session to draft comprehensive backlog documentation through SNAP clarification, multi-perspective analysis, and consistency auditing.
 ---
 
 # Product Discovery & Design Loop
@@ -16,7 +16,6 @@ This skill invokes the following expert personas from the shared agents library 
 
 - **PM / Product Strategy**: `product-sprint-prioritizer.md`
 - **GTM & Pricing**: `sales-offer-lead-gen-strategist.md`
-- **UX Designer**: `design-ux-architect.md`
 - **UI Designer**: `design-ui-designer.md`
 - **Backend Architect**: `engineering-backend-architect.md`
 - **Software Architect**: `engineering-software-architect.md`
@@ -31,11 +30,10 @@ This skill invokes the following expert personas from the shared agents library 
 - **Orchestrator Agent**: The main chat agent does not directly claim to be all roles. Instead, it acts as the **Orchestrator/Coordinator**, reading the current state of the design and dispatching specialized sub-agents when the host provides them. If no subagent facility is available, run the same role prompts serially in the main session and keep each role's output clearly labeled to limit context pollution.
 
 ### 1.2 Sub-Agent Context Isolation & Invocation
-To prevent "Context Pollution", the Orchestrator should use isolated specialized sub-agents (PM, GTM, UI/UX, Architect, Alignment) when available, and otherwise execute those roles serially.
+To prevent "Context Pollution", the Orchestrator should use isolated specialized sub-agents (PM, GTM, UI, Architect, Alignment) when available, and otherwise execute those roles serially.
 - **Strict Calling Protocol**: Before invoking a role, the Orchestrator **MUST locate and read the corresponding prompt file in `../../_shared/agents/`** using file tools:
   - PM Agent ➔ Read `../../_shared/agents/product-sprint-prioritizer.md`
   - GTM Agent ➔ Read `../../_shared/agents/sales-offer-lead-gen-strategist.md`
-  - UX Agent ➔ Read `../../_shared/agents/design-ux-architect.md`
   - UI Agent ➔ Read `../../_shared/agents/design-ui-designer.md`
   - Architect Agent ➔ Read `../../_shared/agents/engineering-backend-architect.md` + `engineering-software-architect.md`
   - Alignment Agent ➔ Read `../../_shared/agents/alignment-agent.md`
@@ -45,7 +43,7 @@ To prevent "Context Pollution", the Orchestrator should use isolated specialized
 
 ## 2. External & Sibling Skills Integration
 
-To achieve high-fidelity output, this loop relies on several specialized sibling skills (`ui-ux-pro-max`, `gsap-skills`, `pm-skills`). 
+To achieve high-fidelity output, this loop relies on specialized sibling skills (`ui-ux-pro-max`, `pm-skills`).
 - **Rule**: The Orchestrator and invoked role agents MUST proactively load, read, and follow these sibling skills.
 - **Reference Manual**: For specific file paths, relative routing, and configuration metrics of external integrations, refer directly to the sibling [**`README.md`**](README.md) file in this directory.
 
@@ -77,9 +75,9 @@ The core responsibilities, tool integrations, and detailed capabilities of each 
 
 - **Product Manager (PM)**: Defines product scopes, opportunity trees (OST), user journeys, and Gherkin BDD user stories. Detailed in [`../../_shared/agents/product-sprint-prioritizer.md`](../../_shared/agents/product-sprint-prioritizer.md).
 - **Go-To-Market (GTM)**: Formulates subscription structures, free/paid tier boundaries, price elasticities, and GTM plans. Detailed in [`../../_shared/agents/sales-offer-lead-gen-strategist.md`](../../_shared/agents/sales-offer-lead-gen-strategist.md).
-- **UI/UX & Animations**: Establishes visual design systems, layout constraints, interactive ASCII mockups, and GSAP fluid animation parameters. Detailed in [`../../_shared/agents/design-ux-architect.md`](../../_shared/agents/design-ux-architect.md).
+- **UI Designer**: Creates the visual design system: visual direction, design principles, tokens, component language, page composition rules, motion, and visual accessibility. It does not define implementation details. Detailed in [`../../_shared/agents/design-ui-designer.md`](../../_shared/agents/design-ui-designer.md).
 - **System Architect**: Designs technical stack schemas, cross-platform parity specifications, OpenAPI contracts, DB tables, and red-teams assumptions. Detailed in [`../../_shared/agents/engineering-backend-architect.md + engineering-software-architect.md`](../../_shared/agents/engineering-backend-architect.md + engineering-software-architect.md).
-- **Consistency Auditor (Alignment)**: Reads all specifications, cross-references them to identify inconsistencies, and feeds them back to PM, GTM, UI/UX, and Architect. Detailed in [`../../_shared/agents/alignment-agent.md`](../../_shared/agents/alignment-agent.md).
+- **Consistency Auditor (Alignment)**: Reads all specifications, cross-references them to identify inconsistencies, and feeds them back to PM, GTM, UI Designer, and Architect. Detailed in [`../../_shared/agents/alignment-agent.md`](../../_shared/agents/alignment-agent.md).
 
 ---
 
@@ -110,9 +108,8 @@ Drafting & Objections             Hardening & Specifications             Alignme
      - `requirements.md`: Standard Product Requirement Document (PRD) containing scope, state transitions, and Gherkin BDD scenarios.
      - `user-journey.md`: Complete user journeys and user/job stories.
      - `monetization-plan.md`: Subscription structures, free/paid tier boundaries, and entitlement configurations.
-   - **`interface/`** (Visual & Interaction):
-     - `design-system.md`: Visual design systems, layout constraints, and visual tokens.
-     - `ui-mockups.md`: Interactive ASCII mockups, wireframes, and animation parameters.
+   - **`interface/`** (Visual Design):
+     - `design-system.md`: The sole visual-design source of truth. It defines visual direction, principles, colors, typography, spacing, component language, page composition rules, motion, and visual accessibility. It must not contain ASCII mockups, implementation code, technical architecture, API/schema details, or framework-specific guidance.
    - **`architecture/`** (Technical Design & Contracts):
      - `architecture.md`: Technical specifications detailing system designs, physical process models, database relations, and cross-platform integrations.
      - `database-schema.sql`: Complete SQL tables, indices, and constraints.
@@ -128,7 +125,7 @@ Drafting & Objections             Hardening & Specifications             Alignme
    - After structured specifications are generated, the Orchestrator MUST invoke the **Alignment Agent** (reading `../../_shared/agents/alignment-agent.md`) to conduct a comprehensive consistency audit across all generated files.
    - The Alignment Agent reads all specification files across the five directories, generates `docs/backlog/alignment-report.md`, and writes any identified inconsistencies into `docs/backlog/design-draft.md` under `[ALIGNMENT CHALLENGE]` blocks:
      `[ALIGNMENT CHALLENGE: Alignment -> <Role(s)>] <Description of conflict>`
-   - The corresponding roles (PM, GTM, UI/UX, Architect) must be re-dispatched to resolve these challenges, updating their respective files and writing `[RESOLVED: <Role>]` in `design-draft.md`.
+   - The corresponding roles (PM, GTM, UI Designer, Architect) must be re-dispatched to resolve these challenges, updating their respective files and writing `[RESOLVED: <Role>]` in `design-draft.md`.
    - The Alignment Agent is re-dispatched to verify the updates. Once 100% aligned, the Alignment Agent appends `[ALIGNMENT APPROVED: Alignment]` to `design-draft.md`.
 6. **Final Lock-In**: PM appends **`[WAITING FOR HUMAN REVIEW]`** at the end of `design-draft.md` only after receiving the `[ALIGNMENT APPROVED: Alignment]` sign-off.
 7. **Archiving & Purge (Cleanup)**: Once the user approves and marks it as `Locked`, **Architect Agent** is responsible for verifying that all specifications are intact, and then **deleting the temporary `design-draft.md`** to keep the codebase clean.

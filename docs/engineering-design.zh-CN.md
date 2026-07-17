@@ -167,9 +167,8 @@ flowchart TD
   - `requirements.md`：核心 PRD，包含全局产品矩阵、状态转移图及 Gherkin BDD 场景定义。
   - `user-journey.md`：用户旅程设计与体验故事描述。
   - `monetization-plan.md`：定价策略、免费与付费阶梯限制规则、商业化收费埋点设计。
-- `**interface/` (交互与视觉层)**：
-  - `design-system.md`：设计系统，定义色彩、边距、字号视觉 Token。
-  - `ui-mockups.md`：交互 ASCII 文本原型、线框图和动效参数。
+- `**interface/` (视觉设计层)**：
+  - `design-system.md`：视觉设计唯一事实来源，定义视觉方向、原则、Token、组件语言、页面构图、动效与视觉无障碍；不包含原型或实现细节。
 - `**architecture/` (技术架构层)**：
   - `architecture.md`：多端技术选型、高并发策略、数据流、缓存架构。
   - `database-schema.sql`：完整的 DDL、外键约束、索引与性能基准约束。
@@ -187,7 +186,7 @@ flowchart TD
 
 - **PM (产品总监)**：使用 `./source/agency-agents-main/product/product-sprint-prioritizer.md` 作为产品策略总负责。
 - **GTM & Pricing (商业策划/定价专家)**：使用 `./source/agency-agents-main/sales/sales-offer-lead-gen-strategist.md` 或 `sales-deal-strategist.md`，负责打磨商业策划书（GTM）与付费边界。
-- **UX & UI Designer (交互体验与视觉专家)**：使用 `./source/agency-agents-main/design/design-ux-architect.md` & `design-ui-designer.md` 联合完成用户旅程定义与 ASCII UI 原型画稿。
+- **UI Designer (视觉设计专家)**：使用 `./source/agency-agents-main/design/design-ui-designer.md` 编制视觉设计系统与页面构图规则；用户旅程仍由 PM 负责。
 - **System Architect (首席架构师)**：使用 `./source/agency-agents-main/engineering/engineering-backend-architect.md` & `engineering-software-architect.md` 实施技术架构红队测试并编制数据库、OpenAPI 契约以及 `scaffolding-blueprint.md` 物理目录拓扑设计（纯文档规范），不进行实际代码的编写。
 
 ---
@@ -203,7 +202,7 @@ codoop-project-repo/            # 项目主 Git 仓库 (唯一可信源 + 核心
 │   │   ├── design-draft.md     # 联合草拟设计草案 (Challenge Loop 协同辩论区)
 │   │   ├── alignment-report.md # 一致性审计报告
 │   │   ├── product/            # 产品与商业层 (requirements.md, user-journey.md, monetization-plan.md)
-│   │   ├── interface/          # 交互与视觉层 (design-system.md, ui-mockups.md)
+│   │   ├── interface/          # 视觉设计层 (design-system.md)
 │   │   ├── architecture/       # 技术架构层 (architecture.md, database-schema.sql, openapi.yaml)
 │   │   ├── modules/            # 模块详细设计 (module-<name>.md)
 │   │   └── bridge/             # 人机桥梁层 (human-preparation.md, ai-co-dev-guide.md, scaffolding-blueprint.md)
@@ -382,7 +381,7 @@ codoop-project-repo/            # 项目主 Git 仓库 (唯一可信源 + 核心
 
 | 流水线阶段 (Phase)                | 映射的 `agent-skills` Skill                                                                  | 执行主体 / 角色 (Subagent / Executor)                                                                                                                                                                                                                                                                                               | 具体的控制行为与规则遵循 (Behavior & Control Rules)                                                                                                                                                                                                                                                              |
 | ---------------------------- | ----------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **1. 顶层商业与架构论证 (Discovery)** | `product-discovery-loop`                                                                  | **Product Discovery Subagents** (由主大脑加载 `source/agency-agents-main/` 顶级专家角色：`product-sprint-prioritizer` (产品), `sales-offer-lead-gen-strategist` (GTM与定价), `design-ux-architect` & `design-ui-designer` (UX与UI设计), `engineering-backend-architect` & `engineering-software-architect` (技术架构), `workflow-architect` (一致性硬锁审计)) | 1. **全链路论证**：通过 PM、商业策划专家、UI/UX 设计专家及首席技术架构师进行 0 到 1 的去假设化顶层论证，打磨 `docs/backlog/` 5 大维度的规范草案。 2. **审计锁定**：由 `workflow-architect` 对草案进行 100% 一致性审计后固化，合并到常青树，并清空 backlog Staging 区。                                                                                                                   |
+| **1. 顶层商业与架构论证 (Discovery)** | `product-discovery-loop`                                                                  | **Product Discovery Subagents** (由主大脑加载 `source/agency-agents-main/` 顶级专家角色：`product-sprint-prioritizer` (产品), `sales-offer-lead-gen-strategist` (GTM与定价), `design-ui-designer` (视觉设计), `engineering-backend-architect` & `engineering-software-architect` (技术架构), `workflow-architect` (一致性硬锁审计)) | 1. **全链路论证**：通过 PM、商业策划专家、UI 设计专家及首席技术架构师进行 0 到 1 的去假设化顶层论证，打磨 `docs/backlog/` 5 大维度的规范草案。 2. **审计锁定**：由 `workflow-architect` 对草案进行 100% 一致性审计后固化，合并到常青树，并清空 backlog Staging 区。                                                                                                                   |
 | **2. 需求设计定义 (Define)**       | `spec-driven-development` `api-and-interface-design`                                      | **人类提单人主导 + Product Agent 协同** (读取 `source/agency-agents-main/product/product-sprint-prioritizer.md` 中的产品总监角色)                                                                                                                                                                                                                | 1. **纯业务 PRD (module_prd.md)**：人类协同 PM 编写纯粹的业务描述说明书，100% 纯业务属性，绝不涉及代码或数据库细节。 2. **规格驱动 Spec (spec.md)**：遵循 `spec-driven-development` 规格驱动开发原则，针对业务 PRD 编制技术规格规范（spec.md），声明 API 契约与 UI 交互准则，确立开发刚性硬约束边界。                                                                        |
 | **3. 任务规划分解 (Plan)**         | `planning-and-task-breakdown`                                                             | **人类提单人主导 / 辅助分解模型**                                                                                                                                                                                                                                                                                                          | 1. **步骤规划 (plan.md)**：基于 `spec.md` 契约，用 plan.md 规范多端协作或分步开发路径。 2. **原子任务 (todo.md)**：采用 `planning-and-task-breakdown` 将 Plan 细化为单项修改不超过 100 行代码的原子 checkbox `- [ ]` 列表。必须带明确的子系统模块前缀 `[backend]`, `[web]`, `[desktop]`, `[mobile]` 等。并在设计完成后由 `drafts/` 迁移至 `pending/` 唤醒调度器。                        |
 | **4. 隔离渐进开发 (Build)**        | `incremental-implementation` `context-engineering`                                        | **抽象 AI 编码引擎** (仅支持 Claude Code CLI, Codex CLI/API, Cursor CLI)                                                                                                                                                                                                                                                               | 1. **渐进披露**：调度器启动编码引擎时只向其披露该工单局部工作树内的 `module_prd.md`、`spec.md`，杜绝上下文膨胀与大范围修改。 2. **编辑沙箱限制**：在 System Prompt 级别强约束编码工具只允许编辑 spec 限制的文件白名单（如 `backend/` 内部），保证范围纪律。                                                                                                                                   |

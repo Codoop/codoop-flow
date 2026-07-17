@@ -252,7 +252,7 @@ python skills/codoop-ticket/scripts/codoop-ticket.py ticket <command> <args>
 在阶段 1（需求设计）中，`codoop-ticket` 主动读取第一环的 backlog 输出：
 
 - `docs/backlog/product/` — requirements.md、user-journey.md、monetization-plan.md
-- `docs/backlog/interface/` — design-system.md、ui-mockups.md
+- `docs/backlog/interface/` — design-system.md（视觉设计唯一事实来源）
 - `docs/backlog/architecture/` — architecture.md、database-schema.sql、openapi.yaml
 - `docs/backlog/modules/` — 单模块详细设计
 

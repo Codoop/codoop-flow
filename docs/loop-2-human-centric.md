@@ -244,7 +244,7 @@ Every ticket's `metadata.json` must satisfy this schema:
 During Phase 1 (requirement design), `codoop-ticket` proactively reads Loop 1's backlog outputs:
 
 - `docs/backlog/product/` — requirements.md, user-journey.md, monetization-plan.md
-- `docs/backlog/interface/` — design-system.md, ui-mockups.md
+- `docs/backlog/interface/` — design-system.md (visual-design source of truth)
 - `docs/backlog/architecture/` — architecture.md, database-schema.sql, openapi.yaml
 - `docs/backlog/modules/` — per-module detailed designs
 

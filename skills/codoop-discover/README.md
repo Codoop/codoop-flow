@@ -10,7 +10,7 @@ When you have a product idea and want to design it comprehensively before buildi
 
 - **PM (Product Strategy)** — defines scope, user journeys, and BDD scenarios
 - **GTM (Go-To-Market)** — designs monetization, pricing, and business strategy
-- **UX & UI Design** — establishes visual design systems and interactive prototypes
+- **UI Design** — establishes a visual design system and page-composition rules
 - **System Architect** — designs technical stack, APIs, databases, and deployment
 - **Alignment Auditor** — ensures consistency across all specifications
 
@@ -22,7 +22,7 @@ When you have a product idea and want to design it comprehensively before buildi
 User: /skill codoop-discover I want to build a SaaS project management tool for remote teams
 
 SKILL: [Starts SNAP clarification questions]
-SKILL: Based on your answers, invokes PM, GTM, UX/UI, Architect agents in-session
+SKILL: Based on your answers, invokes PM, GTM, UI, Architect agents in-session
 SKILL: Generates comprehensive backlog documentation in docs/backlog/
 ```
 
@@ -34,7 +34,7 @@ SKILL: Generates comprehensive backlog documentation in docs/backlog/
 2. **User Confirmation** — You confirm key decisions (platform scope, business model, timeline, etc.)
 3. **PM Drafting** — PM agent writes requirements, user journeys, and BDD scenarios
 4. **GTM Strategy** — GTM agent designs monetization and commercial structure
-5. **UX/UI Design** — UX/UI agents create design system and interactive mockups
+5. **UI Design** — UI agent creates the visual design system and page-composition rules
 6. **Technical Architecture** — Architect agent designs technical stack, APIs, and databases
 7. **Consistency Audit** — Alignment agent audits all documents for inconsistencies and conflicts
 8. **Resolution & Lock-In** — Conflicts resolved, documents finalized and saved to `docs/backlog/`
@@ -66,8 +66,7 @@ docs/backlog/
 │   ├── user-journey.md      # User journeys and personas
 │   └── monetization-plan.md # Pricing, tiers, entitlements
 ├── interface/
-│   ├── design-system.md     # Visual tokens, spacing, fonts
-│   └── ui-mockups.md        # ASCII mockups and wireframes
+│   └── design-system.md     # Visual direction, system, components, and page composition
 ├── architecture/
 │   ├── architecture.md      # Tech stack, data flow, deployment
 │   ├── database-schema.sql  # Complete database design
@@ -95,7 +94,6 @@ This skill reads expert personas from `skills/_shared/agents/`:
 
 - `product-sprint-prioritizer.md` — PM/Product Strategy expert
 - `sales-offer-lead-gen-strategist.md` — GTM/Business Strategy expert
-- `design-ux-architect.md` — UX Design expert
 - `design-ui-designer.md` — UI Design expert
 - `engineering-backend-architect.md` — Backend Architecture expert
 - `engineering-software-architect.md` — Software Architecture expert
