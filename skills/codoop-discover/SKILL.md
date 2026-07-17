@@ -35,8 +35,10 @@ To prevent "Context Pollution", the Orchestrator should use isolated specialized
   - PM Agent ➔ Read `../../_shared/agents/product-sprint-prioritizer.md`
   - GTM Agent ➔ Read `../../_shared/agents/sales-offer-lead-gen-strategist.md`
   - UI Agent ➔ Read `../../_shared/agents/design-ui-designer.md`
+    - **Discovery UI scope (overrides shared deliverables):** Create only `interface/design-system.md` as defined in §5. Do not create a mockup/prototype document or include implementation details.
   - Architect Agent ➔ Read `../../_shared/agents/engineering-backend-architect.md` + `engineering-software-architect.md`
   - Alignment Agent ➔ Read `../../_shared/agents/alignment-agent.md`
+    - **Discovery alignment scope (overrides shared checklist):** Do not require `ui-mockups.md`. Audit `interface/design-system.md` against the product's audience, brand position, user journeys, primary actions, entitlement states, and visual-only boundary.
 - **Invoke Role**: After reading, pass the exact file contents of the selected agent markdown as the persona/system context for that role. Use Codex multi-agent tools, Claude Code Task, or another host-native subagent mechanism when available; otherwise run the role serially in this session and require an explicit role verdict.
 
 ---
