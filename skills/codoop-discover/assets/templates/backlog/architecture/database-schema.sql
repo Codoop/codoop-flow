@@ -1,0 +1,2 @@
+-- [Product Name] database schema
+-- Replace this file with complete DDL. Remove this comment before lock-in.

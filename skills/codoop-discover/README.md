@@ -55,6 +55,8 @@ You choose, and the skill adapts accordingly.
 
 ## Output Structure
 
+The skill starts each backlog document from the matching file under `assets/templates/backlog/`. Templates fix the document structure only: the agent fills product-specific content, removes irrelevant optional sections, and leaves no placeholders in the final output.
+
 After the skill completes, `docs/backlog/` contains:
 
 ```

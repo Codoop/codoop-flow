@@ -1,0 +1,7 @@
+openapi: 3.1.0
+info:
+  title: "Product Name"
+  version: 0.1.0
+paths: {}
+components:
+  schemas: {}
