@@ -2,6 +2,11 @@ openapi: 3.1.0
 info:
   title: "Product Name"
   version: 0.1.0
+  description: "Replace all template values before lock-in."
+servers: []
+security: []
 paths: {}
 components:
+  securitySchemes: {}
   schemas: {}
+  responses: {}

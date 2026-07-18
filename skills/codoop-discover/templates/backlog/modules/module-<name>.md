@@ -4,6 +4,20 @@
 
 ## Scope
 
+### Included
+
+### Excluded
+
+## Dependencies
+
+| Dependency | Why Needed | Failure Behavior |
+|---|---|---|
+
+## State and Permissions
+
+| State or Permission | Rule | Observable Result |
+|---|---|---|
+
 ## BDD Scenarios
 
 ```gherkin
@@ -16,3 +30,10 @@ Feature: [Module Name]
 ```
 
 ## Edge Cases
+
+| Condition | Expected Behavior |
+|---|---|
+
+## Acceptance Conditions
+
+- [Condition]

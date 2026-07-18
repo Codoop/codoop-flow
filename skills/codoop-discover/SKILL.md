@@ -106,7 +106,7 @@ Drafting & Objections             Hardening & Specifications             Alignme
 3. **Reactive Human Intercept (`[HUMAN DIRECTIVE]`)**:
    - The user can intervene at any time by placing a `[HUMAN DIRECTIVE]` block directly in `design-draft.md`.
    - Sub-agents must read this block on launch and unconditionally obey the directive, adjusting their designs.
-4. **Structured Specifications**: Before writing, copy the corresponding files from `templates/backlog/` into `docs/backlog/`, preserving their hierarchy. Replace every placeholder with product-specific content, remove inapplicable optional sections, and do not leave template text or placeholders in a locked document. Hard-lock the final design into structured spec files organized under five clear subdirectories under `docs/backlog/` (strictly avoiding flat root-level file accumulation, and not generating any `specs/` directory):
+4. **Structured Specifications**: Before writing, copy the corresponding files from `templates/backlog/` into `docs/backlog/`, preserving their hierarchy, required headings, and table columns. Replace every placeholder with product-specific content, remove inapplicable optional sections, and do not leave template text or placeholders in a locked document. Hard-lock the final design into structured spec files organized under five clear subdirectories under `docs/backlog/` (strictly avoiding flat root-level file accumulation, and not generating any `specs/` directory):
    - **`product/`** (Product & Monetization):
      - `requirements.md`: Standard Product Requirement Document (PRD) containing scope, state transitions, and Gherkin BDD scenarios.
      - `user-journey.md`: Complete user journeys and user/job stories.

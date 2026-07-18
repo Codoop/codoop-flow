@@ -4,6 +4,15 @@
 
 ## Plans and Entitlements
 
-## Upgrade and Limit Experiences
+| Plan | Target User | Price | Included Entitlements | Limits |
+|---|---|---|---|---|
+
+## Upgrade, Downgrade, and Limit Experiences
+
+| Event | User-Facing Message | Available Action | Result |
+|---|---|---|---|
 
 ## Assumptions to Validate
+
+| Assumption | Evidence Needed | Validation Method | Decision Date |
+|---|---|---|---|
