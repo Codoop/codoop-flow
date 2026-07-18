@@ -188,4 +188,4 @@ To ensure that the first internal testing version (Alpha/Beta) of any applicatio
 ---
 
 ## 8. Output Language Rule
-- **Rule**: Adapt to the conversation context and user's preferred/specified language. Do not force any specific language (e.g., Chinese or English) unless explicitly requested or implied by the project context.
+- **Rule**: The bundled templates are currently Chinese. Generate Chinese documents by default; if the user explicitly requests another language, translate the headings and table labels while preserving the template structure.

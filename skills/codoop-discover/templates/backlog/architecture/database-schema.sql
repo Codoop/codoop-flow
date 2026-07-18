@@ -1,18 +1,21 @@
--- [Product Name] database schema
--- Replace all bracketed placeholders and remove guidance comments before lock-in.
+-- [产品名称] 数据库 Schema
+-- 填写说明：将方括号占位符替换为真实 SQL，并在锁定前删除本说明与示例注释。
 
--- Conventions
--- - Table names:
--- - Primary key type:
--- - Timestamp fields:
--- - Soft-delete policy:
+-- 命名与约定
+-- 表名规则：
+-- 主键类型：
+-- 创建/更新时间字段：
+-- 软删除策略：
 
--- Core tables
-CREATE TABLE [table_name] (
-  id [primary_key_type] PRIMARY KEY
-  -- columns
+-- 核心表
+CREATE TABLE [表名] (
+  id [主键类型] PRIMARY KEY
+  -- 字段：名称、类型、是否为空、默认值、业务含义
 );
 
--- Relationships and indexes
--- ALTER TABLE [child_table] ADD CONSTRAINT [constraint_name] ...;
--- CREATE INDEX [index_name] ON [table_name] ([column_name]);
+-- 关系与索引
+-- ALTER TABLE [子表] ADD CONSTRAINT [约束名] ...;
+-- CREATE INDEX [索引名] ON [表名] ([字段名]);
+
+-- 数据完整性检查
+-- 列出唯一约束、外键、检查约束和关键删除策略。

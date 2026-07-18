@@ -1,26 +1,30 @@
-# [Product Name] Discovery Draft
+# [产品名称] 发现阶段协作草案
 
-## Confirmed Decisions
+> 填写说明：此文件是协作过程记录，不是最终规范。记录决策、分歧和人工指令；锁定后删除本文件。
 
-| Area | Decision | Evidence or Rationale | Owner | Date |
+## 已确认决策
+
+| 领域 | 已确认的决定 | 依据或取舍 | 责任角色 | 确认日期 |
+|---|---|---|---|---|
+| 例如：目标用户 |  |  |  |  |
+
+## 待确认决策
+
+| 领域 | 需要决定的问题 | 可选方案 | 建议方案与原因 | 等待谁确认 |
 |---|---|---|---|---|
 
-## Open Decisions
+## 质疑与解决记录
 
-| Area | Decision Needed | Options | Recommendation | Owner |
-|---|---|---|---|---|
+<!-- 使用以下格式，保留每次有实质影响的讨论。 -->
+<!-- [CHALLENGE: 角色 A -> 角色 B] 具体分歧、风险或缺失信息 -->
+<!-- [RESOLVED: 角色] 最终解决方案及影响到的文档 -->
 
-## Challenges and Resolutions
+## 人工指令
 
-<!-- [CHALLENGE: Role A -> Role B] -->
-<!-- [RESOLVED: Role] -->
+<!-- [HUMAN DIRECTIVE] 人类直接指定的范围、优先级或约束。 -->
 
-## Human Directives
+## 角色批准
 
-<!-- [HUMAN DIRECTIVE] -->
-
-## Approvals
-
-<!-- [APPROVED: Role] -->
+<!-- [APPROVED: 角色] -->
 <!-- [ALIGNMENT APPROVED: Alignment] -->
 <!-- [WAITING FOR HUMAN REVIEW] -->

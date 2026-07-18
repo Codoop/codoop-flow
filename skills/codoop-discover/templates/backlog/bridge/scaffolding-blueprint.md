@@ -1,37 +1,40 @@
-# [Product Name] Scaffolding Blueprint
+# [产品名称] 项目脚手架蓝图
 
-## Repository Layout
+> 填写说明：定义初始化项目时要创建的目录、配置和基础文件。写清职责，不复制大段实现代码。
+
+## 顶层目录结构
 
 ```text
-[repository-root]/
+[仓库根目录]/
 ```
 
-## Application Directories
+## 应用目录
 
-| Directory | Responsibility | Owner or Consumer |
+| 目录 | 职责 | 主要使用方 | 是否可独立构建 |
+|---|---|---|---|
+
+## deploy 目录
+
+| 要求 | 规则 | 初始化时需要创建什么 |
 |---|---|---|
+| 业务分组 | 脚本按用户定义的业务子目录组织，不预设端或平台名称。 |  |
+| 索引 | 必须有 `deploy/README.md`，说明业务目录、入口和前置条件。 |  |
 
-## Deploy Directory
+## resources 目录
 
-| Requirement | Rule |
-|---|---|
-| Business grouping | Organize scripts in user-defined business subdirectories. |
-| Index | Provide `deploy/README.md` as the business index and usage guide. |
-
-## Shared Resources
-
-| Requirement | Rule |
-|---|---|
-| Index | Provide `resources/README.md` as the cross-platform resource index. |
-| Audio | Provide `resources/audio/` for shared audio assets. |
-
-## Configuration and Tooling
-
-| File or Tool | Purpose | Owner |
+| 要求 | 规则 | 初始化时需要创建什么 |
 |---|---|---|
+| 资源索引 | 必须有 `resources/README.md`，索引跨端共享资源。 |  |
+| 音频 | 必须有 `resources/audio/`，存放共享音频资源。 |  |
+| 其他资源 | 按资源类型或业务自定义子目录，例如图标、图片、品牌与字体。 |  |
 
-## Initialization Sequence
+## 配置与工具
 
-1. [First initialization step]
-2. [Second initialization step]
-3. [Third initialization step]
+| 文件或工具 | 用途 | 必填内容 | 谁维护 |
+|---|---|---|---|
+
+## 初始化顺序
+
+1. [第一步：创建哪些目录或配置]
+2. [第二步：初始化哪些依赖或服务]
+3. [第三步：如何验证基础项目可用]

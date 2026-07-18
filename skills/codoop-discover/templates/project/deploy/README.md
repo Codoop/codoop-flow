@@ -1,27 +1,30 @@
-# Deploy Index
+# 部署与运维脚本索引
 
-## Business Directories
+> 填写说明：`deploy/` 按业务组织，不按客户端、服务端或远程连接等固定名称组织。每个业务目录都必须在这里登记。
 
-| Directory | Business Purpose | Entry Points | Prerequisites |
+## 业务目录索引
+
+| 目录 | 业务目的 | 入口命令或脚本 | 输入 | 输出 | 前置条件 |
+|---|---|---|---|---|---|
+
+## 通用使用规则
+
+- 一个子目录代表一个业务关注点，不代表强制的平台分类。
+- 入口、输入、输出和前置条件必须在上表说明。
+- 密钥不放在此目录；只引用它们的安全管理位置。
+- 新增业务脚本时，先更新本 README。
+
+## 环境与访问要求
+
+| 要求 | 哪些业务会用到 | 如何获取 | 注意事项 |
 |---|---|---|---|
 
-## Shared Usage Rules
+## 常用操作
 
-- Each directory represents a business concern, not a required platform category.
-- Document its entry points, inputs, outputs, and prerequisites in the table above.
-- Keep secrets outside this directory and reference their setup location instead.
-
-## Environment and Access Requirements
-
-| Requirement | Used By | How to Obtain | Notes |
+| 业务目录 | 操作目的 | 命令或入口 | 成功时应得到什么 |
 |---|---|---|---|
 
-## Common Operations
+## 常见问题
 
-| Business Directory | Operation | Command or Entry Point | Expected Output |
+| 现象 | 常见原因 | 首先检查什么 | 升级给谁 |
 |---|---|---|---|
-
-## Troubleshooting
-
-| Symptom | Likely Cause | First Check |
-|---|---|---|

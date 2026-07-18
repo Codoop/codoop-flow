@@ -1,22 +1,24 @@
-# AI Co-Development Guide
+# AI 协作开发指南
 
-## What Each Document Decides
+> 填写说明：面向非技术决策者，说明应按什么顺序使用已生成文档推进开发。不得提及具体 AI 工具品牌或提供固定提示词。
 
-| Document | Decision It Owns | When to Consult It |
-|---|---|---|
+## 各文档解决什么问题
 
-## Recommended Build Sequence
-
-| Step | Input | Outcome | Human Review Point |
+| 文档 | 决定什么 | 什么时候阅读 | 改动该文档会影响什么 |
 |---|---|---|---|
 
-## Review Checkpoints
+## 推荐开发顺序
 
-| Checkpoint | What to Verify | Decision |
-|---|---|---|
+| 步骤 | 应先阅读的输入 | 预期产出 | 人工需要确认什么 |
+|---|---|---|---|
 
-## Collaboration Principles
+## 评审检查点
 
-- Keep product, visual, and technical decisions in their owning documents.
-- Update the relevant source document when a decision changes.
-- Do not begin implementation until the required decisions are approved.
+| 检查点 | 核对内容 | 可继续的条件 | 不通过时回到哪里 |
+|---|---|---|---|
+
+## 协作原则
+
+- 产品、视觉和技术决策应分别保留在各自的源文档中。
+- 决策改变时，先更新源文档，再更新受影响的下游文档。
+- 未获得必要批准前，不进入实现阶段。

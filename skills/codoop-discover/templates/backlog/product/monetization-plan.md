@@ -1,18 +1,24 @@
-# [Product Name] Monetization Plan
+# [产品名称] 商业化与权益方案
 
-## Commercial Model
+> 填写说明：仅在产品有收费、额度或权益差异时填写。描述用户可获得什么和限制如何呈现，不写支付实现细节。
 
-## Plans and Entitlements
+## 商业模式
 
-| Plan | Target User | Price | Included Entitlements | Limits |
+**收费对象：**
+
+**收费方式：** 订阅 / 按量 / 一次性 / 其他
+
+## 套餐与权益
+
+| 套餐 | 面向用户 | 价格与周期 | 可用能力 | 用量或人数限制 | 不包含内容 |
+|---|---|---|---|---|---|
+
+## 升级、降级与触达限制
+
+| 事件 | 用户看到的说明 | 可执行操作 | 操作后结果 | 是否可恢复 |
 |---|---|---|---|---|
 
-## Upgrade, Downgrade, and Limit Experiences
+## 待验证假设
 
-| Event | User-Facing Message | Available Action | Result |
-|---|---|---|---|
-
-## Assumptions to Validate
-
-| Assumption | Evidence Needed | Validation Method | Decision Date |
-|---|---|---|---|
+| 假设 | 需要的证据 | 验证方法 | 负责人 | 决策时间 |
+|---|---|---|---|---|

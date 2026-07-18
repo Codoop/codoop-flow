@@ -1,23 +1,29 @@
-# [Product Name] Alignment Report
+# [产品名称] 一致性审计报告
 
-## Scope Reviewed
+> 填写说明：审计所有 backlog 文档是否描述同一个产品。每个问题必须有责任人和最终状态。
 
-| Area | Documents Reviewed | Result |
-|---|---|---|
+## 审计范围
 
-## Findings
+| 审计维度 | 已检查文档 | 核对内容 | 结论 |
+|---|---|---|---|
+| 产品与架构 |  | 功能、状态和数据是否互相支持 |  |
 
-| ID | Severity | Documents | Finding | Owner | Resolution | Status |
+## 发现的问题
+
+| 编号 | 严重度 | 涉及文档 | 问题描述 | 责任角色 | 解决方案 | 状态 |
 |---|---|---|---|---|---|---|
+| A-001 | 高/中/低 |  |  |  |  | 待解决/已解决 |
 
-## Required Checks
+## 必查项
 
-- Product requirements, journeys, and modules agree on behavior and states.
-- Monetization rules appear in requirements and user-facing experiences.
-- Visual design reflects product priorities without defining implementation.
-- Architecture, database schema, and API contract describe the same domain.
-- Human preparation and scaffolding match external dependencies.
+- 产品需求、用户旅程和模块 BDD 对核心行为与状态的描述一致。
+- 套餐、权益和限制在需求与用户可见体验中都有体现。
+- 视觉设计体现产品优先级，且不混入实现代码或技术契约。
+- 架构、数据库 Schema 与 OpenAPI 描述相同的数据实体和关系。
+- 人工准备清单、外部服务和脚手架方案彼此一致。
 
-## Approval
+## 审计结论
 
-<!-- [ALIGNMENT APPROVED: Alignment] after all findings are resolved. -->
+**当前结论：** 待审计 / 有阻塞项 / 可批准
+
+<!-- 所有问题解决后追加：[ALIGNMENT APPROVED: Alignment] -->

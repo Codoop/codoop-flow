@@ -1,39 +1,55 @@
-# [Module Name]
+# [模块名称] 模块详细设计
 
-## Purpose
+> 填写说明：每个可独立交付的功能模块使用一份文档。描述可观察到的行为、权限和边界，不重复全局架构细节。
 
-## Scope
+## 模块目的
 
-### Included
+**该模块为谁解决什么问题：**
 
-### Excluded
+**对应的产品需求编号：**
 
-## Dependencies
+## 范围
 
-| Dependency | Why Needed | Failure Behavior |
-|---|---|---|
+### 本模块包含
 
-## State and Permissions
+- [包含的能力]
 
-| State or Permission | Rule | Observable Result |
-|---|---|---|
+### 本模块不包含
 
-## BDD Scenarios
+- [不包含的能力]
+
+## 依赖与输入
+
+| 依赖项或输入 | 为什么需要 | 不可用时的行为 | 是否可替代 |
+|---|---|---|---|
+
+## 状态、权限与业务规则
+
+| 状态或权限 | 谁可以触发 | 规则 | 用户可观察到的结果 |
+|---|---|---|---|
+
+## BDD 场景
 
 ```gherkin
-Feature: [Module Name]
+Feature: [模块名称]
 
-  Scenario: [Primary outcome]
-    Given [initial state]
-    When [user action or event]
-    Then [observable outcome]
+  Scenario: [用户完成主要目标]
+    Given [前置条件]
+    When [用户动作或系统事件]
+    Then [用户可观察到的结果]
+    And [附加业务结果]
+
+  Scenario: [异常或边界情况]
+    Given [异常前置条件]
+    When [动作或事件]
+    Then [系统应如何保护用户或数据]
 ```
 
-## Edge Cases
+## 边界情况
 
-| Condition | Expected Behavior |
-|---|---|
+| 条件 | 预期行为 | 用户反馈 |
+|---|---|---|
 
-## Acceptance Conditions
+## 验收条件
 
-- [Condition]
+- [可验证的完成条件]

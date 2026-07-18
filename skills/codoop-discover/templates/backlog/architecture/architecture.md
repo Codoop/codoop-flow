@@ -1,36 +1,38 @@
-# [Product Name] Architecture
+# [产品名称] 技术架构说明
 
-## Goals and Constraints
+> 填写说明：解释系统由哪些部分组成、谁负责什么、数据如何流动和失败时如何处理。不要重复产品需求中的业务描述。
 
-| Goal or Constraint | Consequence |
-|---|---|
+## 目标与约束
 
-## System Context
-
-| Actor or System | Relationship | Data or Responsibility |
-|---|---|---|
-
-## Components and Responsibilities
-
-| Component | Responsibility | Owns | Depends On |
-|---|---|---|
-
-## Data Flow
-
-| Flow | Trigger | Data | Failure Handling |
+| 目标或约束 | 来源 | 对架构的影响 | 验证方式 |
 |---|---|---|---|
 
-## External Integrations
+## 系统上下文
 
-| Service | Purpose | Sandbox or Mock Strategy | Failure Fallback |
+| 参与者或外部系统 | 与本系统的关系 | 交换的信息 | 信任边界 |
 |---|---|---|---|
 
-## Security and Failure Handling
+## 组件与职责
 
-| Risk | Boundary | Mitigation | User-Facing Outcome |
+| 组件 | 负责什么 | 拥有什么数据或状态 | 依赖什么 |
 |---|---|---|---|
 
-## Deployment and Operations
+## 关键数据流
 
-| Concern | Decision | Owner |
-|---|---|---|
+| 流程 | 触发条件 | 数据如何流动 | 成功结果 | 失败处理 |
+|---|---|---|---|---|
+
+## 外部集成
+
+| 服务 | 用途 | 测试/模拟策略 | 凭据需求 | 失败时的降级方案 |
+|---|---|---|---|---|
+
+## 安全与异常处理
+
+| 风险或异常 | 所在边界 | 防护措施 | 用户可见反馈 |
+|---|---|---|---|
+
+## 部署与运维
+
+| 关注点 | 决定 | 责任方 | 验证方式 |
+|---|---|---|---|

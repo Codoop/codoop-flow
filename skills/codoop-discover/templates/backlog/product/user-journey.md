@@ -1,21 +1,23 @@
-# [Product Name] User Journeys
+# [产品名称] 用户旅程
 
-## Personas
+> 填写说明：记录用户从触发需求到完成目标的完整体验。每一步都说明用户目标、系统反馈和成功判断。
 
-| Persona | Context | Goal | Main Friction |
-|---|---|---|---|
+## 用户画像
 
-## Primary Journey
-
-| Step | User Goal | User Action | System Response | Success Signal |
+| 用户角色 | 使用背景 | 核心目标 | 主要阻碍 | 使用频率 |
 |---|---|---|---|---|
 
-## Alternate and Recovery Journeys
+## 主用户旅程
 
-| Trigger | User Need | Expected Experience | Recovery Outcome |
+| 步骤 | 用户此刻的目标 | 用户动作 | 系统反馈 | 可能疑问或阻碍 | 成功信号 |
+|---|---|---|---|---|---|
+
+## 异常与恢复旅程
+
+| 触发情况 | 用户需要什么 | 应呈现的说明或操作 | 恢复后的结果 |
 |---|---|---|---|
 
-## User Stories
+## 用户故事
 
-| ID | As a | I want | So that |
-|---|---|---|---|
+| 编号 | 作为 | 我想要 | 从而 | 对应需求编号 |
+|---|---|---|---|---|

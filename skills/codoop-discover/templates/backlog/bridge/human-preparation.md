@@ -1,20 +1,22 @@
-# Human Preparation Checklist
+# 人工准备清单
 
-## Required Accounts and Access
+> 填写说明：只列出必须由人完成、无法由编码代理代办的事项。不要记录真实密钥；只说明从哪里获得和放在哪里管理。
 
-| Item | Why Needed | Owner | Completion Check |
+## 所需账号与访问权限
+
+| 事项 | 为什么需要 | 负责人 | 如何确认完成 |
 |---|---|---|---|
 
-## Credentials and Domains
+## 域名、凭据与配置
 
-| Item | Where to Obtain It | Where It Is Stored | Completion Check |
+| 项目 | 从哪里获取 | 保存位置或管理方式 | 如何确认完成 |
 |---|---|---|---|
 
-## External Service Setup
+## 外部服务开通
 
-| Service | Required Human Action | Sandbox Available | Completion Check |
+| 服务 | 需要人工完成的操作 | 是否有沙盒/测试模式 | 完成后应验证什么 |
 |---|---|---|---|
 
-## No Preparation Required
+## 无需人工准备
 
-State this explicitly only when the project has no external prerequisites.
+仅当产品没有外部账号、凭据、域名或第三方服务依赖时，明确写：**本项目无需额外人工准备。**

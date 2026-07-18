@@ -1,33 +1,37 @@
-# Resources Index
+# 共享资源索引
 
-## Directory Index
+> 填写说明：此目录存放跨端复用的产品资源。网页、移动端和桌面端应先复用这里的资源，避免维护不一致的副本。
 
-| Directory | Contents | Consumers |
-|---|---|---|
+## 目录索引
 
-## Resource Catalogue
-
-| Resource | Location | Purpose | Source or Licence |
+| 目录 | 存放内容 | 哪些端或模块使用 | 维护规则 |
 |---|---|---|---|
+| `audio/` | 共享提示音、引导音或音效 |  |  |
 
-## Audio
+## 资源清单
 
-| Resource | Location | Purpose | Playback Rule |
-|---|---|---|---|
+| 资源名称 | 位置 | 用途 | 使用方 | 来源或许可 | 负责人 |
+|---|---|---|---|---|---|
 
-## Branding, Icons, Images, and Fonts
+## 音频资源
 
-| Resource Group | Location | Consumers | Source or Licence |
-|---|---|---|---|
+| 资源 | 位置 | 用途 | 播放规则 | 是否可关闭 |
+|---|---|---|---|---|
 
-## Usage Rules
+## 品牌、图标、图片与字体
 
-- Reuse this directory before adding a duplicate asset to a client codebase.
-- Do not store user-uploaded content here.
-- Do not add a resource without recording its source or licence.
+| 资源类型 | 位置 | 使用方 | 来源或许可 | 使用注意事项 |
+|---|---|---|---|---|
 
-## Adding Resources
+## 使用规则
 
-1. Place the resource in the closest existing or newly named group.
-2. Add an index entry with consumers, purpose, and source or licence.
-3. Confirm the resource is suitable for every intended client.
+- 新增资源前先检查是否已有可复用资源。
+- 不在此目录存放用户上传内容。
+- 未记录来源或许可的资源不得加入。
+- 字体的视觉用途以 `design-system.md` 为准；本文件记录文件来源与许可。
+
+## 新增资源流程
+
+1. 放入最接近用途的现有或新建分组。
+2. 在资源清单中登记用途、使用方、来源或许可。
+3. 确认所有目标客户端都可正确使用该资源。

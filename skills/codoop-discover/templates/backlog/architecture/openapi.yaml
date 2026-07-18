@@ -1,8 +1,8 @@
 openapi: 3.1.0
 info:
-  title: "Product Name"
+  title: "产品名称"
   version: 0.1.0
-  description: "Replace all template values before lock-in."
+  description: "填写说明：补全服务用途、路径、认证、Schema 和错误响应；锁定前移除模板说明。"
 servers: []
 security: []
 paths: {}

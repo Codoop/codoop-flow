@@ -1,35 +1,47 @@
-# [Product Name] Requirements
+# [产品名称] 产品需求文档
 
-## Product Goal
+> 填写说明：描述用户需要什么、为什么需要和如何验收；不写 API、数据库字段、框架或代码实现。
 
-## Target Users and Jobs
+## 产品目标
 
-| User | Job to Be Done | Current Problem | Desired Outcome |
-|---|---|---|---|
+**要解决的问题：**
 
-## Scope
+**成功标准：**
 
-### In Scope
+## 目标用户与待完成任务
 
-### Out of Scope
-
-## Functional Requirements
-
-| ID | Requirement | User Value | Priority | Acceptance Signal |
+| 用户角色 | 使用场景 | 想完成的任务 | 当前痛点 | 期望结果 |
 |---|---|---|---|---|
 
-## State Transitions
+## 范围
 
-| Entity | Current State | Trigger | Next State | Invalid Transition |
-|---|---|---|---|---|
+### 本期包含
 
-## Acceptance Scenarios
+- [包含的能力]
+
+### 本期不包含
+
+- [不包含的能力]
+
+## 功能需求
+
+| 编号 | 用户能够做什么 | 触发条件 | 业务规则 | 优先级 | 验收信号 |
+|---|---|---|---|---|---|
+| FR-001 |  |  |  | 必须/应该/可选 |  |
+
+## 业务状态与流转
+
+| 业务对象 | 当前状态 | 触发事件 | 下一状态 | 不允许的流转 | 用户可见反馈 |
+|---|---|---|---|---|---|
+
+## 验收场景
 
 ```gherkin
-Feature: [Product capability]
+Feature: [产品能力]
 
-  Scenario: [Primary outcome]
-    Given [initial state]
-    When [user action]
-    Then [observable result]
+  Scenario: [用户完成主要目标]
+    Given [前置状态]
+    When [用户动作或系统事件]
+    Then [用户可观察到的结果]
+    And [附加业务规则]
 ```
