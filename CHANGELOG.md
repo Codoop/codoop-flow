@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.5-alpha.3] - 2026-07-17
+
+### Added
+
+- **Discovery Intake.** Product discovery now begins with short, plain-language
+  question rounds and a human-confirmed Discovery Brief before role dispatch.
+- **Ticket visual previews.** A user-visible feature can include a reviewed,
+  self-contained `preview.html` before task breakdown. When
+  `metadata.json.visual_preview` is true, the ticket cannot be promoted without
+  that preview; Loop 3 reads it as design context.
+
+### Changed
+
+- **Visual-design output is simpler.** `interface/design-system.md` is the sole
+  visual-design source of truth; it is visual-only and no `ui-mockups.md` is
+  produced.
+- **Target-project conventions are clearer.** `deploy/` is organized by
+  business with a README index, while shared product assets live in `resources/`
+  with an index and `audio/` directory.
+- **Ticket test commands remain explicit.** No project-specific test command is
+  inferred as a default; every ticket supplies the command for its modules.
+
 ## [0.1.5-alpha.2] - 2026-07-15
 
 ### Added
