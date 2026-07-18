@@ -17,6 +17,8 @@ I want to design a user search feature for my e-commerce platform with keyword, 
 【Phase 1】Requirement Design (module_prd.md)
   ↓ (you review and say "OK, move to next phase")
 【Phase 2】Technical Spec (spec.md)
+  ↓ (visual feature only: review preview.html)
+【Visual Preview Review】
   ↓ (you review and say "OK, move to next phase")
 【Phase 3】Task Breakdown (plan.md + todo.md)
   ↓ (you review and say "OK, move to next phase")
@@ -44,6 +46,7 @@ ticket_001/
 ├── metadata.json      ← Auto-inferred: ticket_type, modules, test_command
 ├── module_prd.md      ← PM-written: business requirements (pure business)
 ├── spec.md            ← Architect-designed: technical spec (APIs, DB, UI)
+├── preview.html        ← Visual feature only: static HTML preview for review
 ├── plan.md            ← Auto-decomposed: implementation plan (steps)
 └── todo.md            ← Auto-decomposed: atomic task list (≤100 lines/task)
 ```
@@ -109,8 +112,16 @@ privacy, payments/costs, compliance, and irreversible behavior.
 **You**:
 - Review a plain-language summary first, then `spec.md` when you want the
   technical detail
+- For a feature that changes visible screens or primary interactions, review
+  `preview.html`: a standalone, local HTML prototype using mock data
 - Provide feedback and modifications
 - Say "OK, move to next phase"
+
+For visual feature tickets, `preview.html` is generated after `spec.md` and
+before task breakdown. It shows the changed area, the primary path, and relevant
+states with a small amount of clickable interaction. It is not a production
+implementation and does not call real services. The ticket cannot be published
+until this preview exists and has been reviewed.
 
 ### Phase 3: Task Breakdown
 
@@ -135,6 +146,9 @@ privacy, payments/costs, compliance, and irreversible behavior.
 - Preserve user-defined `test_command` entries; require one explicit command per module before validation
 - Detect whether the confirmed spec changes user-visible screens, interactions,
   or flows
+- Require `preview.html` for those feature tickets through
+  `metadata.json.visual_preview`; keep it off for backend-only, infrastructure,
+  refactoring, and non-visual configuration work
 
 **You**:
 - Review the inferred metadata.json

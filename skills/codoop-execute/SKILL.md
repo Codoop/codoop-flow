@@ -79,12 +79,13 @@ Parse the JSON, then branch on `reason`:
 - `reason:"no pending tickets"` — nothing to do; stop.
 
 On a claim/resume you get: `ticket_id`, `lease_token`, `ticket_dir` (holds
-module_prd.md / spec.md / plan.md / todo.md), `worktree` (the ISOLATED clone you
+module_prd.md / spec.md / optional preview.html / plan.md / todo.md), `worktree` (the ISOLATED clone you
 must edit in), `ui_capture`, `screenshot_dir`.
 
 ### 2. Build (your work)
 - Read the ticket's design docs from `ticket_dir`: `module_prd.md` (business),
-  `spec.md` (contract), `plan.md` + `todo.md` (steps). Also read the target
+  `spec.md` (contract), `preview.html` when present (reviewed local visual
+  flow), and `plan.md` + `todo.md` (steps). Also read the target
   repo's `docs/tech/project-structure.md` and `docs/tech/tech-standards.md` if
   present — respect them as hard architectural boundaries.
 - Load `$SKILL/../../incremental-implementation/SKILL.md` discipline

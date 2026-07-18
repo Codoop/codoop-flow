@@ -24,7 +24,18 @@ The skill will ask clarifying questions, run a multi-role expert session with yo
 
 ## Workflow
 
-### Step 1 — Clarification (SNAP: Strict Non-Assumption Principle)
+### Step 1 — Discovery Intake and Clarification (SNAP)
+
+Before dispatching roles or creating a shared draft, the skill runs a short
+Discovery Intake. It asks only 2–3 plain-language questions per round, starting
+with the product idea, target users, core flow, and visual direction. Each
+question can include examples or options and always allows “I’m not sure—please
+recommend.” Platform, monetization, data risk, and technical constraints are
+asked only when earlier answers make them relevant.
+
+The skill summarizes a Discovery Brief — product positioning, users and
+scenario, version-one scope, visual direction, constraints, and open decisions.
+You confirm or correct it before multi-role work begins.
 
 When the orchestrator encounters any ambiguous requirement (pricing model, platform scope, tech stack, feature boundaries), it halts and presents structured options:
 
@@ -54,7 +65,7 @@ If you need to override an agent, place a `[HUMAN DIRECTIVE]` block directly in 
 ### Step 4 — Product Strategy (PM Agent)
 
 The **product-sprint-prioritizer** agent drafts:
-- `module_prd.md` — business overview, user stories, state transitions, and Gherkin BDD acceptance criteria
+- `requirements.md` — business overview, user stories, state transitions, and Gherkin BDD acceptance criteria
 - `user-journey.md` — end-to-end user journeys and personas
 
 **Hard constraint:** 100% pure business language. No database tables, API fields, or code.
@@ -66,9 +77,8 @@ The **sales-offer-lead-gen-strategist** produces:
 
 ### Step 6 — UX/UI Design (Design Agents)
 
-The **design-ux-architect** and **design-ui-designer** collaborate on:
-- `design-system.md` — information architecture, CSS foundations, responsive breakpoints, accessible component patterns
-- `ui-mockups.md` — ASCII wireframes, design tokens (color, typography, spacing), responsive frameworks, and animation parameters
+The **design-ui-designer** creates:
+- `design-system.md` — the sole visual-design source of truth: visual direction, color, typography, spacing, component language, page composition, motion, and visual accessibility
 
 ### Step 7 — Technical Architecture (Architect Agents)
 
@@ -121,8 +131,7 @@ docs/backlog/
 │   ├── user-journey.md          # User journeys and personas
 │   └── monetization-plan.md     # Pricing tiers, entitlements, GTM plan
 ├── interface/
-│   ├── design-system.md         # Visual tokens, responsive breakpoints, components
-│   └── ui-mockups.md            # ASCII wireframes, animation parameters
+│   └── design-system.md         # Sole visual-design source of truth
 ├── architecture/
 │   ├── architecture.md          # Tech stack, data flow, deployment, caching
 │   ├── database-schema.sql      # Complete DDL with indexes and constraints
@@ -182,7 +191,8 @@ Loop 1 takes a free-form product idea as input:
 I want to build a SaaS project management tool for remote teams
 ```
 
-That's it. All further inputs are gathered interactively during the session via SNAP clarification.
+That's it. The Discovery Intake establishes the initial brief; further inputs
+are gathered interactively through SNAP clarification as they become relevant.
 
 ### Outputs (feeding Loop 2)
 
@@ -220,4 +230,3 @@ Loop 1 applies four conditional quality requirements to all generated designs:
 - **Decentralized Drafting Before Centralized Audit** — All roles draft independently and raise `[CHALLENGE]` flags. The Alignment Agent runs last as an independent auditor.
 - **SNAP as Non-Negotiable** — The skill explicitly refuses to make assumptions. Every ambiguity resolved during Loop 1 avoids 10x cost during implementation.
 - **Output Language Adaptation** — If your session is in Chinese, output is in Chinese. No forced language.
-

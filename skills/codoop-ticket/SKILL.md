@@ -15,6 +15,7 @@ A ticket is a complete design document package for one feature module:
 |------|---------|--------|
 | `module_prd.md` | Business requirements (pure business language, no tech) | PM agent |
 | `spec.md` | Technical specification (APIs, DB, implementation details) | Architect agent |
+| `preview.html` | Static, reviewable preview of a user-visible feature | Ticket agent, when required |
 | `plan.md` | Implementation plan (steps) | Auto-inferred |
 | `todo.md` | Atomic task list (≤100 lines code/task) | Auto-inferred |
 | `metadata.json` | Ticket metadata (modules, test commands) | Auto-inferred |
@@ -155,7 +156,20 @@ promotion remain mandatory.
    - API interface design (backend, web, mobile platforms)
    - Database fields and data models
    - UI interaction flows
-3. You review, provide feedback, modify until satisfied
+3. Decide whether the feature creates or materially changes a user-visible screen, primary task flow, or interaction state. If it does, set `visual_preview: true` in `metadata.json` and generate `preview.html` before asking the user to review the phase. Otherwise leave it `false` and state that no visual preview is needed.
+4. You review, provide feedback, modify until satisfied
+
+#### Visual Preview (`preview.html`)
+
+Generate this file only for a `feature` ticket with `visual_preview: true`. It is a single, self-contained HTML file for discussing the ticket's local UI change; it is not a production implementation or a full-product shell.
+
+- Base its visual language on `docs/backlog/interface/design-system.md` when available. Do not invent a conflicting visual direction.
+- Cover the new or changed local screen/area, one primary user path, and the states needed to understand it (for example: empty, loading, error, success, confirmation, or permission state).
+- Make only the key interactions clickable with local mock data and client-side state. Do not call real APIs, require login, add dependencies, or reproduce unrelated product flows.
+- Use clear placeholder content only where final content is unknown; do not leave the whole page as a wireframe or a static screenshot.
+- Present the preview and ask for explicit feedback before Phase 3. Apply approved feedback to `module_prd.md` and `spec.md`, then regenerate the preview if the change affects it.
+
+`visual_preview: true` makes `preview.html` a promotion requirement. It is independent from `ui_capture`, which checks screenshots of the real implementation after development.
 
 **Example**:
 ```
@@ -210,6 +224,9 @@ todo.md:
    - `test_command`: preserve the user-defined commands; require one explicit command per module before validation
 2. Inspect the confirmed spec for new or changed user-visible screens,
    interactions, or task flows:
+   - Keep `visual_preview: true` only when the Phase 2 preview was required
+     and reviewed; otherwise keep it `false`. Never enable it for a pure
+     backend, infrastructure, refactoring, or non-visual configuration ticket.
    - If present, explain in plain language that the delivery can also check the
      actual screens and interactions, save screenshots, and have UI/UX reviewers
      inspect them. Recommend enabling it and ask the user to confirm.
@@ -240,6 +257,7 @@ recommend enabling it. Confirm?
     "mobile": "flutter test"
   },
   "max_healing_attempts": 3,
+  "visual_preview": true,
   "ui_capture": true
 }
 ```

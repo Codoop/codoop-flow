@@ -21,7 +21,8 @@ The `codoop-ticket` skill automatically calls this skill in phase 2:
 【Phase 2】Technical Spec (spec.md)
 6. codoop-ticket loads /skill spec-driven-development
 7. Design spec.md based on module_prd.md
-8. User reviews and confirms
+8. For a user-visible feature, codoop-ticket creates preview.html from the confirmed UI interactions
+9. User reviews and confirms the spec and, when present, the preview before task breakdown
 ```
 
 ## Key Outputs of Spec Design
@@ -51,4 +52,3 @@ The output of this skill (spec.md) is the input to `planning-and-task-breakdown`
 2. **Include code examples** — Show actual code snippets, not just conceptual descriptions
 3. **Clear boundaries** — Make Boundaries section explicit to avoid ambiguity during implementation
 4. **Align with team style** — Code Style should reflect the project's existing conventions
-

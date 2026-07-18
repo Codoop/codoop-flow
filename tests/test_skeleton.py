@@ -389,6 +389,29 @@ def test_ticket_lifecycle(root: Path, worktrees: Path) -> None:
     _check(not draft.exists(), "draft removed after promote")
 
 
+def test_visual_preview_gate(root: Path, worktrees: Path) -> None:
+    print("[test] lifecycle: visual preview requires preview.html")
+    from codoop_lib_v1.tickets_cli import init_draft, validate_draft
+
+    cfg = _config_obj(root, worktrees)
+    draft = init_draft(cfg, "ticket_preview", title="visual feature")
+    metadata = json.loads((draft / "metadata.json").read_text(encoding="utf-8"))
+    metadata["test_command"] = {"backend": "true"}
+    metadata["visual_preview"] = True
+    (draft / "metadata.json").write_text(json.dumps(metadata), encoding="utf-8")
+    (draft / "module_prd.md").write_text("# PRD\nA user sees a new dashboard.\n", encoding="utf-8")
+    (draft / "spec.md").write_text("# Spec\nThe dashboard has a filter.\n", encoding="utf-8")
+
+    result = validate_draft(cfg, "ticket_preview")
+    _check(
+        not result.ok and any("preview.html" in error for error in result.errors),
+        "missing visual preview blocks promotion",
+    )
+
+    (draft / "preview.html").write_text("<!doctype html><title>Preview</title>", encoding="utf-8")
+    _check(validate_draft(cfg, "ticket_preview").ok, "visual preview unblocks promotion")
+
+
 def test_ticket_test_commands_are_explicit(root: Path, worktrees: Path) -> None:
     print("[test] ticket test commands are explicit")
     from codoop_lib_v1.tickets_cli import init_draft, update_metadata_from_docs
@@ -529,6 +552,7 @@ def main() -> int:
         test_fail_archives_with_report_and_preserves_worktree,
         test_status_reports_counts,
         test_ticket_lifecycle,
+        test_visual_preview_gate,
         test_ticket_test_commands_are_explicit,
         test_confirmed_promotion_commits_only_ticket,
         test_fix_ticket_lifecycle,

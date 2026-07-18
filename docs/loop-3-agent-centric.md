@@ -63,6 +63,7 @@ python3 <SKILL>/scripts/codoop_tools.py --config <toml> pick
 The agent reads the ticket package from `ticket_dir`:
 - `module_prd.md` — 100% business description
 - `spec.md` — API contract, data schema, UI interactions
+- `preview.html` — when present, the human-reviewed local visual flow and key interactions; use it as design context, not as production code
 - `plan.md` — step-by-step execution plan
 - `todo.md` — atomic checkbox tasks
 

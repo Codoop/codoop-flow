@@ -32,6 +32,9 @@ class Ticket:
     # When true, this ticket touches UI: tests must emit screenshots into the
     # qa-screenshots dir, and review adds the UI/UX personas.
     ui_capture: bool = False
+    # When true, the ticket must include a static HTML preview for human review
+    # before it can be promoted.
+    visual_preview: bool = False
     # Absolute path to the ticket directory (set at load time).
     path: Path = field(default=None)  # type: ignore[assignment]
 
@@ -59,6 +62,8 @@ class Ticket:
         _require(raw, "title", str, meta_path)
         _require(raw, "modules", list, meta_path)
         _require(raw, "test_command", dict, meta_path)
+        if "visual_preview" in raw and not isinstance(raw["visual_preview"], bool):
+            raise ValueError(f"{meta_path}: field 'visual_preview' must be bool")
 
         # ticket_type is optional; defaults to "feature". Validate when present.
         ticket_type = raw.get("ticket_type", "feature")
@@ -86,6 +91,7 @@ class Ticket:
             coding_engine=raw.get("coding_engine"),
             max_healing_attempts=int(raw.get("max_healing_attempts", 3)),
             ui_capture=bool(raw.get("ui_capture", False)),
+            visual_preview=raw.get("visual_preview", False),
             path=ticket_dir,
         )
 

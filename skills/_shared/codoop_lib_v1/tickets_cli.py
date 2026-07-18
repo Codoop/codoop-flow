@@ -86,6 +86,7 @@ def init_draft(
         "test_command": {},
         "max_healing_attempts": 3,
         "ui_capture": False,
+        "visual_preview": False,
     }
     (draft / METADATA_FILE).write_text(
         json.dumps(stub, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
@@ -199,6 +200,9 @@ def validate_draft(config: Config, ticket_id: str) -> ValidationResult:
             errors.append(f"missing required doc: {doc}")
         elif not _is_meaningfully_filled(p):
             errors.append(f"required doc still empty (only scaffold): {doc}")
+
+    if not errors and ticket.visual_preview and not (draft / "preview.html").exists():
+        errors.append("missing required visual preview: preview.html")
 
     for doc in RECOMMENDED_DOCS:
         p = draft / doc

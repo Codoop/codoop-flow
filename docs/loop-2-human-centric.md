@@ -53,7 +53,8 @@ The skill orchestrates a PM and Architect with you as director, guiding you thro
 1. **trigger** — you confirm Phase 1 is done; `codoop-ticket` loads `/skill spec-driven-development`
 2. **design** — Architect agent writes `spec.md` based on the confirmed `module_prd.md`
 3. **content** — includes API contracts (per platform: backend/web/mobile/desktop), data schema field-level, UI interactions and state management, code examples, testing strategy, Always/Ask First/Never boundaries
-4. **review** — you review and confirm or request changes
+4. **preview** — for a feature that adds or materially changes a visible screen, primary task flow, or interaction state, generate a self-contained `preview.html` before review and set `metadata.json.visual_preview` to `true`. It shows only the ticket's local UI change, primary path, and relevant states with mock data and key clickable interactions; it is not a production implementation or a full-product shell.
+5. **review** — you review the spec and, when present, the preview; approved feedback is reflected in both before task breakdown
 
 ### Phase 3 — Task Breakdown (plan.md + todo.md)
 
@@ -66,7 +67,7 @@ The skill orchestrates a PM and Architect with you as director, guiding you thro
 
 ### Post-Phase 3 — Metadata Auto-Inference
 
-After Phase 3, `codoop-ticket` calls `update_metadata_from_docs` to automatically infer `metadata.json` from your `spec.md` and task files. It also checks whether the confirmed spec changes user-visible screens, interactions, or task flows. If it does, it asks in plain language whether delivery should inspect the actual experience with saved screenshots and UI/UX review; it recommends enabling that check. Backend-only, infrastructure, refactoring, and internal-only work keep it off without an unnecessary question. The human reviews the result and confirms or modifies before validation.
+After Phase 3, `codoop-ticket` calls `update_metadata_from_docs` to automatically infer `metadata.json` from your `spec.md` and task files. `visual_preview` remains true only when the Phase 2 preview was required and reviewed; its presence is a blocking promotion requirement. Separately, the skill checks whether delivery should inspect the actual implementation with saved screenshots and UI/UX review (`ui_capture`). Backend-only, infrastructure, refactoring, and internal-only work keep both off without an unnecessary question. The human reviews the result and confirms or modifies before validation.
 
 ### Validation & Promotion
 
@@ -92,9 +93,10 @@ docs/tickets/
 
 | File | Author | Required | Purpose |
 |---|---|---|---|
-| `metadata.json` | Auto-inferred; human confirms | Yes | Machine-readable config for Loop 3: ticket type, modules, test commands, self-heal budget, UI capture flag |
+| `metadata.json` | Auto-inferred; human confirms | Yes | Machine-readable config for Loop 3: ticket type, modules, test commands, self-heal budget, preview and UI-capture flags |
 | `module_prd.md` | PM agent + human | Yes for `feature` | 100% pure-business description — user stories, state flows, acceptance criteria |
 | `spec.md` | Architect agent + human | Yes for `feature` | Technical contract — APIs, data schema, UI interactions |
+| `preview.html` | Ticket agent + human | Required when `visual_preview` is true | Static HTML prototype for reviewing a ticket-local visual flow and key interactions |
 | `bug_report.md` | Human (+ agent) | Yes for `fix` | Defect record — Symptom / Reproduction / Root Cause / Expected Behavior / Scope |
 | `plan.md` | Auto-decomposed + human review | Recommended (both) | Step-by-step implementation plan with phases and checkpoints |
 | `todo.md` | Auto-decomposed + human review | Recommended (both) | Atomic checkbox task list, each ≤100 lines, with platform prefixes |
@@ -167,6 +169,7 @@ Or directly call the skill in any AI coding tool:
 **Checks (blocking):**
 - `metadata.json` parses cleanly and satisfies the full schema (all required fields present, correct types, every module has a test command, valid `ticket_type`)
 - The type's required docs exist and contain meaningful (non-scaffold, non-empty) content: `feature` → `module_prd.md` + `spec.md`; `fix` → `bug_report.md`
+- `preview.html` exists when `metadata.json.visual_preview` is true
 
 **Checks (advisory warnings):**
 - `plan.md` and `todo.md` exist and are meaningfully filled
@@ -231,6 +234,7 @@ Every ticket's `metadata.json` must satisfy this schema:
 | `ticket_type` | string | `"feature"` | `"feature"` (需求单) or `"fix"` (修复单). Selects required docs in Loop 2 and the commit prefix (`feat`/`fix`) in Loop 3 |
 | `coding_engine` | string or null | null | Which AI tool for this ticket: `claude`, `codex`, `cursor`. If absent, uses global default. |
 | `max_healing_attempts` | int | 3 | Maximum self-healing retries in Loop 3 before moving to `failed/` |
+| `visual_preview` | bool | false | Requires a reviewed `preview.html` for a user-visible feature before promotion; this static prototype is separate from runtime verification |
 | `ui_capture` | bool | false | If true, Loop 3's test script writes screenshots; review adds UI/UX personas |
 
 **Validation:** All required fields must be present with correct types; every module in `modules` must have a corresponding entry in `test_command`. Missing any of these is a blocking validation error.
@@ -254,8 +258,9 @@ This anchors every ticket to the global product strategy rather than inventing i
 
 The `promote` command's filesystem move (`drafts/` → `pending/`) is the only handoff mechanism. Loop 3's scheduler polls `pending/`, picks the oldest ticket, and consumes:
 
-- `metadata.json` — drives all scheduler decisions (modules, test commands, self-heal budget, ui_capture flag)
+- `metadata.json` — drives scheduler decisions (modules, test commands, self-heal budget, ui_capture flag) and records whether a reviewed visual preview is part of the ticket
 - `module_prd.md` + `spec.md` — progressively disclosed to the coding engine at startup
+- `preview.html` — read alongside the design docs when present so implementation follows the reviewed local visual flow
 - `plan.md` + `todo.md` — Loop 3 reads the todo list step-by-step and checks off items as they complete
 - `public/qa-screenshots/` — created at runtime by Loop 3's test scripts (for UI tickets)
 

@@ -20,7 +20,7 @@ The `codoop-ticket` skill automatically calls this skill in phase 3:
 ```
 【Phase 3】Task Breakdown (plan.md + todo.md)
 9. codoop-ticket loads /skill planning-and-task-breakdown
-10. Break down implementation tasks based on spec.md
+10. Break down implementation tasks based on spec.md and the reviewed preview.html when present
 11. User reviews and confirms
 ```
 
@@ -139,4 +139,3 @@ Each task broken down by this skill must meet the standards defined in `/skill d
 2. **Specific acceptance criteria** — "Tests pass" is not enough; specify test types and coverage
 3. **Include risk identification** — List known pitfalls in Risks and Mitigations
 4. **Conservative estimates** — If unsure a task fits in 1-2 hours, split it further
-

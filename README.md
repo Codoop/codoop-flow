@@ -21,7 +21,7 @@ pick → build → verify → multi-review → archive, one ticket per closed lo
 
 **Three independent loops** that work together or standalone:
 - **Loop 1**: Multi-role product design sessions (0→1 planning)
-- **Loop 2**: Detailed ticket design (PRD + spec + task breakdown)
+- **Loop 2**: Detailed ticket design (PRD + spec + visual preview when needed + task breakdown)
 - **Loop 3**: Continuous ticket execution (build → verify → review → merge)
 
 ```
@@ -106,6 +106,7 @@ codoop-flow implements a **Triple-Loop** system for AI-driven development:
 ```
 
 The skill orchestrates expert agents (PM, GTM, UX/UI, Architect) through:
+- **Discovery Intake** — short, plain-language question rounds establish the product, core flow, and visual direction before role dispatch
 - **SNAP clarification** — removes ambiguities via structured questions
 - **Multi-role drafting** — experts collaborate in-session
 - **Consistency audit** — catches cross-document conflicts
@@ -116,7 +117,7 @@ The skill orchestrates expert agents (PM, GTM, UX/UI, Architect) through:
 [Learn more about codoop-discover →](./skills/codoop-discover/README.md)
 
 ### 📋 Loop 2: Human-Centric (Ticket Design)
-Design work tickets through three stages: requirements (PRD) → technical spec → task breakdown. Ready for the agent loop.
+Design work tickets through requirements (PRD) → technical spec → visual preview when needed → task breakdown. Ready for the agent loop.
 
 **Main orchestrator**:
 ```
@@ -213,6 +214,7 @@ python3 skills/codoop-execute/scripts/codoop.py setup /path/to/your/repo \
 - `metadata.json` ([fields](#ticket-metadatajson))
 - `module_prd.md` (business requirements)
 - `spec.md` (technical contract)
+- `preview.html` (required only for a feature with `metadata.json.visual_preview: true`)
 - `plan.md` (execution plan)
 - `todo.md` (atomic tasks)
 
@@ -302,7 +304,7 @@ After `setup`, you can also use the human-facing CLI to turn an idea into a tick
 ```bash
 # Draft: scaffold metadata + empty docs under drafts/
 python3 skills/codoop-ticket/scripts/codoop-ticket.py ticket init ticket_001 --config codoop_flow.toml --title "add hello module"
-# Edit drafts/ticket_001/: module_prd.md (business), spec.md (contract)
+# Edit drafts/ticket_001/: module_prd.md (business), spec.md (contract), and preview.html when visual_preview is true
 python3 skills/codoop-ticket/scripts/codoop-ticket.py ticket validate ticket_001 --config codoop_flow.toml   # check required docs
 python3 skills/codoop-ticket/scripts/codoop-ticket.py ticket promote  ticket_001 --config codoop_flow.toml   # confirmed drafts → pending + dedicated ticket commit
 ```
@@ -326,6 +328,7 @@ To explore a brand-new idea (multi-role design session, output to `docs/backlog/
   "modules": ["backend"],
   "test_command": {"backend": "<project-specific test command>"},
   "max_healing_attempts": 3,
+  "visual_preview": false,
   "ui_capture": false
 }
 ```
@@ -336,6 +339,7 @@ To explore a brand-new idea (multi-role design session, output to `docs/backlog/
 | `modules` | Modules involved; each must have an entry in `test_command` |
 | `test_command` | module → explicitly configured shell command; `verify` runs one per module (no default is inferred) |
 | `max_healing_attempts` | self-heal retry budget (default 3) |
+| `visual_preview` | when true: a feature ticket must include a reviewed `preview.html` before task breakdown; it communicates the local UI and key interactions, not production code |
 | `ui_capture` | when true: the test script must write screenshots to `$CODOOP_QA_SCREENSHOT_DIR` (no screenshots = hard fail), and review adds 2 UI personas that actually look at the images |
 
 Required: `ticket_id / title / modules / test_command`. `ticket_type` (default `feature`) is optional.
@@ -419,7 +423,7 @@ The skill is a self-contained directory; any coding agent that can read files an
 
 **What's the difference between the three loops?**
 - **Loop 1**: Multi-role product design (0→1 planning) → `docs/backlog/`
-- **Loop 2**: Single-ticket design (PRD + spec + tasks) → `docs/tickets/pending/`
+- **Loop 2**: Single-ticket design (PRD + spec + visual preview when needed + tasks) → `docs/tickets/pending/`
 - **Loop 3**: Implementation (build + verify + review + merge) → `main` branch
 
 **Can I use all three loops together?**

@@ -69,6 +69,16 @@ Use this format:
 > - **Recommendation (Recommendation)**: <Your recommended option> because <professional reasoning>.
 ```
 
+### 3.3 Discovery Intake（冷启动引导）
+在创建 `docs/backlog/design-draft.md` 或分派任何角色之前，必须先阅读 [`references/discovery-intake.md`](references/discovery-intake.md)，以分轮提问的方式建立已确认的 Discovery Brief。
+
+- 面向产品、设计和开发经验不足的用户，使用大白话；每个问题提供具体例子或 2–3 个可选方向，并始终允许用户回答“我不确定，请推荐”。
+- 每轮最多提 2–3 个问题。先问产品目标、目标用户与核心流程；再问视觉方向；平台、商业模式、数据风险与技术约束只在前面答案需要时追问。
+- 不要把参考清单一次性作为长问卷发给用户；它是按需追问的题库，而不是必填表单。
+- 用户已明确提供的信息不得重复询问。缺失但不影响当前轮次的问题可以后置。
+- 收集到足够信息后，先输出一份简短的 **Discovery Brief**，至少包含：产品定位、目标用户与场景、第一版核心流程与范围、视觉方向、已知约束与待决问题。用户确认或修正后，才开始第 5 节的文档协作流程。
+- 若用户拒绝回答某个关键问题，记录为“待决”，给出推荐假设，并在 Discovery Brief 中要求确认；不得悄然当作既定事实。
+
 ---
 
 ## 4. Multi-Role Collaboration Framework

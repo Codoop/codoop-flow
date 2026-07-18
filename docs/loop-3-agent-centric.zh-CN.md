@@ -63,6 +63,7 @@ python3 <SKILL>/scripts/codoop_tools.py --config <toml> pick
 代理从 `ticket_dir` 读取工单包：
 - `module_prd.md` — 100% 业务描述
 - `spec.md` — API 契约、数据模式、UI 交互
+- `preview.html` — 存在时代表人工已审查的局部视觉流程和关键交互；将其作为设计上下文，而非实际代码
 - `plan.md` — 分步执行计划
 - `todo.md` — 原子检查框任务
 
