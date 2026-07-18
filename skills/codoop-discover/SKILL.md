@@ -98,7 +98,7 @@ Drafting & Objections             Hardening & Specifications             Alignme
 ```
 
 1. **Shared Design Draft**: Create a temporary file `docs/backlog/design-draft.md` as the shared room for collaborative drafting.
-   - Start from `assets/templates/backlog/design-draft.md`.
+   - Start from `templates/backlog/design-draft.md`.
 2. **Review & Objections (The Challenge Loop)**:
    - Raise objections using: `[CHALLENGE: <Role A> -> <Role B>] <Objection details>`
    - Resolve them using: `[RESOLVED: <Role>] <Resolution/compromise details>`
@@ -106,7 +106,7 @@ Drafting & Objections             Hardening & Specifications             Alignme
 3. **Reactive Human Intercept (`[HUMAN DIRECTIVE]`)**:
    - The user can intervene at any time by placing a `[HUMAN DIRECTIVE]` block directly in `design-draft.md`.
    - Sub-agents must read this block on launch and unconditionally obey the directive, adjusting their designs.
-4. **Structured Specifications**: Before writing, copy the corresponding files from `assets/templates/backlog/` into `docs/backlog/`, preserving their hierarchy. Replace every placeholder with product-specific content, remove inapplicable optional sections, and do not leave template text or placeholders in a locked document. Hard-lock the final design into structured spec files organized under five clear subdirectories under `docs/backlog/` (strictly avoiding flat root-level file accumulation, and not generating any `specs/` directory):
+4. **Structured Specifications**: Before writing, copy the corresponding files from `templates/backlog/` into `docs/backlog/`, preserving their hierarchy. Replace every placeholder with product-specific content, remove inapplicable optional sections, and do not leave template text or placeholders in a locked document. Hard-lock the final design into structured spec files organized under five clear subdirectories under `docs/backlog/` (strictly avoiding flat root-level file accumulation, and not generating any `specs/` directory):
    - **`product/`** (Product & Monetization):
      - `requirements.md`: Standard Product Requirement Document (PRD) containing scope, state transitions, and Gherkin BDD scenarios.
      - `user-journey.md`: Complete user journeys and user/job stories.
@@ -122,7 +122,7 @@ Drafting & Objections             Hardening & Specifications             Alignme
    - **`bridge/`** (Human-AI Collaboration Bridge):
      - `human-preparation.md` (Human Preparation Checklist): A non-technical checklist of administrative and platform-specific tasks that a human must perform (e.g., registering developer accounts, obtaining API keys/credentials, registering domains, setting up payment gateways). This document must be dynamically and precisely tailored based on the application's specific design. If the application has no external platform dependencies, it should explicitly state that no preparation is needed.
      - `ai-co-dev-guide.md` (AI Co-Development Guide): A non-technical roadmap guiding the human user on how to continue AI-driven development. It explains the role of each generated specification document, outlines a logical step-by-step coding sequence, and suggests general AI collaboration principles (e.g., how to feed specifications to an AI coding assistant). It must NOT mention specific AI tool brands (such as Cursor, Claude Code, etc.) and must NOT contain concrete prompt templates.
-     - `scaffolding-blueprint.md` (Scaffolding Blueprint): A technical blueprint specifying the physical directory layout, boilerplate configuration files (e.g., package managers, compiler configs, container setups), and core boilerplate code specifications. This serves as a concrete "architectural drawing" for an AI assistant to initialize the project's codebase foundation. When the project uses `deploy/` or `resources/`, direct the coding agent to start from `assets/templates/project/deploy/README.md` or `assets/templates/project/resources/README.md`.
+     - `scaffolding-blueprint.md` (Scaffolding Blueprint): A technical blueprint specifying the physical directory layout, boilerplate configuration files (e.g., package managers, compiler configs, container setups), and core boilerplate code specifications. This serves as a concrete "architectural drawing" for an AI assistant to initialize the project's codebase foundation. When the project uses `deploy/` or `resources/`, direct the coding agent to start from `templates/project/deploy/README.md` or `templates/project/resources/README.md`.
 
 5. **Consistency Audit & Alignment Loop**:
    - After structured specifications are generated, the Orchestrator MUST invoke the **Alignment Agent** (reading `../../_shared/agents/alignment-agent.md`) to conduct a comprehensive consistency audit across all generated files.
