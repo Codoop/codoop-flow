@@ -1,11 +1,18 @@
 ---
 name: codoop-ticket
-description: Design work tickets (PRD → Spec → Plan) in three stages. Describe features in natural language; codoop-ticket orchestrates PM and Architect agents, calls spec and planning skills, and auto-infers metadata. Outputs complete ticket package for Phase 3.
+description: Design work tickets (PRD → Spec → Plan) in three stages. Describe features in natural language; codoop-ticket orchestrates PM and Architect agents, calls spec and planning skills, and auto-infers metadata. Its terminal responsibility is promoting an approved ticket to pending/; it never executes the ticket.
 ---
 
 # Codoop-Ticket — Ticket Design Orchestration
 
 Help users systematically design work tickets in-session through three stages: requirements, technical specs, and task breakdown.
+
+## Scope Boundary
+
+This skill ends after an explicitly approved ticket is validated, committed, and
+promoted to `pending/`. Do not implement, run, verify, review, or ship the
+ticket; do not invoke `codoop-execute` or otherwise consume the pending queue.
+Those are Phase 3 responsibilities and require a separate user request.
 
 ## What is a Ticket?
 
@@ -276,7 +283,8 @@ failure. Use `false` when no user-visible behavior needs checking.
    the ticket to `pending/` and create a dedicated `docs(ticket): add <ticket_id>`
    commit. The command stages and commits only that ticket directory; it must
    not include other working-tree changes.
-4. Ticket complete, committed, and ready for Phase 3 development
+4. Ticket complete: stop after the commit and `pending/` promotion. Do not
+   start Phase 3 development or invoke `codoop-execute`.
 
 **Promote requires explicit user approval.** Never promote a draft to
 `pending/` without the user confirming in the current conversation. Do not
@@ -343,7 +351,8 @@ When the ticket is complete, Phase 3 receives via `metadata.json`:
 - `modules`: which test suites to run?
 - `test_command`: verification standards
 
-Phase 3 automatically picks up the ticket and develops in a worktree.
+The ticket is now available for Phase 3 to pick up in a separate execution
+request; codoop-ticket must stop here.
 
 ---
 
