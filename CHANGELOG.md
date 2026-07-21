@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Ticket test commands removed.** `metadata.json.test_command` is no longer
+  generated, required, or executed by `verify`. Existing entries are ignored
+  and removed when ticket metadata is updated; `verify` now only enforces the
+  optional `ui_capture` screenshot gate.
+
 ## [0.1.5-alpha.3] - 2026-07-17
 
 ### Added
@@ -26,8 +33,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Target-project conventions are clearer.** `deploy/` is organized by
   business with a README index, while shared product assets live in `resources/`
   with an index and `audio/` directory.
-- **Ticket test commands remain explicit.** No project-specific test command is
-  inferred as a default; every ticket supplies the command for its modules.
 
 ## [0.1.5-alpha.2] - 2026-07-15
 
@@ -140,8 +145,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   longer fails a ticket for edits outside the `files_to_edit` whitelist — the
   edit scope defined in `spec.md` / `metadata.json` is guidance the agent reads,
   not a hard gate. This unblocks tickets that legitimately need to touch adjacent
-  files. `verify` now has two hard gates: tests pass, and (for `ui_capture`
-  tickets) UI screenshots. `files_to_edit` is also now an optional metadata field.
+  files. `verify` keeps the `ui_capture` screenshot gate. `files_to_edit` is
+  also now an optional metadata field.
 
 ## [0.1.1] - 2026-07-07
 

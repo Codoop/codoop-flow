@@ -44,7 +44,6 @@ cat > "$PDIR/metadata.json" <<JSON
   "ticket_id": "$TID",
   "title": "lease demo",
   "modules": ["backend"],
-  "test_command": {"backend": "true"},
   "files_to_edit": ["backend/**"],
   "max_healing_attempts": 3
 }

@@ -101,7 +101,7 @@ docs/tickets/
 
 | 文件 | 作者 | 必需 | 用途 |
 |---|---|---|---|
-| `metadata.json` | 自动推断；人工确认 | 是 | 第三环的机器可读配置：工单类型、模块、测试命令、自愈预算、视觉预览与 UI 捕获标志 |
+| `metadata.json` | 自动推断；人工确认 | 是 | 第三环的机器可读配置：工单类型、模块、自愈预算、视觉预览与 UI 捕获标志 |
 | `module_prd.md` | PM 代理 + 人工 | `feature` 必需 | 100% 纯业务描述 — 用户故事、状态流、验收标准 |
 | `spec.md` | 架构师代理 + 人工 | `feature` 必需 | 技术契约 — API、数据模式、UI 交互 |
 | `preview.html` | 工单代理 + 人工 | `visual_preview` 为 true 时必需 | 用于评审工单局部视觉流程和关键交互的静态 HTML 原型 |
@@ -175,7 +175,7 @@ python skills/codoop-ticket/scripts/codoop-ticket.py ticket <command> <args>
 **验证**草稿准备好提升。
 
 **检查（阻止性）：**
-- `metadata.json` 清洁解析并满足完整模式（所有必需字段存在、类型正确、每个模块都有测试命令、`ticket_type` 合法）
+- `metadata.json` 清洁解析并满足完整模式（所有必需字段存在、类型正确、`ticket_type` 合法）
 - 该类型的必需文档存在并包含有意义的（非样板、非空）内容：`feature` → `module_prd.md` + `spec.md`；`fix` → `bug_report.md`
 - 当 `metadata.json.visual_preview` 为 true 时检查 `preview.html` 是否存在
 
@@ -190,7 +190,6 @@ python skills/codoop-ticket/scripts/codoop-ticket.py ticket <command> <args>
 
 **推断逻辑：**
 - `modules` — 从 `spec.md` 标题扫描（`## 后端`、`## 网页`等），映射到：后端、网页、移动、桌面
-- `test_command` — 保留已有配置；验证前必须为每个已声明模块明确填写命令，不推断默认值
 
 通常在阶段 3 完成后、验证和提升前调用。
 
@@ -233,7 +232,6 @@ python skills/codoop-ticket/scripts/codoop-ticket.py ticket <command> <args>
 | `ticket_id` | 字符串 | 与目录名称匹配的标识符（例如 `ticket_001`） |
 | `title` | 字符串 | 人类可读的工单标题 |
 | `modules` | 字符串列表 | 这个工单涉及的平台模块：`backend`、`web`、`mobile`、`desktop` |
-| `test_command` | dict[字符串, 字符串] | 每个模块的测试命令运行（键必须覆盖所有 `modules` 条目） |
 
 **可选字段：**
 
@@ -243,9 +241,9 @@ python skills/codoop-ticket/scripts/codoop-ticket.py ticket <command> <args>
 | `coding_engine` | 字符串或 null | null | 这个工单用哪个 AI 工具：`claude`、`codex`、`cursor`。如果缺失，使用全局默认。 |
 | `max_healing_attempts` | int | 3 | 第三环的最大自愈重试次数，之后移到 `failed/` |
 | `visual_preview` | bool | false | 为用户可见的需求单要求已审查的 `preview.html`；静态原型与运行时验证相互独立 |
-| `ui_capture` | bool | false | 如果为真，第三环的测试脚本写入截图；审查添加 UI/UX personas |
+| `ui_capture` | bool | false | 如果为真，交付过程在 `public/qa-screenshots/` 写入截图；审查添加 UI/UX personas |
 
-**验证：** 所有必需字段必须存在且类型正确；`modules` 中的每个模块都必须在 `test_command` 中有对应条目。缺少其中任何一个是阻止验证错误。
+**验证：** 所有必需字段必须存在且类型正确。
 
 ---
 
@@ -270,7 +268,7 @@ python skills/codoop-ticket/scripts/codoop-ticket.py ticket <command> <args>
 - `module_prd.md` + `spec.md` — 在启动时逐步披露给编码引擎
 - `preview.html` — 存在时与设计文档一同读取，使实现遵循已审查的局部视觉流程
 - `plan.md` + `todo.md` — 第三环逐步读取任务列表，随着完成检查项
-- `public/qa-screenshots/` — 由第三环的测试脚本在运行时创建（UI 工单）
+- `public/qa-screenshots/` — 由 UI 工单交付过程在运行时创建
 
 工单目录随工单通过所有阶段传播：`pending/` → `in_progress/` → `done/`（或 `failed/`），在实现制品旁边保留完整设计记录。
 

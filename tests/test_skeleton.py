@@ -61,7 +61,7 @@ def _config_obj(root: Path, worktrees: Path) -> Config:
 
 
 def _make_ticket(
-    root: Path, ticket_id: str, *, test_cmd,
+    root: Path, ticket_id: str, *,
     title="skeleton test", ui_capture=False, ticket_type=None,
 ) -> Path:
     tdir = root / "docs" / "tickets" / "pending" / ticket_id
@@ -70,7 +70,6 @@ def _make_ticket(
         "ticket_id": ticket_id,
         "title": title,
         "modules": ["backend"],
-        "test_command": {"backend": test_cmd},
         "max_healing_attempts": 3,
     }
     if ui_capture:
@@ -114,7 +113,7 @@ def _check(cond: bool, msg: str) -> None:
 def test_pick_moves_and_creates_worktree(root: Path, worktrees: Path) -> None:
     print("[test] pick: pending -> in_progress + worktree")
     cfg = _write_config(root, worktrees)
-    _make_ticket(root, "ticket_001", test_cmd="true")
+    _make_ticket(root, "ticket_001")
     code, data = _tool(cfg, "pick")
     _check(code == 0 and data["picked"], "pick succeeded")
     _check(data["ticket_id"] == "ticket_001", "picked the pending ticket")
@@ -127,9 +126,9 @@ def test_pick_moves_and_creates_worktree(root: Path, worktrees: Path) -> None:
 def test_pick_reports_when_in_progress_busy(root: Path, worktrees: Path) -> None:
     print("[test] pick: reports existing in_progress instead of double-picking")
     cfg = _write_config(root, worktrees)
-    _make_ticket(root, "ticket_a", test_cmd="true")
+    _make_ticket(root, "ticket_a")
     _tool(cfg, "pick")  # claims ticket_a
-    _make_ticket(root, "ticket_b", test_cmd="true")
+    _make_ticket(root, "ticket_b")
     code, data = _tool(cfg, "pick")
     _check(not data["picked"], "second pick does not claim a new ticket")
     _check(data["ticket_id"] == "ticket_a", "reports the busy in_progress ticket")
@@ -139,7 +138,7 @@ def test_pick_reports_when_in_progress_busy(root: Path, worktrees: Path) -> None
 def test_pick_mints_lease(root: Path, worktrees: Path) -> None:
     print("[test] pick: first claim mints a lease token + lease file")
     cfg = _write_config(root, worktrees)
-    _make_ticket(root, "ticket_l1", test_cmd="true")
+    _make_ticket(root, "ticket_l1")
     code, data = _tool(cfg, "pick")
     _check(code == 0 and data["picked"], "pick succeeded")
     _check(bool(data.get("lease_token")), "pick returned a lease_token")
@@ -149,7 +148,7 @@ def test_pick_mints_lease(root: Path, worktrees: Path) -> None:
 def test_pick_blocks_without_lease(root: Path, worktrees: Path) -> None:
     print("[test] pick: resuming an owned ticket without the token is blocked")
     cfg = _write_config(root, worktrees)
-    _make_ticket(root, "ticket_l2", test_cmd="true")
+    _make_ticket(root, "ticket_l2")
     _, first = _tool(cfg, "pick")
     wt = Path(first["worktree"])
     # A second runner picks with no token -> blocked, worktree untouched.
@@ -164,7 +163,7 @@ def test_pick_blocks_without_lease(root: Path, worktrees: Path) -> None:
 def test_pick_resumes_with_lease(root: Path, worktrees: Path) -> None:
     print("[test] pick: same runner resumes with its token")
     cfg = _write_config(root, worktrees)
-    _make_ticket(root, "ticket_l3", test_cmd="true")
+    _make_ticket(root, "ticket_l3")
     _, first = _tool(cfg, "pick")
     token = first["lease_token"]
     code, data = _tool(cfg, "pick", "--lease", token)
@@ -176,7 +175,7 @@ def test_pick_resumes_with_lease(root: Path, worktrees: Path) -> None:
 def test_takeover_rotates_token(root: Path, worktrees: Path) -> None:
     print("[test] takeover: mints a new token; old token then rejected by verify")
     cfg = _write_config(root, worktrees)
-    _make_ticket(root, "ticket_l4", test_cmd="true")
+    _make_ticket(root, "ticket_l4")
     _, first = _tool(cfg, "pick")
     old = first["lease_token"]
     code, data = _tool(cfg, "takeover", "ticket_l4")
@@ -191,7 +190,7 @@ def test_takeover_rotates_token(root: Path, worktrees: Path) -> None:
 def test_verify_no_token_warns_but_proceeds(root: Path, worktrees: Path) -> None:
     print("[test] verify: omitting --lease proceeds (back-compat)")
     cfg = _write_config(root, worktrees)
-    _make_ticket(root, "ticket_l5", test_cmd="true")
+    _make_ticket(root, "ticket_l5")
     _tool(cfg, "pick")
     code, data = _tool(cfg, "verify", "ticket_l5")
     _check(code == 0 and data["ok"], "verify without token still runs")
@@ -200,7 +199,7 @@ def test_verify_no_token_warns_but_proceeds(root: Path, worktrees: Path) -> None
 def test_finish_releases_lease(root: Path, worktrees: Path) -> None:
     print("[test] finish: lease file removed after archiving to done/")
     cfg = _write_config(root, worktrees)
-    _make_ticket(root, "ticket_l6", test_cmd="true")
+    _make_ticket(root, "ticket_l6")
     _, picked = _tool(cfg, "pick")
     token = picked["lease_token"]
     (Path(picked["worktree"]) / "backend" / "f.txt").write_text("x", encoding="utf-8")
@@ -212,7 +211,7 @@ def test_finish_releases_lease(root: Path, worktrees: Path) -> None:
 def test_status_reports_in_progress_detail(root: Path, worktrees: Path) -> None:
     print("[test] status: in_progress carries progress detail")
     cfg = _write_config(root, worktrees)
-    tdir = _make_ticket(root, "ticket_l7", test_cmd="true")
+    tdir = _make_ticket(root, "ticket_l7")
     (tdir / "todo.md").write_text(
         "# Todo\n- [x] a\n- [x] b\n- [ ] c\n- [ ] d\n- [ ] e\n", encoding="utf-8")
     _, picked = _tool(cfg, "pick", "--runner-note", "runner-X")
@@ -229,7 +228,7 @@ def test_status_reports_in_progress_detail(root: Path, worktrees: Path) -> None:
 def test_concurrent_first_pick_no_double_claim(root: Path, worktrees: Path) -> None:
     print("[test] pick: two concurrent first-picks -> exactly one claims, no crash")
     cfg = _write_config(root, worktrees)
-    _make_ticket(root, "ticket_c1", test_cmd="true")
+    _make_ticket(root, "ticket_c1")
     procs = [
         subprocess.Popen(
             [sys.executable, str(_TOOLS), "--config", str(cfg), "pick"],
@@ -255,7 +254,7 @@ def test_pick_adopts_legacy_in_progress(root: Path, worktrees: Path) -> None:
     print("[test] pick: legacy in_progress with no lease is adopted")
     cfg = _write_config(root, worktrees)
     # Simulate a pre-lease ticket sitting directly in in_progress/.
-    tdir = _make_ticket(root, "ticket_l8", test_cmd="true")
+    tdir = _make_ticket(root, "ticket_l8")
     import shutil as _sh
     dest = root / "docs" / "tickets" / "in_progress"
     _sh.move(str(tdir), str(dest / "ticket_l8"))
@@ -264,30 +263,24 @@ def test_pick_adopts_legacy_in_progress(root: Path, worktrees: Path) -> None:
     _check(bool(data.get("lease_token")), "lease minted on adopt")
 
 
-def test_verify_passes(root: Path, worktrees: Path) -> None:
-    print("[test] verify: passing tests -> ok")
+def test_verify_has_no_test_command_gate(root: Path, worktrees: Path) -> None:
+    print("[test] verify: legacy test_command is ignored")
     cfg = _write_config(root, worktrees)
-    _make_ticket(root, "ticket_002", test_cmd="true")
+    ticket = _make_ticket(root, "ticket_002")
+    metadata = json.loads((ticket / "metadata.json").read_text(encoding="utf-8"))
+    metadata["test_command"] = {"backend": "false"}
+    (ticket / "metadata.json").write_text(json.dumps(metadata), encoding="utf-8")
     _, picked = _tool(cfg, "pick")
     (Path(picked["worktree"]) / "backend" / "feature.txt").write_text("x", encoding="utf-8")
     code, data = _tool(cfg, "verify", "ticket_002")
-    _check(code == 0 and data["ok"], "verify passed")
-
-
-def test_verify_fails_on_failing_tests(root: Path, worktrees: Path) -> None:
-    print("[test] verify: failing test command -> fail")
-    cfg = _write_config(root, worktrees)
-    _make_ticket(root, "ticket_004", test_cmd="false")
-    _tool(cfg, "pick")
-    code, data = _tool(cfg, "verify", "ticket_004")
-    _check(not data["ok"], "verify failed on failing tests")
+    _check(code == 0 and data["ok"], "verify ignores legacy test commands")
 
 
 def test_ui_capture_gate(root: Path, worktrees: Path) -> None:
     print("[test] verify: ui_capture with/without screenshots")
     cfg = _write_config(root, worktrees)
     # No screenshots -> fail.
-    _make_ticket(root, "ticket_ui1", test_cmd="true", ui_capture=True)
+    _make_ticket(root, "ticket_ui1", ui_capture=True)
     _tool(cfg, "pick")
     _, data = _tool(cfg, "verify", "ticket_ui1")
     _check(not data["ok"] and any("screenshot" in r.lower() for r in data["reasons"]),
@@ -295,10 +288,10 @@ def test_ui_capture_gate(root: Path, worktrees: Path) -> None:
     _tool(cfg, "fail", "ticket_ui1", "--report", "no shots")
 
     # Writes a screenshot via the injected env var -> pass.
-    _make_ticket(
-        root, "ticket_ui2", ui_capture=True,
-        test_cmd='mkdir -p "$CODOOP_QA_SCREENSHOT_DIR" && printf x > "$CODOOP_QA_SCREENSHOT_DIR/desktop.png"',
-    )
+    ticket = _make_ticket(root, "ticket_ui2", ui_capture=True)
+    screenshot = ticket / "public" / "qa-screenshots" / "desktop.png"
+    screenshot.parent.mkdir(parents=True)
+    screenshot.write_text("x", encoding="utf-8")
     _tool(cfg, "pick")
     _, data2 = _tool(cfg, "verify", "ticket_ui2")
     _check(data2["ok"], "ui ticket with screenshots passes")
@@ -307,7 +300,7 @@ def test_ui_capture_gate(root: Path, worktrees: Path) -> None:
 def test_finish_commits_and_archives(root: Path, worktrees: Path) -> None:
     print("[test] finish: commit on dev branch + move to done/ + clean worktree")
     cfg = _write_config(root, worktrees)
-    _make_ticket(root, "ticket_005", test_cmd="true")
+    _make_ticket(root, "ticket_005")
     _, picked = _tool(cfg, "pick")
     (Path(picked["worktree"]) / "backend" / "f.txt").write_text("x", encoding="utf-8")
     code, data = _tool(cfg, "finish", "ticket_005", "--message", "feat(backend): x [ticket_005]")
@@ -325,7 +318,7 @@ def test_finish_commits_and_archives(root: Path, worktrees: Path) -> None:
 def test_finish_fix_uses_fix_prefix(root: Path, worktrees: Path) -> None:
     print("[test] finish (fix): auto commit message uses fix(...) prefix")
     cfg = _write_config(root, worktrees)
-    _make_ticket(root, "ticket_fix2", test_cmd="true",
+    _make_ticket(root, "ticket_fix2",
                  ticket_type="fix")
     _, picked = _tool(cfg, "pick")
     (Path(picked["worktree"]) / "backend" / "f.txt").write_text("x", encoding="utf-8")
@@ -342,7 +335,7 @@ def test_finish_fix_uses_fix_prefix(root: Path, worktrees: Path) -> None:
 def test_fail_archives_with_report_and_preserves_worktree(root: Path, worktrees: Path) -> None:
     print("[test] fail: archive report + preserve worktree for recovery")
     cfg = _write_config(root, worktrees)
-    _make_ticket(root, "ticket_006", test_cmd="true")
+    _make_ticket(root, "ticket_006")
     picked = _tool(cfg, "pick")[1]
     worktree = Path(picked["worktree"])
     (worktree / "backend" / "unfinished.txt").write_text("keep this work\n", encoding="utf-8")
@@ -363,7 +356,7 @@ def test_fail_archives_with_report_and_preserves_worktree(root: Path, worktrees:
 def test_status_reports_counts(root: Path, worktrees: Path) -> None:
     print("[test] status: reports tickets per stage")
     cfg = _write_config(root, worktrees)
-    _make_ticket(root, "ticket_007", test_cmd="true")
+    _make_ticket(root, "ticket_007")
     code, data = _tool(cfg, "status")
     _check(code == 0, "status ran")
     _check("ticket_007" in data["pending"], "pending count includes the ticket")
@@ -377,8 +370,6 @@ def test_ticket_lifecycle(root: Path, worktrees: Path) -> None:
     cfg = _config_obj(root, worktrees)
     draft = init_draft(cfg, "ticket_010", title="demo")
     metadata = json.loads((draft / "metadata.json").read_text(encoding="utf-8"))
-    metadata["test_command"] = {"backend": "true"}
-    (draft / "metadata.json").write_text(json.dumps(metadata), encoding="utf-8")
     _check(draft.exists(), "draft scaffolded")
     _check(not validate_draft(cfg, "ticket_010").ok, "empty scaffold fails validation")
     (draft / "module_prd.md").write_text("# PRD\n用户看到欢迎语。\n", encoding="utf-8")
@@ -396,7 +387,6 @@ def test_visual_preview_gate(root: Path, worktrees: Path) -> None:
     cfg = _config_obj(root, worktrees)
     draft = init_draft(cfg, "ticket_preview", title="visual feature")
     metadata = json.loads((draft / "metadata.json").read_text(encoding="utf-8"))
-    metadata["test_command"] = {"backend": "true"}
     metadata["visual_preview"] = True
     (draft / "metadata.json").write_text(json.dumps(metadata), encoding="utf-8")
     (draft / "module_prd.md").write_text("# PRD\nA user sees a new dashboard.\n", encoding="utf-8")
@@ -412,16 +402,16 @@ def test_visual_preview_gate(root: Path, worktrees: Path) -> None:
     _check(validate_draft(cfg, "ticket_preview").ok, "visual preview unblocks promotion")
 
 
-def test_ticket_test_commands_are_explicit(root: Path, worktrees: Path) -> None:
-    print("[test] ticket test commands are explicit")
+def test_ticket_metadata_has_no_test_command(root: Path, worktrees: Path) -> None:
+    print("[test] ticket metadata omits test_command")
     from codoop_lib_v1.tickets_cli import init_draft, update_metadata_from_docs
     cfg = _config_obj(root, worktrees)
-    draft = init_draft(cfg, "ticket_013", title="explicit tests")
+    draft = init_draft(cfg, "ticket_013", title="no configured tests")
     metadata = json.loads((draft / "metadata.json").read_text(encoding="utf-8"))
-    _check(metadata["test_command"] == {}, "new draft has no default test command")
+    _check("test_command" not in metadata, "new draft has no test command")
     (draft / "spec.md").write_text("# Spec\n## Backend\n", encoding="utf-8")
     updated = update_metadata_from_docs(cfg, "ticket_013")
-    _check(updated["test_command"] == {}, "metadata update does not infer test commands")
+    _check("test_command" not in updated, "metadata update does not add test commands")
 
 
 def test_confirmed_promotion_commits_only_ticket(root: Path, worktrees: Path) -> None:
@@ -432,8 +422,6 @@ def test_confirmed_promotion_commits_only_ticket(root: Path, worktrees: Path) ->
     cfg = _config_obj(root, worktrees)
     draft = init_draft(cfg, "ticket_012", title="commit confirmed ticket")
     metadata = json.loads((draft / "metadata.json").read_text(encoding="utf-8"))
-    metadata["test_command"] = {"backend": "true"}
-    (draft / "metadata.json").write_text(json.dumps(metadata), encoding="utf-8")
     (draft / "module_prd.md").write_text("# PRD\nUsers can confirm tickets.\n", encoding="utf-8")
     (draft / "spec.md").write_text("# Spec\nPOST /tickets/confirm\n", encoding="utf-8")
     (root / "unrelated.txt").write_text("do not commit me\n", encoding="utf-8")
@@ -462,8 +450,6 @@ def test_fix_ticket_lifecycle(root: Path, worktrees: Path) -> None:
     cfg = _config_obj(root, worktrees)
     draft = init_draft(cfg, "ticket_fix1", title="修复分页越界", ticket_type="fix")
     metadata = json.loads((draft / "metadata.json").read_text(encoding="utf-8"))
-    metadata["test_command"] = {"backend": "true"}
-    (draft / "metadata.json").write_text(json.dumps(metadata), encoding="utf-8")
     _check(draft.exists(), "fix draft scaffolded")
     _check((draft / "bug_report.md").exists(), "bug_report.md scaffolded")
     _check(not (draft / "module_prd.md").exists(), "no module_prd.md for fix")
@@ -544,8 +530,7 @@ def main() -> int:
         test_status_reports_in_progress_detail,
         test_concurrent_first_pick_no_double_claim,
         test_pick_adopts_legacy_in_progress,
-        test_verify_passes,
-        test_verify_fails_on_failing_tests,
+        test_verify_has_no_test_command_gate,
         test_ui_capture_gate,
         test_finish_commits_and_archives,
         test_finish_fix_uses_fix_prefix,
@@ -553,7 +538,7 @@ def main() -> int:
         test_status_reports_counts,
         test_ticket_lifecycle,
         test_visual_preview_gate,
-        test_ticket_test_commands_are_explicit,
+        test_ticket_metadata_has_no_test_command,
         test_confirmed_promotion_commits_only_ticket,
         test_fix_ticket_lifecycle,
         test_promote_blocks_incomplete,

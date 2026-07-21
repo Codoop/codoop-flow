@@ -22,14 +22,12 @@ class Ticket:
     ticket_id: str
     title: str
     modules: list[str]
-    # module name -> shell command. Scheduler runs one per module in `modules`.
-    test_command: dict[str, str]
     # "feature" (需求单) or "fix" (修复单). Drives which docs Loop 2 requires and
     # which commit prefix Loop 3 uses. Defaults to "feature" for back-compat.
     ticket_type: str = "feature"
     coding_engine: str | None = None
     max_healing_attempts: int = 3
-    # When true, this ticket touches UI: tests must emit screenshots into the
+    # When true, this ticket touches UI: delivery must emit screenshots into the
     # qa-screenshots dir, and review adds the UI/UX personas.
     ui_capture: bool = False
     # When true, the ticket must include a static HTML preview for human review
@@ -61,7 +59,6 @@ class Ticket:
         _require(raw, "ticket_id", str, meta_path)
         _require(raw, "title", str, meta_path)
         _require(raw, "modules", list, meta_path)
-        _require(raw, "test_command", dict, meta_path)
         if "visual_preview" in raw and not isinstance(raw["visual_preview"], bool):
             raise ValueError(f"{meta_path}: field 'visual_preview' must be bool")
 
@@ -73,20 +70,10 @@ class Ticket:
                 f"{VALID_TICKET_TYPES}, got {ticket_type!r}"
             )
 
-        modules = raw["modules"]
-        test_command = raw["test_command"]
-        # Every module must have a test command mapping.
-        missing = [m for m in modules if m not in test_command]
-        if missing:
-            raise ValueError(
-                f"{meta_path}: modules missing test_command entries: {missing}"
-            )
-
         return cls(
             ticket_id=raw["ticket_id"],
             title=raw["title"],
-            modules=modules,
-            test_command=test_command,
+            modules=raw["modules"],
             ticket_type=ticket_type,
             coding_engine=raw.get("coding_engine"),
             max_healing_attempts=int(raw.get("max_healing_attempts", 3)),

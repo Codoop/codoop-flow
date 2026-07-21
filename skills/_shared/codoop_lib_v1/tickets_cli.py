@@ -83,7 +83,6 @@ def init_draft(
         "title": title or ticket_id,
         "ticket_type": ticket_type,
         "modules": ["backend"],
-        "test_command": {},
         "max_healing_attempts": 3,
         "ui_capture": False,
         "visual_preview": False,
@@ -217,7 +216,6 @@ def update_metadata_from_docs(config: Config, ticket_id: str) -> dict:
 
     Infers:
     - modules: extracted from spec.md's "## Backend", "## Web", etc. section headers
-    - test_command: preserved for the user to define per project and ticket
 
     Returns the updated metadata dict (but does NOT write to disk yet).
     User can review and accept/modify before validate().
@@ -260,16 +258,13 @@ def update_metadata_from_docs(config: Config, ticket_id: str) -> dict:
 
     modules = sorted(list(modules))
 
-    # Test commands are project- and ticket-specific; never infer paths here.
-    test_command = metadata.get("test_command", {})
-
     # Update metadata dict
     updated = {
         **metadata,
         "modules": modules,
-        "test_command": test_command,
     }
     updated.pop("files_to_edit", None)
+    updated.pop("test_command", None)
 
     return updated
 

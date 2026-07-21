@@ -79,19 +79,16 @@ python3 <SKILL>/scripts/codoop_tools.py --config <toml> pick
 python3 <SKILL>/scripts/codoop_tools.py --config <toml> verify <ticket_id>
 ```
 
-**两个硬门顺序运行**：
-
-1. **测试门** — 为 `modules` 中的每个模块运行 `test_command[module]`。所有必须退出 0。在第一个非零退出失败。
-
-2. **UI 截图门**（仅当 `ui_capture: true`） — 检查 `ticket_dir/public/qa-screenshots/` 是否至少有一个文件，具有识别的图像扩展名（`.png`、`.jpg`、`.jpeg`、`.webp`、`.gif`）。如果没有则失败。
+**UI 截图门**（仅当 `ui_capture: true`）检查
+`ticket_dir/public/qa-screenshots/` 是否至少有一个具有识别图像扩展名的文件
+（`.png`、`.jpg`、`.jpeg`、`.webp`、`.gif`）。如果没有则失败。
 
 **输出 JSON：**
 ```json
 {
   "ticket_id": "ticket_001",
   "ok": true,
-  "reasons": [],
-  "test_output": "..."
+  "reasons": []
 }
 ```
 
@@ -100,8 +97,7 @@ python3 <SKILL>/scripts/codoop_tools.py --config <toml> verify <ticket_id>
 {
   "ticket_id": "ticket_001",
   "ok": false,
-  "reasons": ["后端测试失败：test_search_api() 中 AssertionError"],
-  "test_output": "..."
+  "reasons": ["ui_capture 工单未产生截图"]
 }
 ```
 
@@ -111,7 +107,7 @@ python3 <SKILL>/scripts/codoop_tools.py --config <toml> verify <ticket_id>
 
 验证失败时，代理应用 `/skill debugging-and-error-recovery`：
 
-1. 去噪 `test_output` 找到真实的回溯
+1. 阅读报告的门禁失败原因
 2. 仅修复**根本原因**，极小变更，留在范围内
 3. 重新运行 `verify`
 
@@ -274,7 +270,7 @@ python3 <SKILL>/scripts/codoop_tools.py --config <toml> fail <ticket_id> --repor
 **预算：** `max_healing_attempts` 重试（默认 3，每个工单在 `metadata.json` 中设置）。
 
 **每次尝试的流程：**
-1. 去噪 `test_output` 到根本原因
+1. 阅读报告的门禁失败原因以定位根因
 2. 修复根本原因（非症状），极小变更，留在范围内
 3. 重新运行 `verify`
 4. 如果仍然失败，重试（如果预算仍然）
@@ -325,7 +321,7 @@ python3 <SKILL>/scripts/codoop_tools.py --config <toml> fail <ticket_id> --repor
 **触发者：** `metadata.json` 中 `"ui_capture": true`。
 
 **它需要什么：**
-- 测试脚本必须把截图写入由 `$CODOOP_QA_SCREENSHOT_DIR` 环境变量给出的路径（自动注入）
+- 交付过程必须把截图写入 `ticket_dir/public/qa-screenshots/`
 - 测试运行后至少一个文件必须以识别的图像扩展名（`.png`、`.jpg`、`.jpeg`、`.webp`、`.gif`）存在
 - 没有截图 = 验证失败
 
@@ -354,10 +350,9 @@ python3 <SKILL>/scripts/codoop_tools.py --config <toml> fail <ticket_id> --repor
 | `title` | 字符串 | 是 | — | 人类可读标题；用于回退提交消息 |
 | `ticket_type` | 字符串 | 否 | `"feature"` | `"feature"` 或 `"fix"`；决定回退提交消息前缀（`feat`/`fix`） |
 | `modules` | 字符串列表 | 是 | — | 这个工单接触的模块：`backend`、`web`、`mobile`、`desktop` |
-| `test_command` | dict[字符串, 字符串] | 是 | — | 每个模块的 shell 命令；必须覆盖所有模块；所有必须退出 0 |
 | `coding_engine` | 字符串或 null | 否 | null | 信息性；哪个 AI 工具处理这个工单 |
 | `max_healing_attempts` | int | 否 | 3 | 最大自愈重试；代理计数（CLI 不强制） |
-| `ui_capture` | bool | 否 | false | 如果为真：激活截图门；注入 `CODOOP_QA_SCREENSHOT_DIR`；添加 UI personas |
+| `ui_capture` | bool | 否 | false | 如果为真：激活截图门并添加 UI personas |
 
 ---
 
@@ -414,7 +409,6 @@ python3 <SKILL>/scripts/codoop_tools.py --config <toml> fail <ticket_id> --repor
 
 关键测试：
 - `test_pick_moves_and_creates_worktree` — pick 把工单从 pending 移到 in_progress 并创建 worktree
-- `test_verify_fails_on_failing_tests` — 测试命令非零退出使验证失败
 - `test_ui_capture_gate` — UI 工单无截图失败；有截图通过
 - `test_finish_commits_and_archives` — finish 在 `dev/<id>` 提交、归档到 done/、删除 worktree
 - `test_ticket_lifecycle` — 人工工单路径：init → 填充 → 验证 → 提升

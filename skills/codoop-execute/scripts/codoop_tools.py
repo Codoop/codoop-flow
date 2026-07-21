@@ -295,7 +295,6 @@ def cmd_verify(config: Config, ticket_id: str, lease_token: str | None = None) -
         "ticket_id": ticket_id,
         "ok": result.ok,
         "reasons": result.reasons,
-        "test_output": result.test_output,
     })
     return 0 if result.ok else 1
 
@@ -375,7 +374,7 @@ def main() -> int:
     p_takeover.add_argument("ticket_id")
     p_takeover.add_argument("--runner-note", default="", help="optional label for the new lease holder")
 
-    p_verify = sub.add_parser("verify", help="run tests (+ UI screenshot gate)")
+    p_verify = sub.add_parser("verify", help="check the UI screenshot gate")
     p_verify.add_argument("ticket_id")
     p_verify.add_argument("--lease", default=None, help="lease token (ownership check)")
 

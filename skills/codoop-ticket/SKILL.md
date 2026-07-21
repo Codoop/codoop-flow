@@ -25,7 +25,7 @@ A ticket is a complete design document package for one feature module:
 | `preview.html` | Static, reviewable preview of a user-visible feature | Ticket agent, when required |
 | `plan.md` | Implementation plan (steps) | Auto-inferred |
 | `todo.md` | Atomic task list (≤100 lines code/task) | Auto-inferred |
-| `metadata.json` | Ticket metadata (modules, test commands) | Auto-inferred |
+| `metadata.json` | Ticket metadata (modules, execution settings) | Auto-inferred |
 
 The table above shows a **feature** ticket (需求单). A **fix** ticket (修复单) is
 lighter — see "Ticket Types" below.
@@ -228,7 +228,6 @@ todo.md:
 **Process**:
 1. Automatically infer from `spec.md`:
    - `modules`: extract from spec headers (## Backend → backend, ## Web → web)
-   - `test_command`: preserve the user-defined commands; require one explicit command per module before validation
 2. Inspect the confirmed spec for new or changed user-visible screens,
    interactions, or task flows:
    - Keep `visual_preview: true` only when the Phase 2 preview was required
@@ -258,20 +257,15 @@ recommend enabling it. Confirm?
   "ticket_id": "ticket_001",
   "title": "E-commerce Product Search Feature",
   "modules": ["backend", "web", "mobile"],
-  "test_command": {
-    "backend": "npm run test -- backend",
-    "web": "npm run test -- web",
-    "mobile": "flutter test"
-  },
   "max_healing_attempts": 3,
   "visual_preview": true,
   "ui_capture": true
 }
 ```
 
-`ui_capture: true` requires the target project's test script to write
-screenshots to `$CODOOP_QA_SCREENSHOT_DIR`; no screenshots is a verification
-failure. Use `false` when no user-visible behavior needs checking.
+`ui_capture: true` requires delivery screenshots under the ticket's
+`public/qa-screenshots/`; no screenshots is a verification failure. Use `false`
+when no user-visible behavior needs checking.
 
 ### 【Finalize】Validate & Release
 
@@ -348,8 +342,7 @@ These serve as context to PM and Architect agents, ensuring tickets align with t
 
 When the ticket is complete, Phase 3 receives via `metadata.json`:
 
-- `modules`: which test suites to run?
-- `test_command`: verification standards
+- `modules`: affected areas
 
 The ticket is now available for Phase 3 to pick up in a separate execution
 request; codoop-ticket must stop here.

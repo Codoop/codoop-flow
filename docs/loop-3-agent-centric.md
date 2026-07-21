@@ -79,19 +79,16 @@ The agent also reads project architectural boundaries from `docs/tech/project-st
 python3 <SKILL>/scripts/codoop_tools.py --config <toml> verify <ticket_id>
 ```
 
-**Two hard gates run sequentially**:
-
-1. **Tests gate** — Runs `test_command[module]` for each module in `modules`. All must exit 0. Fails on first non-zero exit.
-
-2. **UI screenshot gate** (only if `ui_capture: true`) — Checks `ticket_dir/public/qa-screenshots/` for at least one file with recognized image extension (`.png`, `.jpg`, `.jpeg`, `.webp`, `.gif`). Fails if none exist.
+**UI screenshot gate** (only if `ui_capture: true`) checks
+`ticket_dir/public/qa-screenshots/` for at least one file with a recognized
+image extension (`.png`, `.jpg`, `.jpeg`, `.webp`, `.gif`). It fails if none exist.
 
 **Output JSON:**
 ```json
 {
   "ticket_id": "ticket_001",
   "ok": true,
-  "reasons": [],
-  "test_output": "..."
+  "reasons": []
 }
 ```
 
@@ -100,8 +97,7 @@ Or on failure:
 {
   "ticket_id": "ticket_001",
   "ok": false,
-  "reasons": ["backend tests failed: AssertionError in test_search_api()"],
-  "test_output": "..."
+  "reasons": ["ui_capture ticket produced no screenshots"]
 }
 ```
 
@@ -111,7 +107,7 @@ Or on failure:
 
 On verify failure, the agent applies `/skill debugging-and-error-recovery`:
 
-1. Denoise `test_output` to find the real traceback
+1. Read the reported gate failure
 2. Fix only the **root cause** with a minimal change; stay in scope
 3. Re-run `verify`
 
@@ -282,7 +278,7 @@ Each ticket executes in its own **isolated `git worktree`** — a full independe
 **Budget:** `max_healing_attempts` retries (default 3, set per ticket in `metadata.json`).
 
 **Process per attempt:**
-1. Denoise `test_output` to root cause
+1. Read the reported gate failure to identify the root cause
 2. Fix the root cause (not symptoms), minimal change, stay in scope
 3. Re-run `verify`
 4. If still failing, retry (if budget remains)
@@ -333,7 +329,7 @@ Each ticket executes in its own **isolated `git worktree`** — a full independe
 **Triggered by:** `"ui_capture": true` in `metadata.json`.
 
 **What it requires:**
-- Test script must write screenshots to the path given by `$CODOOP_QA_SCREENSHOT_DIR` env var (injected automatically)
+- Delivery must place screenshots in `ticket_dir/public/qa-screenshots/`
 - At least one file with extension `.png`, `.jpg`, `.jpeg`, `.webp`, or `.gif` must exist after tests run
 - Absence of screenshots = verify fails
 
@@ -362,10 +358,9 @@ The ticket pipeline directories (`pending/`, `in_progress/`, `done/`, `failed/`)
 | `title` | string | Yes | — | Human-readable title; used in fallback commit message |
 | `ticket_type` | string | No | `"feature"` | `"feature"` or `"fix"`; selects the fallback commit prefix (`feat`/`fix`) |
 | `modules` | list[string] | Yes | — | Modules this ticket touches: `backend`, `web`, `mobile`, `desktop` |
-| `test_command` | dict[str, str] | Yes | — | Shell command per module; must cover all modules; all must exit 0 |
 | `coding_engine` | string or null | No | null | Informational; which AI tool handles this ticket |
 | `max_healing_attempts` | int | No | 3 | Max self-heal retries; agent counts (CLI does not enforce) |
-| `ui_capture` | bool | No | false | If true: activates screenshot gate; injects `CODOOP_QA_SCREENSHOT_DIR`; adds UI personas |
+| `ui_capture` | bool | No | false | If true: activates screenshot gate and adds UI personas |
 
 ---
 

@@ -32,7 +32,7 @@ pick → build → verify → multi-review → archive, one ticket per closed lo
   │                                                                             │
   │   pick ──▶ build ──▶ verify ──▶ review ──▶ ship docs ──▶ finish            │
   │ [script] [agent]   [script]  [reviewers] [agent]       [script]           │
-  │  claim    write     run tests  multi-      sync docs     commit &          │
+  │  claim    write     capture    multi-      sync docs     commit &          │
   │  ticket   code      +UI        review                    archive           │
   │ +worktree           gate       unanimous                 dev/<id>          │
   │                        │           │                                       │
@@ -158,7 +158,7 @@ Pick a ticket → build in isolated worktree → verify → multi-review → mer
 **How it works**:
 1. **Pick** — Claims oldest pending ticket, creates isolated git worktree on `dev/<ticket_id>` branch
 2. **Build** — Agent writes code following ticket specs inside worktree
-3. **Verify** — Hard gates: tests pass, UI screenshots (if needed)
+3. **Verify** — Hard gate: UI screenshots (if needed)
 4. **Review** — Multiple reviewer personas check code (unanimous approval required)
 5. **Merge** — Agent asks: "Merge `dev/<ticket_id>` to `main`?" → You decide
 6. **Archive** — Moves ticket to `done/`, removes worktree
@@ -166,7 +166,7 @@ Pick a ticket → build in isolated worktree → verify → multi-review → mer
 **Key features**:
 - **Idempotent**: Same command safely called repeatedly (resumes in-progress tickets)
 - **Self-healing**: Automatically retries on verify failure (up to 3 attempts by default)
-- **Deterministic verification**: Tests + screenshots cannot be bypassed
+- **Deterministic verification**: Required UI screenshots cannot be bypassed
 - **Async-friendly**: Timing controlled by `/loop` (Agent's scheduler, not Python)
 
 **Output**: Merged code in `main` branch, tickets archived in `docs/tickets/done/`
@@ -227,7 +227,7 @@ python3 skills/codoop-execute/scripts/codoop.py setup /path/to/your/repo \
 The Agent will:
 1. Pick oldest pending ticket
 2. Build code in isolated worktree
-3. Verify (tests + UI)
+3. Verify (UI screenshots when required)
 4. Review (multi-reviewer approval)
 5. Ask: "Merge to main?" → You decide
 6. Archive and loop
@@ -259,7 +259,7 @@ Once installed you barely need to remember commands — **the skill is written f
 2. **Script guardrail** (`codoop_tools.py`): The deterministic CLI that handles all must-be-exact work:
    - Claim a ticket (from pending → in_progress)
    - Create isolated git worktree on `dev/<ticket_id>` branch
-   - Verify: run tests, check UI screenshots
+   - Verify: check UI screenshots when required
    - Commit and archive (in_progress → done)
    - Handle failures gracefully
 
@@ -289,7 +289,7 @@ Once installed you barely need to remember commands — **the skill is written f
 
 | Property | Benefit |
 |----------|---------|
-| **Deterministic verification** | Hard gates (tests + UI) cannot be bypassed by AI hallucination |
+| **Deterministic verification** | Required UI screenshot gate cannot be bypassed by AI hallucination |
 | **Self-healing** | Failed verify/review = automatic retry (up to `max_healing_attempts`, default 3) |
 | **Isolated worktrees** | Each ticket builds independently; no cross-ticket interference |
 | **Local-first** | Requires only local git repo; remote push optional (you decide) |
@@ -326,7 +326,6 @@ To explore a brand-new idea (multi-role design session, output to `docs/backlog/
   "title": "add hello module",
   "ticket_type": "feature",
   "modules": ["backend"],
-  "test_command": {"backend": "<project-specific test command>"},
   "max_healing_attempts": 3,
   "visual_preview": false,
   "ui_capture": false
@@ -336,13 +335,12 @@ To explore a brand-new idea (multi-role design session, output to `docs/backlog/
 | Field | Meaning |
 |---|---|
 | `ticket_type` | `feature` (需求单, default) or `fix` (修复单). Selects required docs in Loop 2 and the commit prefix (`feat`/`fix`) in Loop 3 |
-| `modules` | Modules involved; each must have an entry in `test_command` |
-| `test_command` | module → explicitly configured shell command; `verify` runs one per module (no default is inferred) |
+| `modules` | Modules involved |
 | `max_healing_attempts` | self-heal retry budget (default 3) |
 | `visual_preview` | when true: a feature ticket must include a reviewed `preview.html` before task breakdown; it communicates the local UI and key interactions, not production code |
-| `ui_capture` | when true: the test script must write screenshots to `$CODOOP_QA_SCREENSHOT_DIR` (no screenshots = hard fail), and review adds 2 UI personas that actually look at the images |
+| `ui_capture` | when true: delivery must place screenshots under `public/qa-screenshots/` (no screenshots = hard fail), and review adds 2 UI personas that actually look at the images |
 
-Required: `ticket_id / title / modules / test_command`. `ticket_type` (default `feature`) is optional.
+Required: `ticket_id / title / modules`. `ticket_type` (default `feature`) is optional.
 
 ---
 
@@ -355,7 +353,7 @@ Every subcommand takes `--config <toml>` and emits JSON.
 |---|---|
 | `status` | Print tickets per stage |
 | `pick` | Claim the oldest pending ticket → move to in_progress → create worktree (`dev/<id>` branch). If one is already in_progress, report it instead of picking a new one |
-| `verify <id>` | In the worktree: run tests + (UI) screenshot hard gate |
+| `verify <id>` | In the worktree: run the UI screenshot hard gate when required |
 | `finish <id> --message` | Commit (excluding generated noise) to `dev/<id>` → move to done → remove worktree |
 | `fail <id> --report` | Move to failed → write `healing_report.md` → release lease and retain the worktree for human recovery |
 

@@ -93,7 +93,7 @@ docs/tickets/
 
 | File | Author | Required | Purpose |
 |---|---|---|---|
-| `metadata.json` | Auto-inferred; human confirms | Yes | Machine-readable config for Loop 3: ticket type, modules, test commands, self-heal budget, preview and UI-capture flags |
+| `metadata.json` | Auto-inferred; human confirms | Yes | Machine-readable config for Loop 3: ticket type, modules, self-heal budget, preview and UI-capture flags |
 | `module_prd.md` | PM agent + human | Yes for `feature` | 100% pure-business description — user stories, state flows, acceptance criteria |
 | `spec.md` | Architect agent + human | Yes for `feature` | Technical contract — APIs, data schema, UI interactions |
 | `preview.html` | Ticket agent + human | Required when `visual_preview` is true | Static HTML prototype for reviewing a ticket-local visual flow and key interactions |
@@ -182,7 +182,6 @@ Or directly call the skill in any AI coding tool:
 
 **Inference logic:**
 - `modules` — scanned from `spec.md` headers (`## Backend`, `## Web`, etc.) mapped to: backend, web, mobile, desktop
-- `test_command` — preserved as provided; define one command for every listed module before validation (no default is inferred)
 
 Typically called after Phase 3 is complete, before validating and promoting.
 
@@ -225,7 +224,6 @@ Every ticket's `metadata.json` must satisfy this schema:
 | `ticket_id` | string | Identifier matching the directory name (e.g., `ticket_001`) |
 | `title` | string | Human-readable ticket title |
 | `modules` | list[string] | Which platform modules this ticket touches: `backend`, `web`, `mobile`, `desktop` |
-| `test_command` | dict[string, string] | Shell command to run tests per module (keys must cover all `modules` entries) |
 
 **Optional fields:**
 
@@ -235,9 +233,9 @@ Every ticket's `metadata.json` must satisfy this schema:
 | `coding_engine` | string or null | null | Which AI tool for this ticket: `claude`, `codex`, `cursor`. If absent, uses global default. |
 | `max_healing_attempts` | int | 3 | Maximum self-healing retries in Loop 3 before moving to `failed/` |
 | `visual_preview` | bool | false | Requires a reviewed `preview.html` for a user-visible feature before promotion; this static prototype is separate from runtime verification |
-| `ui_capture` | bool | false | If true, Loop 3's test script writes screenshots; review adds UI/UX personas |
+| `ui_capture` | bool | false | If true, delivery writes screenshots under `public/qa-screenshots/`; review adds UI/UX personas |
 
-**Validation:** All required fields must be present with correct types; every module in `modules` must have a corresponding entry in `test_command`. Missing any of these is a blocking validation error.
+**Validation:** All required fields must be present with correct types.
 
 ---
 
@@ -258,11 +256,11 @@ This anchors every ticket to the global product strategy rather than inventing i
 
 The `promote` command's filesystem move (`drafts/` → `pending/`) is the only handoff mechanism. Loop 3's scheduler polls `pending/`, picks the oldest ticket, and consumes:
 
-- `metadata.json` — drives scheduler decisions (modules, test commands, self-heal budget, ui_capture flag) and records whether a reviewed visual preview is part of the ticket
+- `metadata.json` — drives scheduler decisions (modules, self-heal budget, ui_capture flag) and records whether a reviewed visual preview is part of the ticket
 - `module_prd.md` + `spec.md` — progressively disclosed to the coding engine at startup
 - `preview.html` — read alongside the design docs when present so implementation follows the reviewed local visual flow
 - `plan.md` + `todo.md` — Loop 3 reads the todo list step-by-step and checks off items as they complete
-- `public/qa-screenshots/` — created at runtime by Loop 3's test scripts (for UI tickets)
+- `public/qa-screenshots/` — created at runtime during UI-ticket delivery
 
 The ticket directory travels with the ticket through all stages: `pending/` → `in_progress/` → `done/` (or `failed/`), preserving the full design record alongside implementation artifacts.
 

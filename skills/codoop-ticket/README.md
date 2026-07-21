@@ -43,7 +43,7 @@ Feature ticket:
 
 ```
 ticket_001/
-├── metadata.json      ← Auto-inferred: ticket_type, modules, test_command
+├── metadata.json      ← Auto-inferred: ticket_type, modules, UI settings
 ├── module_prd.md      ← PM-written: business requirements (pure business)
 ├── spec.md            ← Architect-designed: technical spec (APIs, DB, UI)
 ├── preview.html        ← Visual feature only: static HTML preview for review
@@ -55,7 +55,7 @@ Fix ticket (`ticket_type: fix`):
 
 ```
 ticket_002/
-├── metadata.json      ← ticket_type=fix, modules, test_command
+├── metadata.json      ← ticket_type=fix, modules, UI settings
 ├── bug_report.md      ← Symptom / Reproduction / Root Cause / Expected / Scope
 ├── plan.md            ← Auto-decomposed: fix steps
 └── todo.md            ← Auto-decomposed: atomic task list
@@ -143,7 +143,6 @@ until this preview exists and has been reviewed.
 
 **codoop-ticket automatically**:
 - Extract `modules` from spec.md (## Backend, ## Web, etc. sections)
-- Preserve user-defined `test_command` entries; require one explicit command per module before validation
 - Detect whether the confirmed spec changes user-visible screens, interactions,
   or flows
 - Require `preview.html` for those feature tickets through
@@ -179,7 +178,6 @@ codoop-ticket will regenerate or modify that section.
 A: Tell codoop-ticket what to change:
 ```
 modules should be ["backend", "web"], not mobile
-test_command for backend should be "npm run test:backend"
 ```
 
 ### Q: Ticket spec conflicts with Phase 1 standards. What happens?

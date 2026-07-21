@@ -99,12 +99,12 @@ must edit in), `ui_capture`, `screenshot_dir`.
 ```
 python3 $SKILL/scripts/codoop_tools.py --config <toml> verify <ticket_id> --lease <token>
 ```
-Exit 0 / `ok:true` = tests passed AND (for `ui_capture` tickets) screenshots
-were produced. Otherwise read `reasons` + `test_output`.
+Exit 0 / `ok:true` = the UI screenshot gate passed (when `ui_capture` is
+enabled). Otherwise read `reasons`.
 
 ### 4. Self-heal (your work) — on verify failure
-- Apply `$SKILL/../../debugging-and-error-recovery/SKILL.md` triage.
-  Denoise `test_output` to the real traceback / assertion.
+- Apply `$SKILL/../../debugging-and-error-recovery/SKILL.md` triage to the
+  reported reason or reviewer finding.
 - Fix the **root cause** with a minimal change; stay in scope; don't add
   unrelated features. Re-run verify.
 - Budget: retry up to the ticket's `max_healing_attempts` (default 3). If still
@@ -232,7 +232,7 @@ Use the returned `lease_token` for the rest of that run.
 |---|---|
 | pick / move folders / worktree lifecycle | write code, self-heal |
 | lease / ownership arbitration (one runner per ticket) | resume vs. stop decision (follow the CLI's `reason`) |
-| run tests + UI screenshot gate | review judgment (subagents if available, serial otherwise) |
+| UI screenshot gate | review judgment (subagents if available, serial otherwise) |
 | commit / archive done\|failed | living-doc sync, commit message |
 
 Trust the tool for the deterministic parts; never re-derive them yourself.
