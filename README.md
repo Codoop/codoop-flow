@@ -17,7 +17,7 @@ pick → build → verify → multi-review → archive, one ticket per closed lo
 
 **codoop-flow** is a three-loop AI-driven development system for turning "AI writes code" into a reliable engineering pipeline.
 
-**You steer Codex or Claude in plain language; guardrails backstop the grunt work.** The thinking (writing code, self-healing, review judgment) happens in the active agent session; the mechanical must-be-exact work (claiming tickets, managing git worktrees, running tests) goes to a deterministic Python CLI that can't hallucinate. It's a portable tool with no business code — point one `codoop_flow.toml` at the project you want to build.
+**You steer Codex or Claude in plain language; guardrails backstop the grunt work.** The thinking (writing code, self-healing, review judgment) happens in the active agent session; the mechanical must-be-exact work (claiming tickets, managing git worktrees, checking required UI screenshot evidence) goes to a deterministic Python CLI that can't hallucinate. It's a portable tool with no business code — point one `codoop_flow.toml` at the project you want to build.
 
 **Three independent loops** that work together or standalone:
 - **Loop 1**: Multi-role product design sessions (0→1 planning)

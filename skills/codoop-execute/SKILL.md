@@ -10,7 +10,7 @@ design §5). You do the intelligent work **in this session**: writing code,
 self-healing, review judgment, and living-doc sync. A small guardrail CLI
 (`scripts/codoop_tools.py`, inside this skill) handles everything that must be
 100% deterministic — claiming tickets, moving folders, managing the isolated git
-worktree, running tests, committing.
+worktree, checking the UI screenshot gate, committing.
 **Never do the CLI's job by hand** (don't move ticket folders or create worktrees
 yourself) — always call the tool, because those steps must never be guessed.
 

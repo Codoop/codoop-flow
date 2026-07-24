@@ -435,7 +435,7 @@ python3 <SKILL>/scripts/codoop_tools.py --config <toml> fail <ticket_id> --repor
 ## 关键设计原则
 
 - **确定性胜过聪慧** — CLI 很小、完全确定性、从不猜测。代理拥有所有智能。
-- **两个硬门顺序** — 测试 → UI 截图（如果适用）。所有必须通过再审查。
+- **独立验证 + 截图门禁** — 代理独立记录 lint、build、focused test 与 UI 证据；CLI 强制执行需要的 UI 截图硬门。
 - **一致批准** — 审查仅在所有 personas 同意时进行。任何关键/重要阻止。
 - **预算内自愈** — 失败触发重试（如果预算允许），非立即失败。预算耗尽移到 failed/ 供人工干预。
 - **隔离 Worktrees** — 每个工单获得自己的分支和检出路径；主 repo 从不接触。

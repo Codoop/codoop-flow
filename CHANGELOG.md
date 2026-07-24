@@ -23,6 +23,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   compare exact diagnostic fingerprints with the pre-change baseline. Only new,
   changed, or diff-file diagnostics trigger self-healing or failure; unchanged
   unrelated diagnostics remain reported baseline warnings.
+- **Verification documentation now matches the guardrail.** The CLI is described
+  consistently as enforcing the required UI screenshot gate, while the agent
+  runs the independent lint, build, and focused-test evidence steps.
 
 ## [0.1.5-alpha.3] - 2026-07-17
 

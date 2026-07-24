@@ -264,7 +264,7 @@ python skills/codoop-ticket/scripts/codoop-ticket.py ticket <command> <args>
 
 `promote` 命令的文件系统移动（`drafts/` → `pending/`）是唯一的交接机制。第三环的调度器轮询 `pending/`，拾取最旧的工单，并消费：
 
-- `metadata.json` — 驱动调度决定（模块、测试命令、自愈预算、ui_capture 标志），并记录工单是否带有已审查的视觉预览
+- `metadata.json` — 驱动调度决定（模块、自愈预算、ui_capture 标志），并记录工单是否带有已审查的视觉预览
 - `module_prd.md` + `spec.md` — 在启动时逐步披露给编码引擎
 - `preview.html` — 存在时与设计文档一同读取，使实现遵循已审查的局部视觉流程
 - `plan.md` + `todo.md` — 第三环逐步读取任务列表，随着完成检查项

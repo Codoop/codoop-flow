@@ -8,7 +8,7 @@ and never hallucinate:
 
     pick    — claim the oldest pending ticket: move to in_progress/, create the
               isolated worktree, print the ticket + worktree paths (JSON).
-    verify  — run the ticket's tests (+ UI screenshot gate). Print pass/fail +
+    verify  — check the ticket's UI screenshot gate. Print pass/fail +
               output (JSON).
     finish  — stage (excl. generated noise), commit on dev/<id>, move the
               ticket to done/, remove the worktree.

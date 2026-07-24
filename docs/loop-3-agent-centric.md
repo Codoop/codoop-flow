@@ -457,7 +457,7 @@ The project includes `tests/test_skeleton.py` which exercises only the determini
 
 Key tests:
 - `test_pick_moves_and_creates_worktree` — pick moves ticket from pending to in_progress and creates worktree
-- `test_verify_fails_on_failing_tests` — test command non-zero exit fails verify
+- `test_verify_has_no_test_command_gate` — legacy `test_command` entries are ignored by verify
 - `test_ui_capture_gate` — UI ticket without screenshots fails; with screenshots passes
 - `test_finish_commits_and_archives` — finish commits on `dev/<id>`, archives to done/, removes worktree
 - `test_ticket_lifecycle` — Human-Centric path: init → fill → validate → promote
@@ -469,7 +469,7 @@ Run with: `python tests/test_skeleton.py` (no pytest needed).
 ## Key Design Principles
 
 - **Determinism Over Cleverness** — The CLI is small, fully deterministic, never guesses. The agent owns all intelligence.
-- **Two Hard Gates in Sequence** — tests → UI screenshot (if applicable). All must pass before review.
+- **Independent Validation + Screenshot Gate** — the agent records lint, build, focused-test, and UI evidence independently; the CLI enforces the required UI screenshot gate.
 - **Unanimous Approval** — Review is only done when all personas agree. Any Critical/Important blocks.
 - **Self-Heal Within Budget** — Failures trigger retry (if budget permits), not immediate failure. Budget exhaustion moves to failed/ for human intervention.
 - **Isolated Worktrees** — Each ticket gets its own branch and checkout path; main repo is never touched.

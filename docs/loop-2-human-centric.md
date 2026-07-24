@@ -167,7 +167,7 @@ Or directly call the skill in any AI coding tool:
 **Validates** a draft is ready to promote.
 
 **Checks (blocking):**
-- `metadata.json` parses cleanly and satisfies the full schema (all required fields present, correct types, every module has a test command, valid `ticket_type`)
+- `metadata.json` parses cleanly and satisfies the full schema (all required fields present, correct types, valid `ticket_type`)
 - The type's required docs exist and contain meaningful (non-scaffold, non-empty) content: `feature` → `module_prd.md` + `spec.md`; `fix` → `bug_report.md`
 - `preview.html` exists when `metadata.json.visual_preview` is true
 
