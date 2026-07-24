@@ -166,6 +166,8 @@ Pick a ticket → build in isolated worktree → verify → multi-review → mer
 **Key features**:
 - **Idempotent**: Same command safely called repeatedly (resumes in-progress tickets)
 - **Self-healing**: Automatically retries on verify failure (up to 3 attempts by default)
+- **Baseline-aware verification**: Exact pre-existing diagnostics are reported
+  without hiding them; only new, changed, or diff-file diagnostics self-heal or fail a ticket
 - **Deterministic verification**: Required UI screenshots cannot be bypassed
 - **Async-friendly**: Timing controlled by `/loop` (Agent's scheduler, not Python)
 

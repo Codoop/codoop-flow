@@ -7,12 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.5] - 2026-07-24
+
 ### Changed
 
 - **Ticket test commands removed.** `metadata.json.test_command` is no longer
   generated, required, or executed by `verify`. Existing entries are ignored
   and removed when ticket metadata is updated; `verify` now only enforces the
   optional `ui_capture` screenshot gate.
+- **Ticket type selection is automatic.** `codoop-ticket` now chooses `feature`
+  or `fix` from the request and scaffolds immediately. Phase progression and
+  promotion still require their existing explicit approvals.
+- **Verification distinguishes repository debt from ticket regressions.** Agents
+  capture lint, build, focused-test, and UI evidence as independent steps, then
+  compare exact diagnostic fingerprints with the pre-change baseline. Only new,
+  changed, or diff-file diagnostics trigger self-healing or failure; unchanged
+  unrelated diagnostics remain reported baseline warnings.
 
 ## [0.1.5-alpha.3] - 2026-07-17
 

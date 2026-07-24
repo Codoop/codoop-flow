@@ -71,9 +71,29 @@ The agent also reads project architectural boundaries from `docs/tech/project-st
 
 **Implementation discipline:** Use the `/skill incremental-implementation` workflow: implement one thin vertical slice, test, verify, then move to the next. Work through `todo.md` items in order, checking them off as you go (`- [x]`).
 
-**Edit-scope guidance:** Prefer to create or modify files within the scope described in `spec.md` — stay in scope unless the task genuinely requires touching adjacent files.
+**Edit-scope rule:** A `Scope` heading in `spec.md` or `bug_report.md` is guidance: prefer it, but make the smallest necessary root-cause change outside it when a required gate demands it, and record the reason. Do not infer a hard file allowlist from Scope text.
 
-### Step 3 — Verify (CLI)
+### Step 3 — Verify (independent steps + CLI)
+
+Before editing, the agent records a baseline by running the declared validation
+as independent ordered steps: lint, build, focused test, and UI capture when
+required. A chained shell command such as `lint && build && test` is not a
+valid verification plan. A failed lint step must not skip independent build,
+focused-test, capture, or review evidence.
+
+Each step records its command, stdout/stderr, exit code, and any screenshots.
+For every diagnostic, the agent stores a normalized fingerprint: module,
+step/command, file path, line (when available), rule/error code, and normalized
+error text. After the change it runs the same steps and compares those
+fingerprints with `git diff --name-only`:
+
+- New/changed diagnostics, or diagnostics in changed files, are ticket failures.
+- An exactly matching diagnostic outside changed files is a `baseline_blocker`.
+  It remains fully reported but cannot spend a healing attempt, require a fix,
+  or by itself fail the ticket.
+
+There is no broad lint ignore or permanent allowlist. A different file, line,
+rule/code, normalized message, or a new diagnostic fails again.
 
 ```
 python3 <SKILL>/scripts/codoop_tools.py --config <toml> verify <ticket_id>
@@ -103,15 +123,23 @@ Or on failure:
 
 **Exit code:** 0 if `ok: true`, 1 if `ok: false`.
 
-### Step 4 — Self-Heal (Agent, on verify failure)
+### Step 4 — Self-Heal (Agent, on ticket failure)
 
 On verify failure, the agent applies `/skill debugging-and-error-recovery`:
 
-1. Read the reported gate failure
-2. Fix only the **root cause** with a minimal change; stay in scope
-3. Re-run `verify`
+1. Read the reported ticket failure, never a baseline blocker
+2. Fix only the **root cause** with a minimal change; follow Scope guidance and
+   report a necessary exception
+3. Re-run the independent validation steps and `verify`
 
-**Budget:** Up to `max_healing_attempts` retries (default 3, per ticket in `metadata.json`). Both verify failures AND review rejections count against this budget. If still failing after exhausting retries → Fail Path.
+**Budget:** Up to `max_healing_attempts` retries (default 3, per ticket in `metadata.json`). Only ticket failures and review rejections count; baseline blockers do not. If still failing after exhausting retries → Fail Path.
+
+When all functional gates, UI evidence, and review pass with only baseline
+blockers remaining, completion is allowed and the finish handoff includes
+`baseline_warnings` with the exact fingerprints and outputs. If a target
+configuration explicitly requires repository-wide green, record
+`blocked_by_baseline` instead of `failed`; keep the worktree and evidence for
+recovery.
 
 ### Step 5 — Review (Agent, after verify passes)
 
@@ -225,7 +253,9 @@ Exit 0 always.
 
 **Input:** Ticket ID (positional arg).
 
-**Behavior:** Runs two hard gates: tests, UI screenshot (if applicable).
+**Behavior:** Runs the deterministic UI screenshot hard gate (if applicable).
+The agent runs lint/build/focused-test commands as the independent validation
+steps described above; their results are classified against the baseline.
 
 **Output:** Success or failure with specific reasons.
 
@@ -273,14 +303,17 @@ Each ticket executes in its own **isolated `git worktree`** — a full independe
 
 ## Self-Heal Mechanism
 
-**Trigger:** `verify` returns `ok: false` OR a review persona rejects.
+**Trigger:** a new/changed diagnostic, a diagnostic in a changed file, a failed
+functional/UI gate, or a review persona rejection. Exact unchanged diagnostics
+outside changed files are baseline blockers, not triggers.
 
 **Budget:** `max_healing_attempts` retries (default 3, set per ticket in `metadata.json`).
 
 **Process per attempt:**
-1. Read the reported gate failure to identify the root cause
-2. Fix the root cause (not symptoms), minimal change, stay in scope
-3. Re-run `verify`
+1. Read the ticket failure to identify the root cause
+2. Fix the root cause (not symptoms), minimal change; follow Scope guidance
+   and report a necessary exception
+3. Re-run all independent validation steps and `verify`
 4. If still failing, retry (if budget remains)
 
 **Budget exhausted:** Call `fail` with denoised summary. Ticket moves to `failed/`.
@@ -381,6 +414,13 @@ Loop 3 picks a ticket from `docs/tickets/pending/<ticket_id>/` and consumes:
 - Committed on branch `dev/<ticket_id>`: all changes + living doc updates + conventional commit message
 - Archived to `done/<ticket_id>/`: full ticket directory + `public/qa-screenshots/` (if UI ticket)
 - Commit SHA returned; branch ready for push (human decides whether to push)
+- If baseline blockers remain, the handoff includes `baseline_warnings` and the
+  archived verification report retains their exact fingerprints and output
+
+**On strict-baseline block:**
+- State is `blocked_by_baseline`, never `failed`; the worktree and verification
+  evidence are retained so the ticket can be resumed after the repository debt
+  is cleared
 
 **On failure (fail):**
 - Nothing committed; worktree discarded

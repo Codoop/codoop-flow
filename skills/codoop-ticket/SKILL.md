@@ -41,21 +41,18 @@ Every ticket has a `ticket_type` (stored in `metadata.json`, default `feature`):
 
 `plan.md` + `todo.md` are recommended (not blocking) for **both** types.
 
-**Inferring the type — always confirm.** At the start, infer the type from the
-user's description (signals like "fix / bug / 报错 / 异常 / 坏了 / 回归 / 修复" →
-`fix`; otherwise `feature`), then **state your inference and ask the user to
-confirm** before scaffolding. Do not silently pick — `ticket_type` is a routing
-switch (it decides which docs are required and which flow runs), so a wrong
-guess forces rework. The user can correct it in one word.
+**Inferring the type — decide automatically.** At the start, infer the type
+from the user's description (signals like "fix / bug / 报错 / 异常 / 坏了 / 回归 /
+修复" → `fix`; otherwise `feature`) and scaffold immediately. Do not ask the
+user to confirm the type. If later context shows the type is wrong, change it
+and regenerate the affected ticket documents.
 
 Example:
 
 ```
 User: 搜索结果分页有时候会越界报错，帮我处理一下
-codoop-ticket: 这看起来是「修复单 (fix)」——已存在的 bug，我会用 bug_report.md
-              轻量流程（跳过 PRD/Spec）。确认吗？还是当作需求单 (feature)？
-User: 对，修 bug
-codoop-ticket: 好，创建 fix 类型草稿…
+codoop-ticket: 创建修复单 (fix) 草稿，使用 bug_report.md 轻量流程
+              （跳过 PRD/Spec）…
 ```
 
 When initializing via CLI, pass the type explicitly:
@@ -150,8 +147,8 @@ stories, acceptance criteria, BDD, and technical constraints in the documents.
 summary: what users can do, what is intentionally out of scope, and which
 decision (if any) needs approval. Offer the detailed PRD, spec, or plan for
 review rather than requiring the user to understand it before they can respond.
-The existing explicit approvals for ticket type, phase progression, and
-promotion remain mandatory.
+The existing explicit approvals for phase progression and promotion remain
+mandatory.
 
 ### 【Phase 2】Technical Spec (spec.md)
 

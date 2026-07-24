@@ -21,7 +21,7 @@
 
 `feature` 走下面完整的三阶段流程。`fix` 更轻量：跳过 PRD 与 Spec 阶段，改用 `bug_report.md` 记录缺陷（现象 / 复现 / 根因 / 预期行为 / 影响范围），然后进入任务拆解、metadata 推断、validate 与 promote。修复若确实涉及契约 / 数据模型变更，可自愿补一份 `spec.md`，但不强制。
 
-`codoop-ticket` 会根据你的描述推断类型，并在生成脚手架前**总是请你确认**——类型是分流开关，判错会造成返工。通过 CLI 时用 `--type feature|fix` 显式指定。
+`codoop-ticket` 会根据你的描述自动决定类型并立即生成脚手架，不要求人工确认；若后续上下文显示类型不对，它会切换类型并重新生成受影响的文档。通过 CLI 时用 `--type feature|fix` 显式指定。
 
 ---
 
@@ -315,7 +315,7 @@ python skills/codoop-ticket/scripts/codoop-ticket.py ticket <command> <args>
 - **确定性输入产生确定性输出** — 高保真需求使第三环能可靠执行而不猜测。
 - **三阶段人工协作** — 阶段 1（PRD）→ 阶段 2（规格）→ 阶段 3（任务），每个阶段之间有明确的人工确认。
 - **人话澄清，专业落档** — 用户确认可感知的业务结果；agent 负责把回答转写成清晰、专业、可执行的 PRD 与 Spec。技术细节仅在会影响产品选择或风险时升级确认。
-- **类型贴合流程** — `feature` 工单走完整的 PRD → Spec → 任务流程；`fix` 工单用更轻量的 `bug_report.md` 流程。类型在开始时与人工确认，绝不静默猜测。
+- **类型贴合流程** — `feature` 工单走完整的 PRD → Spec → 任务流程；`fix` 工单用更轻量的 `bug_report.md` 流程。Skill 自动推断并决定类型。
 - **元数据自动推断** — 第二环从规格内容自动推断 `metadata.json`，省去人工手动、容易出错的配置。
 - **双模 Sub-Skills** — spec-driven-development 和 planning-and-task-breakdown 既可独立工作，也可作为 codoop-ticket 的集成阶段。
 - **不写代码** — 第二环是纯文档。代码仅在第三环写入。

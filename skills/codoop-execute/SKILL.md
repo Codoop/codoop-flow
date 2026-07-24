@@ -90,25 +90,60 @@ must edit in), `ui_capture`, `screenshot_dir`.
   present — respect them as hard architectural boundaries.
 - Load `$SKILL/../../incremental-implementation/SKILL.md` discipline
   and implement the ticket **inside the `worktree` directory only**.
-- **Edit-scope guidance:** prefer to create/modify files within the scope
-  described in `spec.md` — stay in scope unless the task genuinely requires
-  touching adjacent files.
+- **Edit-scope rule:** A `Scope` heading in `spec.md` or `bug_report.md` is
+  guidance, not an implicit allowlist. Prefer it, but make the smallest
+  adjacent root-cause fix when a required gate needs it; record the file and
+  reason in the delivery report.
 - Work the `todo.md` items in order; check them off (`- [x]`) as you go.
 
-### 3. Verify (the tool)
+### 3. Verify (independent steps + tool)
+Before editing, capture a **baseline** by running the ticket's declared
+validation as ordered, independent steps: lint, build, focused test, then UI
+capture when required. Do not accept or create a single `lint && build && ...`
+command. Run every later step that does not depend on a failed one, preserving
+its stdout, stderr, exit status, and screenshots.
+
+For every baseline diagnostic, record a normalized fingerprint containing:
+`module`, `step`/command, file path, line (when present), lint rule or error
+code, and normalized error text. After the change, run the same steps again and
+compare the diagnostics with `git diff --name-only`:
+
+- New or changed diagnostics, or any diagnostic in a changed file, are ticket
+  failures.
+- An identical diagnostic outside the changed files is a **baseline blocker**.
+  Keep it in the report, but do not self-heal it, consume an attempt, or fail
+  this ticket for it.
+
+Never use a broad ignore rule or permanent allowlist: the exact fingerprint is
+the only baseline match. A changed rule, line/text, file, or new diagnostic is
+failing again.
+
+Then run the deterministic screenshot gate:
 ```
 python3 $SKILL/scripts/codoop_tools.py --config <toml> verify <ticket_id> --lease <token>
 ```
 Exit 0 / `ok:true` = the UI screenshot gate passed (when `ui_capture` is
 enabled). Otherwise read `reasons`.
 
-### 4. Self-heal (your work) — on verify failure
+### 4. Self-heal (your work) — only on ticket failures
 - Apply `$SKILL/../../debugging-and-error-recovery/SKILL.md` triage to the
-  reported reason or reviewer finding.
-- Fix the **root cause** with a minimal change; stay in scope; don't add
-  unrelated features. Re-run verify.
+  reported ticket failure or reviewer finding, never to a baseline blocker.
+- Fix the **root cause** with a minimal change; follow Scope guidance and
+  report any necessary exception. Re-run the independent validation steps and
+  `verify`.
 - Budget: retry up to the ticket's `max_healing_attempts` (default 3). If still
   failing, go to **Fail**.
+
+### 4a. Baseline-only outcome
+If build, focused tests, required UI capture, deterministic `verify`, and
+review all pass, baseline blockers alone do not prevent completion. Write their
+full fingerprints, commands, outputs, and the diff file list to the ticket's
+verification report; the finish handoff must include `baseline_warnings`.
+
+If the target configuration explicitly requires a repository-wide clean run,
+record `blocked_by_baseline` instead of `failed`: retain the worktree and all
+evidence for recovery. Do not spend healing attempts on it. This exception is
+for exact baseline fingerprints only, never a repository-wide lint exemption.
 
 ### 5. Review (your reviewers) — after verify passes
 Run the review personas from `$SKILL/../../_shared/agents/` against `git diff` in
@@ -128,9 +163,10 @@ the `screenshot_dir` to actually inspect the rendered screens:
 - `reality-checker` → `$SKILL/../../_shared/agents/testing-reality-checker.md`
 
 For each reviewer: read its markdown, use it as the review persona, hand it the
-diff (and screenshot dir for the UI two), and require a verdict. If **any**
-reviewer rejects, collect the findings and go back to **Self-heal** (still
-within the healing budget) to fix them, then re-verify and re-review.
+diff, verification report, and screenshot dir for the UI two, and require a
+verdict. If **any** reviewer rejects, collect the findings and go back to
+**Self-heal** (still within the healing budget) to fix them, then re-verify and
+re-review.
 
 ### 6. Experience walkthrough (optional, non-blocking)
 After unanimous technical approval, decide whether the ticket has a runnable,

@@ -21,7 +21,7 @@ Every ticket carries a `ticket_type` in `metadata.json` (default `feature`). The
 
 `feature` runs the full three-phase flow below. `fix` is lighter: it skips the PRD and Spec phases and instead captures the defect in `bug_report.md` (Symptom / Reproduction / Root Cause / Expected Behavior / Scope), then proceeds to task breakdown, metadata inference, validate, and promote. A fix may voluntarily add a `spec.md` if it touches a contract/data-model change, but it is not required.
 
-`codoop-ticket` infers the type from your description and **always asks you to confirm** before scaffolding — the type is a routing switch, so a wrong guess would force rework. Via CLI, pass it explicitly with `--type feature|fix`.
+`codoop-ticket` infers the type from your description and scaffolds it immediately; it does not ask for confirmation. If later context shows the type is wrong, it changes the type and regenerates the affected documents. Via CLI, pass it explicitly with `--type feature|fix`.
 
 ---
 
@@ -306,7 +306,7 @@ The skill reads the spec, builds a dependency graph, slices vertically (feature-
 
 - **Deterministic Input for Deterministic Output** — High fidelity requirements enable Loop 3 to execute reliably without guessing.
 - **Three-Phase Human Collaboration** — Phase 1 (PRD) → Phase 2 (Spec) → Phase 3 (Tasks), with explicit human confirmation between each phase.
-- **Type-Fit Flow** — `feature` tickets run the full PRD → Spec → Tasks flow; `fix` tickets use a lighter `bug_report.md` flow. The type is confirmed with the human up front, never silently guessed.
+- **Type-Fit Flow** — `feature` tickets run the full PRD → Spec → Tasks flow; `fix` tickets use a lighter `bug_report.md` flow. The skill infers and chooses the type automatically.
 - **Metadata Auto-Inference** — Loop 2 automatically infers `metadata.json` from spec content, saving humans from manual, error-prone configuration.
 - **Dual-Mode Sub-Skills** — spec-driven-development and planning-and-task-breakdown work both standalone and as integrated phases of codoop-ticket.
 - **No Code Written** — Loop 2 is pure documentation. Code is written only in Loop 3.

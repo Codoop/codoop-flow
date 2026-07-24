@@ -32,8 +32,8 @@ Ticket complete, ready for Phase 3 development ✅
 The flow above is for a **feature** ticket (需求单). A **fix** ticket (修复单)
 skips Phase 1 (PRD) and Phase 2 (Spec): it captures the defect in
 `bug_report.md`, then goes straight to task breakdown → metadata → validate →
-release. `codoop-ticket` infers the type from your description and asks you to
-confirm before scaffolding. See `SKILL.md` → "Ticket Types" for details.
+release. `codoop-ticket` infers the type from your description and scaffolds it
+immediately. See `SKILL.md` → "Ticket Types" for details.
 
 ## Final Outputs
 

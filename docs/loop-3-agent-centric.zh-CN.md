@@ -71,9 +71,18 @@ python3 <SKILL>/scripts/codoop_tools.py --config <toml> pick
 
 **实现规律：** 使用 `/skill incremental-implementation` 工作流：实现一个细薄的垂直切片、测试、验证、移到下一个。按顺序通过 `todo.md` 项目，随着完成检查（`- [x]`）。
 
-**编辑范围指引：** 优先创建或修改 `spec.md` 中描述范围内的文件——除非任务确实需要触及相邻文件，否则保持在范围内。
+**编辑范围规则：** `spec.md` 或 `bug_report.md` 的 `Scope`/“影响范围”章节只是指引：优先遵守；若 required gate 的最小根因修复确实需要跨出它，可以这样做并记录原因。不能从 Scope 文本推断出硬性文件禁令。
 
-### 第 3 步 — 验证（CLI）
+### 第 3 步 — 验证（独立步骤 + CLI）
+
+开始改动前，代理先把已声明的验证拆为有序、彼此独立的步骤并记录基线：lint、build、focused test，以及需要时的 UI capture。`lint && build && test` 这样的链式 shell 命令不是有效验证计划。lint 失败不得跳过不依赖它的 build、focused test、截图或 review 证据采集。
+
+每个步骤都保存命令、stdout/stderr、退出码和截图。每条诊断保存标准化指纹：module、step/command、文件路径、行号（如有）、lint rule/错误码，以及标准化错误文本。改动后再次运行相同步骤，并对照 `git diff --name-only` 比较：
+
+- 新出现、诊断变化，或发生在 diff 文件中的诊断，是当前工单失败。
+- 与改动前完全一致且不在 diff 文件中的诊断，是 `baseline_blocker`；完整保留报告，但不得消耗自愈次数、要求当前工单修复，或单独使工单失败。
+
+不得使用宽泛 lint 忽略或永久 allowlist。文件、行号、rule/错误码、标准化文本任一变化，或新增诊断，都要重新失败。
 
 ```
 python3 <SKILL>/scripts/codoop_tools.py --config <toml> verify <ticket_id>
@@ -103,15 +112,17 @@ python3 <SKILL>/scripts/codoop_tools.py --config <toml> verify <ticket_id>
 
 **退出码：** 如果 `ok: true` 返回 0，如果 `ok: false` 返回 1。
 
-### 第 4 步 — 自愈（代理，验证失败时）
+### 第 4 步 — 自愈（代理，当前工单失败时）
 
 验证失败时，代理应用 `/skill debugging-and-error-recovery`：
 
-1. 阅读报告的门禁失败原因
-2. 仅修复**根本原因**，极小变更，留在范围内
-3. 重新运行 `verify`
+1. 阅读当前工单的失败原因，绝不针对 baseline blocker 自愈
+2. 仅修复**根本原因**，极小变更；遵循 Scope 指引并报告必要的越界原因
+3. 重新运行独立验证步骤和 `verify`
 
-**预算：** 最多 `max_healing_attempts` 重试（默认 3，每个工单在 `metadata.json` 中）。验证失败**和**审查拒绝都计入此预算。如果在耗尽重试后仍然失败 → 失败路径。
+**预算：** 最多 `max_healing_attempts` 重试（默认 3，每个工单在 `metadata.json` 中）。只有当前工单失败和审查拒绝计入预算；baseline blocker 不计入。如果在耗尽重试后仍然失败 → 失败路径。
+
+当功能门禁、UI 证据和 review 都通过，只剩 baseline blocker 时，工单可以完成；finish 交接输出必须带 `baseline_warnings`（精确指纹和完整输出）。若目标配置明确要求全仓绿灯，则记录为 `blocked_by_baseline`，而非 `failed`，并保留 worktree 与证据以供恢复。
 
 ### 第 5 步 — 审查（代理，验证通过后）
 
@@ -219,7 +230,7 @@ python3 <SKILL>/scripts/codoop_tools.py --config <toml> fail <ticket_id> --repor
 
 **输入：** 工单 ID（位置参数）。
 
-**行为：** 运行两个硬门：测试、UI 截图（如果适用）。
+**行为：** 运行确定性的 UI 截图硬门（如适用）。lint/build/focused test 由代理按上述独立步骤运行，并与基线比较分类。
 
 **输出：** 成功或失败及具体原因。
 
@@ -265,14 +276,14 @@ python3 <SKILL>/scripts/codoop_tools.py --config <toml> fail <ticket_id> --repor
 
 ## 自愈机制
 
-**触发：** `verify` 返回 `ok: false` 或审查 persona 拒绝。
+**触发：** 新增/变化诊断、diff 文件中的诊断、功能/UI 门禁失败，或审查 persona 拒绝。未变且不在 diff 文件的精确诊断是 baseline blocker，不触发自愈。
 
 **预算：** `max_healing_attempts` 重试（默认 3，每个工单在 `metadata.json` 中设置）。
 
 **每次尝试的流程：**
-1. 阅读报告的门禁失败原因以定位根因
-2. 修复根本原因（非症状），极小变更，留在范围内
-3. 重新运行 `verify`
+1. 阅读当前工单失败以定位根因
+2. 修复根本原因（非症状），极小变更；遵循 Scope 指引并报告必要的越界原因
+3. 重新运行全部独立验证步骤和 `verify`
 4. 如果仍然失败，重试（如果预算仍然）
 
 **预算耗尽：** 用去噪摘要调用 `fail`。工单移到 `failed/`。
@@ -374,6 +385,10 @@ python3 <SKILL>/scripts/codoop_tools.py --config <toml> fail <ticket_id> --repor
 - 提交到 `dev/<ticket_id>` 分支：所有更改 + 活文档更新 + 常规提交消息
 - 归档到 `done/<ticket_id>/`：完整工单目录 + `public/qa-screenshots/`（如果 UI 工单）+ `experience_report.md`（如果运行体验走查；仅供人工参考）
 - 返回提交 SHA；分支准备推送（你决定是否推送）
+- 若仍有 baseline blocker，交接输出带 `baseline_warnings`，归档的验证报告保留其精确指纹和输出
+
+**严格基线阻塞：**
+- 状态为 `blocked_by_baseline`，绝不为 `failed`；保留 worktree 和验证证据，待仓库债务清除后恢复
 
 **失败（失败）：**
 - 无提交；worktree 舍弃
