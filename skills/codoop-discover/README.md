@@ -29,17 +29,16 @@ SKILL: Generates comprehensive backlog documentation in docs/backlog/
 
 ## How It Works
 
-### The 9-Step Workflow
+### The 8-Step Workflow
 
-1. **Discovery Intake** — Agent uses short, plain-language question rounds to clarify the idea, target users, core flow, and visual direction. Examples and “please recommend” are always available.
+1. **Grilling Intake** — Agent checks available project facts, then asks one plain-language decision at a time to clarify the idea, target users, core flow, and visual direction. Examples and “please recommend” are always available.
 2. **Discovery Brief Confirmation** — You confirm or correct the product positioning, first-version scope, visual direction, and known constraints.
-3. **SNAP Clarification** — Agent asks structured follow-up questions only for remaining ambiguities.
-4. **PM Drafting** — PM agent writes requirements, user journeys, and BDD scenarios.
-5. **GTM Strategy** — GTM agent designs monetization and commercial structure when relevant.
-6. **UI Design** — UI agent creates the visual design system and page-composition rules.
-7. **Technical Architecture** — Architect agent designs technical stack, APIs, and databases.
-8. **Consistency Audit** — Alignment agent audits all documents for inconsistencies and conflicts.
-9. **Resolution & Lock-In** — Conflicts are resolved, then documents are finalized and saved to `docs/backlog/`.
+3. **PM Drafting** — PM agent writes requirements, user journeys, and BDD scenarios.
+4. **GTM Strategy** — GTM agent designs monetization and commercial structure when relevant.
+5. **UI Design** — UI agent creates the visual design system and page-composition rules.
+6. **Technical Architecture** — Architect agent designs technical stack, APIs, and databases.
+7. **Consistency Audit** — Alignment agent audits all documents for inconsistencies and conflicts.
+8. **Resolution & Lock-In** — Conflicts are resolved, then documents are finalized and saved to `docs/backlog/`.
 
 ### SNAP Principle
 
@@ -128,7 +127,7 @@ Once locked, `docs/backlog/` becomes your **Single Source of Truth**. Don't modi
 ## Troubleshooting
 
 **Q: The skill asks too many questions**
-A: It should ask at most 2–3 questions per round. Answer “我不确定，请推荐” when you do not have a preference; lower-priority questions can be deferred until they become relevant.
+A: It asks one decision at a time. Answer “我不确定，请推荐” when you do not have a preference; lower-priority questions can be deferred until they become relevant.
 
 **Q: I want to change a design decision mid-way**
 A: Add a `[HUMAN DIRECTIVE]` block in `docs/backlog/design-draft.md`. The skill will re-audit and update.

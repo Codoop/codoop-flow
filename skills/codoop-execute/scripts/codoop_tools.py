@@ -14,6 +14,8 @@ and never hallucinate:
               ticket to done/, remove the worktree.
     fail    — move the ticket to failed/, write healing_report.md, retain wt
               so a human can continue the investigation.
+    resume  — move a human-approved failed ticket back to in_progress/, reuse
+              its recovery worktree, and mint a new lease.
     status  — print what's in pending/ and in_progress/ (JSON).
 
 All commands take --config <toml>. Output is JSON so the skill can parse it.
@@ -247,6 +249,58 @@ def cmd_takeover(config: Config, ticket_id: str, runner_note: str = "") -> int:
     return 0
 
 
+def cmd_resume(config: Config, ticket_id: str, runner_note: str = "") -> int:
+    """Human-approved retry of a failed ticket without discarding recovery work."""
+    with PipelineLock(config.worktree_root, config.target_repo):
+        failed = config.failed_dir / ticket_id
+        if not failed.exists():
+            _emit({"ok": False, "reason": "ticket not failed", "ticket_id": ticket_id})
+            return 1
+
+        active = [d.name for d in config.in_progress_dir.iterdir() if d.is_dir()]
+        if active:
+            _emit({
+                "ok": False,
+                "reason": "blocked_by_in_progress",
+                "ticket_id": ticket_id,
+                "active_ticket_id": active[0],
+            })
+            return 1
+
+        ticket = Ticket.load(failed)
+        wt = Worktree(config.target_repo, config.worktree_root, ticket_id)
+        worktree_recreated = not wt.path.exists()
+        if worktree_recreated:
+            wt.create()
+
+        previous_report = None
+        report = failed / "healing_report.md"
+        if report.exists():
+            previous_report = failed / "healing_report.previous.md"
+            number = 2
+            while previous_report.exists():
+                previous_report = failed / f"healing_report.previous-{number}.md"
+                number += 1
+            report.rename(previous_report)
+
+        dest = _move(failed, config.in_progress_dir)
+        lease = mint_lease(config.worktree_root, ticket_id, wt.path, note=runner_note)
+
+    _emit({
+        "ok": True,
+        "state": "in_progress",
+        "ticket_id": ticket_id,
+        "ticket_dir": str(dest),
+        "worktree": str(wt.path),
+        "worktree_recreated": worktree_recreated,
+        "previous_report": str(dest / previous_report.name) if previous_report else None,
+        "lease_token": lease.token,
+        "ui_capture": ticket.ui_capture,
+        "screenshot_dir": str(dest / "public" / "qa-screenshots") if ticket.ui_capture else None,
+    })
+    return 0
+
+
 def _load_in_progress(config: Config, ticket_id: str) -> tuple[Ticket, Worktree]:
     tdir = config.in_progress_dir / ticket_id
     if not tdir.exists():
@@ -374,6 +428,10 @@ def main() -> int:
     p_takeover.add_argument("ticket_id")
     p_takeover.add_argument("--runner-note", default="", help="optional label for the new lease holder")
 
+    p_resume = sub.add_parser("resume", help="human-approved retry of a failed ticket")
+    p_resume.add_argument("ticket_id")
+    p_resume.add_argument("--runner-note", default="", help="optional label for the new lease holder")
+
     p_verify = sub.add_parser("verify", help="check the UI screenshot gate")
     p_verify.add_argument("ticket_id")
     p_verify.add_argument("--lease", default=None, help="lease token (ownership check)")
@@ -397,6 +455,8 @@ def main() -> int:
         return cmd_pick(config, lease_token=args.lease, runner_note=args.runner_note)
     if args.command == "takeover":
         return cmd_takeover(config, args.ticket_id, runner_note=args.runner_note)
+    if args.command == "resume":
+        return cmd_resume(config, args.ticket_id, runner_note=args.runner_note)
     if args.command == "verify":
         return cmd_verify(config, args.ticket_id, lease_token=args.lease)
     if args.command == "finish":

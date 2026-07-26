@@ -1,11 +1,21 @@
 ---
 name: codoop-ticket
-description: Design work tickets (PRD → Spec → Plan) in three stages. Describe features in natural language; codoop-ticket orchestrates PM and Architect agents, calls spec and planning skills, and auto-infers metadata. Its terminal responsibility is promoting an approved ticket to pending/; it never executes the ticket.
+description: Design work tickets (PRD → Spec → Plan) in three stages. It first researches comparable products, recommends a project-specific direction, and grills requirements one decision at a time before orchestrating PM and Architect agents. Its terminal responsibility is promoting an approved ticket to pending/; it never executes the ticket.
 ---
 
 # Codoop-Ticket — Ticket Design Orchestration
 
 Help users systematically design work tickets in-session through three stages: requirements, technical specs, and task breakdown.
+
+## Codoop Workspace Layout
+
+When the target project is Codoop, use this root layout as the source of truth:
+
+- `backend/` — service API; `desktop/` — independent desktop client; `web/` — independent web client; `mobile/` — reserved mobile client.
+- `deploy/` — release, packaging, Docker, and operations scripts; `resources/` — shared source assets copied selectively into client packages.
+- `docs/` — product, architecture, API-contract, and ticket documents.
+
+Do not assume a root workspace or shared dependencies. Scope each ticket to the directories it actually changes; do not add `mobile/`, `deploy/`, `resources/`, or `docs/` only because they exist.
 
 ## Scope Boundary
 
@@ -41,9 +51,10 @@ Every ticket has a `ticket_type` (stored in `metadata.json`, default `feature`):
 
 `plan.md` + `todo.md` are recommended (not blocking) for **both** types.
 
-**Inferring the type — decide automatically.** At the start, infer the type
+**Inferring the type — decide automatically.** After the startup grilling
+confirms shared understanding, infer the type
 from the user's description (signals like "fix / bug / 报错 / 异常 / 坏了 / 回归 /
-修复" → `fix`; otherwise `feature`) and scaffold immediately. Do not ask the
+修复" → `fix`; otherwise `feature`) and scaffold. Do not ask the
 user to confirm the type. If later context shows the type is wrong, change it
 and regenerate the affected ticket documents.
 
@@ -69,6 +80,16 @@ the user already specified it).
 
 This skill uses shared modules from `_shared/codoop_lib_v1/` (which are also used by `codoop-execute`). The CLI automatically imports these from the parent `_shared/` directory, so you can invoke both `codoop-ticket.py` (Loop 2) and `codoop_tools.py` (Loop 3) without worrying about module location — they share the same library code.
 
+## Startup: Market Research and Grilling
+
+Before initializing a ticket or writing ticket documents, run this sequence:
+
+1. Read relevant `docs/backlog/`, project documentation, and existing code to establish project facts and constraints.
+2. For a **feature** ticket, use available web/search tools to identify relevant existing products. Prefer primary product pages and documentation; report only patterns that are relevant to the requested feature. If browsing is unavailable, state that plainly rather than inventing competitors. A **fix** ticket skips market research unless the user requests it.
+3. Present a short, evidence-based recommendation: comparable patterns to keep, gaps or risks to avoid, and the tailored product direction that best fits this project's users, existing product decisions, architecture, and scope. Learn from competitors; do not copy branded UI, copy, or proprietary flows.
+4. Load and run the `grilling` skill on the proposal. It asks one decision at a time, looks up facts from the project or available tools instead of asking for them, offers a recommended answer, and waits for the response before continuing.
+5. Do not initialize, scaffold, or write ticket documents until the user confirms shared understanding. Then infer the ticket type and continue with the applicable flow below.
+
 ## Three Stages of Ticket Design
 
 > **Applies to `feature` tickets.** For a `fix` ticket, skip Phase 1 (PRD) and
@@ -83,11 +104,9 @@ This skill uses shared modules from `_shared/codoop_lib_v1/` (which are also use
 **Goal**: Understand business requirements and define feature boundaries.
 
 **Process**:
-1. Describe what feature you want to build (natural language)
-2. codoop-ticket discusses requirements, boundaries, dependencies with you
-3. codoop-ticket reads Phase 1 outputs from `docs/backlog/` (product specs, design specs, architecture)
-4. PM agent writes `module_prd.md` based on discussion and Phase 1 context
-5. You review, provide feedback, modify until satisfied
+1. Complete the Startup: Market Research and Grilling sequence.
+2. PM agent writes `module_prd.md` from the confirmed direction and Phase 1 context.
+3. You review, provide feedback, modify until satisfied.
 
 **Example**:
 ```
@@ -95,10 +114,10 @@ User: Design an e-commerce product search feature
        - Need keyword, category, and price range filtering
        - Should integrate with existing product catalog
 
-codoop-ticket: Clarifying questions
-       - Search scope: product name, description, SKU?
-       - Filter logic: OR or AND combination?
-       - Result sorting: relevance or sales?
+codoop-ticket: Researches comparable search experiences, recommends a
+                catalog-aware direction, then asks one decision at a time.
+       - Which catalog fields should shoppers be able to search? I recommend
+         name, category, and SKU because these match the existing catalog.
        
 Reading Phase 1:
        - docs/backlog/product/commerce-strategy.md
@@ -126,10 +145,10 @@ Before asking a question, first use the ticket context and existing codebase to
 resolve what can be resolved. Do not turn an internal uncertainty into a user
 question merely because there are several valid technical implementations.
 
-**Question format.** Ask at most 1–3 high-value questions at a time. State the
-user-visible situation, give 2–3 everyday-language choices, and recommend one
-when appropriate. Avoid unexplained terms such as API, schema, JWT, index,
-AND/OR logic, or state management.
+**Question format.** Ask one high-value question at a time, wait for the
+answer, then ask the next. State the user-visible situation, give 2–3
+everyday-language choices, and recommend one when appropriate. Avoid unexplained
+terms such as API, schema, JWT, index, AND/OR logic, or state management.
 
 ```text
 Avoid: “Should the filters use AND or OR?”

@@ -353,6 +353,34 @@ def test_fail_archives_with_report_and_preserves_worktree(root: Path, worktrees:
     _check(data["worktree"] == str(worktree), "fail output identifies the preserved worktree")
 
 
+def test_resume_failed_ticket_preserves_worktree_and_report(root: Path, worktrees: Path) -> None:
+    print("[test] resume: failed -> in_progress without losing recovery work")
+    cfg = _write_config(root, worktrees)
+    _make_ticket(root, "ticket_resume1", ui_capture=True)
+    picked = _tool(cfg, "pick")[1]
+    worktree = Path(picked["worktree"])
+    unfinished = worktree / "backend" / "unfinished.txt"
+    unfinished.write_text("keep this work\n", encoding="utf-8")
+    _tool(cfg, "fail", "ticket_resume1", "--report", "first failure")
+
+    code, data = _tool(cfg, "resume", "ticket_resume1")
+
+    _check(code == 0 and data["state"] == "in_progress", "resume returned in_progress")
+    _check(data["worktree"] == str(worktree), "resume reuses the recovery worktree")
+    _check(unfinished.read_text() == "keep this work\n", "resume preserves uncommitted work")
+    _check((root / "docs/tickets/in_progress/ticket_resume1").exists(),
+           "resumed ticket moved to in_progress/")
+    _check(not (root / "docs/tickets/failed/ticket_resume1").exists(),
+           "resumed ticket no longer in failed/")
+    previous_report = Path(data["previous_report"])
+    _check(previous_report.read_text().startswith("first failure"),
+           "previous healing report is retained")
+    _check(bool(data.get("lease_token")), "resume mints a new lease")
+    _check(data["screenshot_dir"] == str(
+        (root / "docs/tickets/in_progress/ticket_resume1/public/qa-screenshots").resolve()),
+           "resume returns the moved screenshot directory")
+
+
 def test_status_reports_counts(root: Path, worktrees: Path) -> None:
     print("[test] status: reports tickets per stage")
     cfg = _write_config(root, worktrees)
@@ -535,6 +563,7 @@ def main() -> int:
         test_finish_commits_and_archives,
         test_finish_fix_uses_fix_prefix,
         test_fail_archives_with_report_and_preserves_worktree,
+        test_resume_failed_ticket_preserves_worktree_and_report,
         test_status_reports_counts,
         test_ticket_lifecycle,
         test_visual_preview_gate,

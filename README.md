@@ -358,6 +358,7 @@ Every subcommand takes `--config <toml>` and emits JSON.
 | `verify <id>` | In the worktree: run the UI screenshot hard gate when required |
 | `finish <id> --message` | Commit (excluding generated noise) to `dev/<id>` → move to done → remove worktree |
 | `fail <id> --report` | Move to failed → write `healing_report.md` → release lease and retain the worktree for human recovery |
+| `resume <id>` | Human-approved retry: move failed → in_progress, reuse the recovery worktree without reset, preserve the prior report, and mint a new lease |
 
 </details>
 
@@ -459,7 +460,7 @@ The target project must be `git init`-ed first. codoop-flow flows tickets inside
 For Claude Code, confirm the plugin is installed. Then verify the guardrail is in place: `python3 skills/codoop-execute/scripts/codoop_tools.py --config codoop_flow.toml status`.
 
 **A ticket is stuck in `failed/`?**
-Open `failed/<id>/healing_report.md` for why self-heal ran out of budget — usually tests too strict or the spec too ambitious for the healing budget. Edit the ticket and push it back to `pending/`.
+Open `failed/<id>/healing_report.md`, then ask the agent to resume that ticket (or run `codoop_tools.py --config <toml> resume <id>`). It returns the ticket to `in_progress/` and preserves its retained worktree; do not move it back to `pending/`, which can reset recovery work.
 
 ---
 

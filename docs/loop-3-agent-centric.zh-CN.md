@@ -193,7 +193,7 @@ python3 <SKILL>/scripts/codoop_tools.py --config <toml> fail <ticket_id> --repor
 **CLI 做：**
 - 将 `in_progress/<ticket_id>` 移到 `failed/<ticket_id>`
 - 把报告写入 `failed/<ticket_id>/healing_report.md`
-- 删除 worktree
+- 保留 worktree（含未提交改动）供恢复
 
 工单和报告传送到 `failed/` 以供人工干预。
 
@@ -255,6 +255,14 @@ python3 <SKILL>/scripts/codoop_tools.py --config <toml> fail <ticket_id> --repor
 **输出：** 报告路径。
 
 成功返回 0。
+
+### `resume <ticket_id>`
+
+**输入：** 经人工确认的 failed 工单 ID。
+
+**行为：** 将 `failed/<ticket_id>` 移到 `in_progress/`、签发新 lease，并且不 reset 地复用保留的 worktree。原 `healing_report.md` 会保存为 `healing_report.previous*.md`。若 worktree 已不存在，CLI 从工单分支重建并返回 `worktree_recreated:true`；未提交的恢复改动无法找回。
+
+使用返回的 lease token，从 Build 继续 execute 流程，并获得一轮新的自愈预算。不要让 failed 工单经过 `pending/`。
 
 ---
 

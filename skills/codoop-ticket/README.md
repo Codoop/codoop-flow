@@ -80,16 +80,19 @@ ticket_002/
 
 **You**:
 1. Describe what feature you want to build (natural language)
-2. Answer clarifying questions from codoop-ticket and PM agent
+2. Review the market-informed recommendation, then answer one decision at a time
+   from codoop-ticket and PM agent
 3. Review generated `module_prd.md`
 4. Provide feedback until satisfied
 5. Say "OK, move to next phase"
 
 **codoop-ticket + PM agent**:
 - Parse your description
-- Ask 1–3 plain-language clarifying questions at a time (scope, goals,
-  acceptance experience)
 - Read Phase 1 product/design specs
+- For a feature, research relevant comparable products and recommend a direction
+  tailored to the existing project
+- Load `grilling` and ask one plain-language decision at a time (scope, goals,
+  acceptance experience)
 - Write business requirements document (pure business, no technical details)
 
 The questions are about outcomes you can judge directly. For example, instead

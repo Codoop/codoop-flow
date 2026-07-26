@@ -351,6 +351,7 @@ python3 skills/codoop-ticket/scripts/codoop-ticket.py ticket promote  ticket_001
 | `verify <id>` | 在 worktree 检查（如需）UI 截图硬门禁 |
 | `finish <id> --message` | 排除生成物后 commit 到 `dev/<id>` → 搬到 done → 删 worktree |
 | `fail <id> --report` | 搬到 failed → 写 `healing_report.md` → 释放 lease 并保留 worktree 供人工恢复 |
+| `resume <id>` | 人工确认后重试：failed → in_progress，不 reset 地复用恢复 worktree，保留旧报告并签发新 lease |
 
 </details>
 
@@ -454,7 +455,7 @@ Agent 自动重试（默认预算 3 次）。全部失败后，工单搬到 `fai
 Claude Code 确认插件已安装。再手动验证护栏就位：`python3 skills/codoop-execute/scripts/codoop_tools.py --config codoop_flow.toml status`。
 
 **工单一直卡在 `failed/`？**
-打开 `failed/<id>/healing_report.md` 看自愈耗尽的原因，通常是测试写得太严或规格对自愈预算来说太庞大。编辑工单后重新推进到 `pending/`。
+打开 `failed/<id>/healing_report.md` 后，让 agent 恢复该工单（或执行 `codoop_tools.py --config <toml> resume <id>`）。它会回到 `in_progress/` 并保留恢复 worktree；不要移回 `pending/`，该路径可能 reset 恢复中的改动。
 
 ---
 

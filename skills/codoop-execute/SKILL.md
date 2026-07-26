@@ -82,6 +82,22 @@ On a claim/resume you get: `ticket_id`, `lease_token`, `ticket_dir` (holds
 module_prd.md / spec.md / optional preview.html / plan.md / todo.md), `worktree` (the ISOLATED clone you
 must edit in), `ui_capture`, `screenshot_dir`.
 
+### 1a. Resume a failed ticket (human-approved)
+
+When a human explicitly asks to retry a specific failed ticket, do **not** move
+it to `pending/` or call ordinary `pick`; that path can reset a reused branch
+and discard recovery work. Instead run:
+```
+python3 $SKILL/scripts/codoop_tools.py --config <toml> resume <ticket_id>
+```
+This moves `failed/<ticket_id>` back to `in_progress/`, mints a new lease, and
+reuses the retained worktree without a reset. Read `previous_report` from the
+JSON when present, then continue at **Build** with the returned lease token and
+a fresh `max_healing_attempts` budget. If `worktree_recreated:true`, tell the
+human that the retained worktree was already absent; only committed branch
+history could be recovered. The prior `healing_report.md` is preserved under a
+`healing_report.previous*.md` filename.
+
 ### 2. Build (your work)
 - Read the ticket's design docs from `ticket_dir`: `module_prd.md` (business),
   `spec.md` (contract), `preview.html` when present (reviewed local visual

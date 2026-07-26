@@ -1,8 +1,8 @@
 # Discovery Intake Question Guide
 
-Use this guide in rounds before formal Discovery. Ask no more than 2–3 questions per round and do not repeat information already known. Offer 2–3 plain-language options or short examples for each question, and always allow: “I’m not sure—please recommend.”
+Use this guide as a decision-coverage checklist before formal Discovery. Ask one question at a time, wait for the answer, and do not repeat information already known. Offer 2–3 plain-language options or short examples for that question, and always allow: “I’m not sure—please recommend.”
 
-## Round 1: Product Idea and Goal (Required)
+## 1. Product Idea and Goal (Required)
 
 - What kind of app do you want to build? Describe it in one simple sentence.
 - Who is it mainly for, and when do they run into this problem?
@@ -10,7 +10,7 @@ Use this guide in rounds before formal Discovery. Ask no more than 2–3 questio
 - If version one could do only one thing well, what must that be?
 - What would make this successful first: people using it, time saved, proving the idea, revenue, or something else?
 
-## Round 2: Core Flow and Scope (Required)
+## 2. Core Flow and Scope (Required)
 
 - What is the first thing you want a user to do after opening the app?
 - What result or value should they get when they finish?
@@ -18,7 +18,7 @@ Use this guide in rounds before formal Discovery. Ask no more than 2–3 questio
 - What features should explicitly stay out of version one?
 - When a user returns after leaving, what should they be able to find or continue quickly?
 
-## Round 3: Visual Direction (Required)
+## 3. Visual Direction (Required)
 
 - What should a user feel at first glance: professional and trustworthy, friendly and light, efficient and tool-like, warm and playful, bold and distinctive, or something else?
 - Are there products, websites, or apps you like or dislike? Ask what specifically they like or dislike, not only for names.
@@ -26,7 +26,7 @@ Use this guide in rounds before formal Discovery. Ask no more than 2–3 questio
 - Do you already have a product name, logo, colors, fonts, images, icons, or other brand assets? Put existing assets in the project-root `resources/` directory and index them in `resources/README.md`.
 - Are there visual constraints such as light/dark preference, night use, larger type, high contrast, or industry rules?
 
-## Round 4: Product Conditions to Ask Only When Relevant
+## 4. Product Conditions to Ask Only When Relevant
 
 Ask these only when earlier answers make them relevant.
 

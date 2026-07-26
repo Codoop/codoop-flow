@@ -10,6 +10,16 @@ This skill guides the AI to act as an **Orchestrator** running a decentralized, 
 It is designed to be compatible with **Codex**, **Claude Code**, **Cursor Desktop**,
 and other coding agents that can read files and write project docs.
 
+## Codoop Workspace Layout
+
+When the target project is Codoop, use this root layout as the source of truth:
+
+- `backend/` — service API; `desktop/` — independent desktop client; `web/` — independent web client; `mobile/` — reserved mobile client.
+- `deploy/` — release, packaging, Docker, and operations scripts; `resources/` — shared source assets copied selectively into client packages.
+- `docs/` — product, architecture, API-contract, and ticket documents.
+
+Do not assume a root workspace or shared dependencies: each client/service manages its own tooling. Read and change only the directories relevant to the work; do not include `mobile/` merely because it exists.
+
 ## Sub-Agent Expert Roles
 
 This skill invokes the following expert personas from the shared agents library (`../../_shared/agents/`):
@@ -69,15 +79,14 @@ Use this format:
 > - **Recommendation (Recommendation)**: <Your recommended option> because <professional reasoning>.
 ```
 
-### 3.3 Discovery Intake（冷启动引导）
-在创建 `docs/backlog/design-draft.md` 或分派任何角色之前，必须先阅读 [`references/discovery-intake.md`](references/discovery-intake.md)，以分轮提问的方式建立已确认的 Discovery Brief。
+### 3.3 Grilling Discovery Intake（冷启动引导）
+每次 Discovery 都必须从 `grilling` skill 开始：在创建 `docs/backlog/design-draft.md` 或分派任何角色之前，先加载 `grilling`，再阅读 [`references/discovery-intake.md`](references/discovery-intake.md)，并按其中的覆盖范围建立已确认的 Discovery Brief。
 
-- 面向产品、设计和开发经验不足的用户，使用大白话；每个问题提供具体例子或 2–3 个可选方向，并始终允许用户回答“我不确定，请推荐”。
-- 每轮最多提 2–3 个问题。先问产品目标、目标用户与核心流程；再问视觉方向；平台、商业模式、数据风险与技术约束只在前面答案需要时追问。
-- 不要把参考清单一次性作为长问卷发给用户；它是按需追问的题库，而不是必填表单。
-- 用户已明确提供的信息不得重复询问。缺失但不影响当前轮次的问题可以后置。
-- 收集到足够信息后，先输出一份简短的 **Discovery Brief**，至少包含：产品定位、目标用户与场景、第一版核心流程与范围、视觉方向、已知约束与待决问题。用户确认或修正后，才开始第 5 节的文档协作流程。
-- 若用户拒绝回答某个关键问题，记录为“待决”，给出推荐假设，并在 Discovery Brief 中要求确认；不得悄然当作既定事实。
+- 先从用户提供的资料、现有代码和项目文档中查证事实；可查证的事实不要再问用户。
+- 每次只问 **一个** 尚未解决、会影响后续决策的问题；给出 2–3 个白话选项和推荐答案，然后等待用户回答。不要把题库一次性作为问卷发出，也不要重复已确认的信息。
+- 沿着产品目标、用户、核心流程、范围、视觉方向和相关约束的决策树逐项追问。只有用户能决定的取舍才交给用户；技术实现细节由编排者根据项目证据处理。
+- 收集到足够信息后，先输出简短的 **Discovery Brief**，至少包含：产品定位、目标用户与场景、第一版核心流程与范围、视觉方向、已知约束与待决问题。用户确认或修正该 Brief 前，不得创建设计文档或分派角色。
+- 若用户拒绝回答关键问题，记录为“待决”，给出推荐假设并要求确认；不得悄然当作既定事实。
 
 ---
 

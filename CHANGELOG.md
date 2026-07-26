@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.6-alpha.1] - 2026-07-25
+
+### Added
+
+- **Failed-ticket resume.** Human-approved `resume <ticket_id>` moves a failed
+  ticket back to `in_progress/`, mints a new lease, and reuses its retained
+  worktree without resetting uncommitted recovery work. The previous failure
+  report is retained as `healing_report.previous*.md`; if the worktree is
+  already gone, the CLI recreates it from the ticket branch and reports that
+  uncommitted changes could not be recovered.
+- **`grilling` skill.** A standalone, one-question-at-a-time interview for
+  resolving user decisions before planning or implementation begins.
+
+### Changed
+
+- **Discovery starts with grilling.** `codoop-discover` now checks available
+  project facts and resolves one user decision at a time before it creates a
+  Discovery Brief, documents, or role assignments.
+- **Ticket intake is research-led.** For feature tickets, `codoop-ticket` now
+  researches comparable products, recommends a direction tailored to the
+  existing project, and then runs `grilling` before it scaffolds the ticket.
+- **Codoop workspace boundaries are explicit.** Discovery and ticket design
+  now recognize the independent `backend/`, `desktop/`, and `web/` projects;
+  the reserved `mobile/` client; and the `deploy/`, `resources/`, and `docs/`
+  directories.
+
 ## [0.1.5] - 2026-07-24
 
 ### Changed

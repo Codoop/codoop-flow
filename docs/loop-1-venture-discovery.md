@@ -26,12 +26,13 @@ The skill will ask clarifying questions, run a multi-role expert session with yo
 
 ### Step 1 — Discovery Intake and Clarification (SNAP)
 
-Before dispatching roles or creating a shared draft, the skill runs a short
-Discovery Intake. It asks only 2–3 plain-language questions per round, starting
-with the product idea, target users, core flow, and visual direction. Each
-question can include examples or options and always allows “I’m not sure—please
-recommend.” Platform, monetization, data risk, and technical constraints are
-asked only when earlier answers make them relevant.
+Before dispatching roles or creating a shared draft, the skill loads `grilling`
+and runs a Discovery Intake. It checks available project facts, then asks one
+plain-language decision at a time, starting with the product idea, target users,
+core flow, and visual direction. Each question can include examples or options
+and always allows “I’m not sure—please recommend.” Platform, monetization, data
+risk, and technical constraints are asked only when earlier answers make them
+relevant.
 
 The skill summarizes a Discovery Brief — product positioning, users and
 scenario, version-one scope, visual direction, constraints, and open decisions.

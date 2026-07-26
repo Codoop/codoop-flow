@@ -41,7 +41,7 @@ The skill orchestrates a PM and Architect with you as director, guiding you thro
 
 ### Phase 1 — Requirement Design (module_prd.md)
 
-1. **clarify** — `codoop-ticket` asks clarifying questions about scope, user intent, and acceptance criteria
+1. **research and grill** — `codoop-ticket` reads project context; for a feature, researches comparable products and recommends a project-specific direction; then it loads `grilling` and asks one decision at a time about scope, user intent, and acceptance criteria
 2. **context** — reads Loop 1 outputs from `docs/backlog/product/`, `docs/backlog/interface/`, `docs/backlog/architecture/`, `docs/backlog/modules/` to anchor the ticket in existing product strategy
 3. **draft** — PM agent writes `module_prd.md` with business overview, user stories, state diagrams, acceptance criteria
 4. **review** — you review and confirm "this PRD is good, move to spec phase"

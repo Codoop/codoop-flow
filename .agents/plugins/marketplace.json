@@ -101,6 +101,18 @@
       "category": "Developer Tools"
     },
     {
+      "name": "grilling",
+      "source": {
+        "source": "local",
+        "path": "skills/grilling"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Developer Tools"
+    },
+    {
       "name": "codoop-flow",
       "source": {
         "source": "local",

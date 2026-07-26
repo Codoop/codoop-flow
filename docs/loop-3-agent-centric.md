@@ -216,7 +216,7 @@ python3 <SKILL>/scripts/codoop_tools.py --config <toml> fail <ticket_id> --repor
 **The CLI:**
 - Moves `in_progress/<ticket_id>` to `failed/<ticket_id>`
 - Writes the report to `failed/<ticket_id>/healing_report.md`
-- Removes the worktree
+- Retains the worktree, including uncommitted changes, for recovery
 
 The ticket and report travel to `failed/` for manual human intervention.
 
@@ -282,6 +282,19 @@ recovery. The report records the worktree path and branch.
 **Output:** Path to report.
 
 Exit 0 on success.
+
+### `resume <ticket_id>`
+
+**Input:** Failed ticket ID, after human approval.
+
+**Behavior:** Moves `failed/<ticket_id>` to `in_progress/`, mints a new lease,
+and reuses the retained worktree without reset. The former `healing_report.md`
+is preserved as `healing_report.previous*.md`. If that worktree is gone, the
+CLI recreates it from the ticket branch and reports `worktree_recreated:true`;
+uncommitted recovery changes cannot be restored.
+
+Use the returned lease token and continue the execute loop at Build with a new
+self-healing budget. Do not route a failed ticket through `pending/`.
 
 ---
 
