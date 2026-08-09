@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.6-alpha.2] - 2026-08-08
+
+### Added
+
+- **Selectable ticket design mode.** `codoop_flow.toml` now supports
+  `ticket_design_mode = "strict" | "one_pass"`: both preserve the complete
+  grilling intake, while `one_pass` generates the complete ticket package
+  before one final promotion decision.
+
 ## [0.1.6-alpha.1] - 2026-07-25
 
 ### Added

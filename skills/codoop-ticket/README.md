@@ -29,11 +29,28 @@ I want to design a user search feature for my e-commerce platform with keyword, 
 Ticket complete, ready for Phase 3 development ✅
 ```
 
-The flow above is for a **feature** ticket (需求单). A **fix** ticket (修复单)
+The flow above is for a **feature** ticket. A **fix** ticket
 skips Phase 1 (PRD) and Phase 2 (Spec): it captures the defect in
 `bug_report.md`, then goes straight to task breakdown → metadata → validate →
 release. `codoop-ticket` infers the type from your description and scaffolds it
 immediately. See `SKILL.md` → "Ticket Types" for details.
+
+## Ticket Design Mode
+
+Set the following in `codoop_flow.toml`:
+
+```toml
+ticket_design_mode = "strict" # or "one_pass"
+```
+
+- `strict` (default) keeps the workflow above: review and confirm each phase.
+- `one_pass` keeps the full grilling intake, then generates every applicable
+  ticket document and infers Metadata using the existing standards. It does not
+  stop for PRD, Spec, Plan/ToDo, preview, or Metadata confirmation.
+- Both modes show the completed ticket summary and require explicit approval
+  before promotion to `pending/`. A missing field defaults to `strict`.
+
+The phase confirmations below apply to `strict` mode.
 
 ## Final Outputs
 
@@ -124,7 +141,7 @@ For visual feature tickets, `preview.html` is generated after `spec.md` and
 before task breakdown. It shows the changed area, the primary path, and relevant
 states with a small amount of clickable interaction. It is not a production
 implementation and does not call real services. The ticket cannot be published
-until this preview exists and has been reviewed.
+until this preview exists; `strict` mode also requires its review.
 
 ### Phase 3: Task Breakdown
 

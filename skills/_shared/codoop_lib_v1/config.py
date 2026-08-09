@@ -28,6 +28,8 @@ class Config:
     target_repo: Path
     # Directory where isolated worktrees are created (one per ticket).
     worktree_root: Path
+    # Ticket-document review behavior in the in-session ticket-design skill.
+    ticket_design_mode: str = "strict"
 
     @property
     def tickets_dir(self) -> Path:
@@ -51,6 +53,7 @@ class Config:
 
 
 DEFAULT_CONFIG_NAME = "codoop_flow.toml"
+VALID_TICKET_DESIGN_MODES = ("strict", "one_pass")
 
 # Ticket pipeline stages the target repo needs under docs/tickets/.
 TICKET_STAGES = ("pending", "in_progress", "done", "failed")
@@ -89,7 +92,8 @@ def setup_target(
     else:
         cfg_path.write_text(
             f'target_repo = "{repo}"\n'
-            f'worktree_root = "{worktree_root}"\n',
+            f'worktree_root = "{worktree_root}"\n'
+            'ticket_design_mode = "strict"\n',
             encoding="utf-8",
         )
     return config, cfg_path
@@ -115,5 +119,14 @@ def load_config(path: str | Path | None = None) -> Config:
     worktree_root = Path(
         raw.get("worktree_root", "~/codoop_tickets/worktrees")
     ).expanduser()
+    ticket_design_mode = raw.get("ticket_design_mode", "strict")
+    if ticket_design_mode not in VALID_TICKET_DESIGN_MODES:
+        raise ValueError(
+            "config ticket_design_mode must be 'strict' or 'one_pass'"
+        )
 
-    return Config(target_repo=target_repo, worktree_root=worktree_root)
+    return Config(
+        target_repo=target_repo,
+        worktree_root=worktree_root,
+        ticket_design_mode=ticket_design_mode,
+    )

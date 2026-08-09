@@ -124,6 +124,11 @@ Design work tickets through requirements (PRD) → technical spec → visual pre
 /skill codoop-ticket Design the user search feature for our e-commerce platform
 ```
 
+Set `ticket_design_mode = "strict"` in `codoop_flow.toml` to review each
+design phase, or `"one_pass"` to keep the full grilling intake and generate
+the complete ticket package before one final promotion confirmation. A missing
+field defaults to `strict`.
+
 **Standalone tools** (also called by codoop-ticket):
 ```
 /skill spec-driven-development Design technical specs before coding

@@ -39,6 +39,20 @@
 
 ## 工作流程
 
+### 工单设计模式
+
+`codoop_flow.toml` 控制工单文档的审查方式：
+
+| 值 | 行为 |
+|---|---|
+| `"strict"`（默认） | 保持当前逐阶段审查与确认流程。 |
+| `"one_pass"` | 保留完整拷问，随后不再逐阶段确认，直接生成适用的 PRD、Spec、预览、Plan、ToDo 与 Metadata 文件。agent 按既有标准推断 Metadata 值，展示完整工单摘要后，只询问一次是否提升到 `pending/`。 |
+
+缺少该字段时按 `"strict"` 处理，以保持向后兼容。两种模式在提升前都必须
+获得明确确认；`one_pass` 不会跳过拷问，也不会自动提升工单。
+
+下文的阶段关卡描述的是 `"strict"` 模式。
+
 ### 阶段 1 — 需求设计（module_prd.md）
 
 1. **调研与 Grill** — `codoop-ticket` 先读取项目上下文；功能单会调研可借鉴的竞品并给出适合当前项目的推荐方向；随后加载 `grilling`，一次只询问一个与范围、用户意图或验收标准有关的决策
@@ -75,7 +89,7 @@ API 形式、数据库索引、框架模式、状态管理、测试布局等常�
 
 ### 阶段 3 后 — 元数据自动推断
 
-阶段 3 后，`codoop-ticket` 调用 `update_metadata_from_docs` 从你的 `spec.md` 和任务文件自动推断 `metadata.json`。只有阶段 2 确实需要且已审查预览时，`visual_preview` 才保持为 true；此时缺少预览会阻止工单发布。它与 `ui_capture` 独立：后者决定交付时是否对真实实现保存截图并由 UI/UX reviewer 查看。纯后端、基础设施、重构或内部功能则都保持关闭，不增加无意义的确认。人工审查结果并在验证前确认或修改。
+阶段 3 后，`codoop-ticket` 调用 `update_metadata_from_docs` 从你的 `spec.md` 和任务文件自动推断 `metadata.json`。只有阶段 2 确实需要预览时，`visual_preview` 才保持为 true；`"strict"` 模式还会审查该预览。此时缺少预览会阻止工单发布。它与 `ui_capture` 独立：后者决定交付时是否对真实实现保存截图并由 UI/UX reviewer 查看。纯后端、基础设施、重构或内部功能则都保持关闭。`"strict"` 模式下人工在验证前审查或修改结果；`"one_pass"` 模式下 agent 按既有标准推断，不再单独确认 Metadata。
 
 ### 验证和提升
 
@@ -215,11 +229,12 @@ python skills/codoop-ticket/scripts/codoop-ticket.py ticket <command> <args>
 
 ### `codoop_flow.toml`
 
-对第二环只有一个字段重要：
+第二环使用以下字段：
 
 | 字段 | 类型 | 必需 | 含义 |
 |---|---|---|---|
 | `target_repo` | 字符串（路径） | 是 | 你的目标 git 仓库路径。第二环在 `<target_repo>/docs/tickets/` 下写入工单目录。 |
+| `ticket_design_mode` | 字符串 | 否 | `"strict"`（默认）逐阶段确认；`"one_pass"` 在拷问后一次生成完整工单包，提升前只询问一次。 |
 
 ### `metadata.json` 模式
 
@@ -240,7 +255,7 @@ python skills/codoop-ticket/scripts/codoop-ticket.py ticket <command> <args>
 | `ticket_type` | 字符串 | `"feature"` | `"feature"`（需求单）或 `"fix"`（修复单）。决定第二环的必需文档，以及第三环的 commit 前缀（`feat`/`fix`） |
 | `coding_engine` | 字符串或 null | null | 这个工单用哪个 AI 工具：`claude`、`codex`、`cursor`。如果缺失，使用全局默认。 |
 | `max_healing_attempts` | int | 3 | 第三环的最大自愈重试次数，之后移到 `failed/` |
-| `visual_preview` | bool | false | 为用户可见的需求单要求已审查的 `preview.html`；静态原型与运行时验证相互独立 |
+| `visual_preview` | bool | false | 为用户可见的需求单要求 `preview.html`；`strict` 模式还会审查该静态原型，且它与运行时验证相互独立 |
 | `ui_capture` | bool | false | 如果为真，交付过程在 `public/qa-screenshots/` 写入截图；审查添加 UI/UX personas |
 
 **验证：** 所有必需字段必须存在且类型正确。
@@ -313,7 +328,7 @@ python skills/codoop-ticket/scripts/codoop-ticket.py ticket <command> <args>
 ## 关键设计原则
 
 - **确定性输入产生确定性输出** — 高保真需求使第三环能可靠执行而不猜测。
-- **三阶段人工协作** — 阶段 1（PRD）→ 阶段 2（规格）→ 阶段 3（任务），每个阶段之间有明确的人工确认。
+- **可选协作模式** — `"strict"` 在 PRD → 规格 → 任务各阶段确认；`"one_pass"` 保留拷问后一次生成完整工单包，再进行一次提升决策。
 - **人话澄清，专业落档** — 用户确认可感知的业务结果；agent 负责把回答转写成清晰、专业、可执行的 PRD 与 Spec。技术细节仅在会影响产品选择或风险时升级确认。
 - **类型贴合流程** — `feature` 工单走完整的 PRD → Spec → 任务流程；`fix` 工单用更轻量的 `bug_report.md` 流程。Skill 自动推断并决定类型。
 - **元数据自动推断** — 第二环从规格内容自动推断 `metadata.json`，省去人工手动、容易出错的配置。

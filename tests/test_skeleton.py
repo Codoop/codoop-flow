@@ -24,7 +24,7 @@ _SCRIPTS = _ROOT / "skills" / "codoop-execute" / "scripts"
 _SHARED = _ROOT / "skills" / "_shared"
 sys.path.insert(0, str(_SHARED))
 
-from codoop_lib_v1.config import Config  # noqa: E402
+from codoop_lib_v1.config import Config, load_config, setup_target  # noqa: E402
 
 _TOOLS = _SCRIPTS / "codoop_tools.py"
 _TICKET_CLI = _ROOT / "skills" / "codoop-ticket" / "scripts" / "codoop-ticket.py"
@@ -58,6 +58,45 @@ def _write_config(root: Path, worktrees: Path) -> Path:
 
 def _config_obj(root: Path, worktrees: Path) -> Config:
     return Config(target_repo=root, worktree_root=worktrees)
+
+
+def test_ticket_design_mode_config(root: Path, worktrees: Path) -> None:
+    print("[test] config: ticket design mode")
+    cfg_path = _write_config(root, worktrees)
+    _check(load_config(cfg_path).ticket_design_mode == "strict",
+           "missing ticket design mode defaults to strict")
+
+    cfg_path.write_text(
+        f'target_repo = "{root}"\n'
+        f'worktree_root = "{worktrees}"\n'
+        'ticket_design_mode = "one_pass"\n',
+        encoding="utf-8",
+    )
+    _check(load_config(cfg_path).ticket_design_mode == "one_pass",
+           "one_pass ticket design mode is loaded")
+
+    cfg_path.write_text(
+        f'target_repo = "{root}"\n'
+        'ticket_design_mode = "onepass"\n',
+        encoding="utf-8",
+    )
+    try:
+        load_config(cfg_path)
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("invalid ticket design mode must fail")
+    print("  ok: invalid ticket design mode is rejected")
+
+
+def test_setup_writes_strict_ticket_design_mode(root: Path, worktrees: Path) -> None:
+    print("[test] setup: writes strict ticket design mode")
+    cfg_path = root / "codoop_flow.toml"
+    config, written_path = setup_target(root, worktrees, cfg_path)
+    _check(written_path == cfg_path, "setup writes the requested config path")
+    _check(config.ticket_design_mode == "strict", "setup defaults to strict mode")
+    _check('ticket_design_mode = "strict"' in cfg_path.read_text(encoding="utf-8"),
+           "setup writes strict mode to config")
 
 
 def _make_ticket(
@@ -547,6 +586,8 @@ def test_promote_blocks_incomplete(root: Path, worktrees: Path) -> None:
 
 def main() -> int:
     tests = [
+        test_ticket_design_mode_config,
+        test_setup_writes_strict_ticket_design_mode,
         test_pick_moves_and_creates_worktree,
         test_pick_reports_when_in_progress_busy,
         test_pick_mints_lease,

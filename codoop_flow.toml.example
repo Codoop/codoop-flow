@@ -7,3 +7,8 @@ target_repo = "/path/to/your/codoop-project-repo"
 
 # Where isolated per-ticket worktrees are created.
 worktree_root = "~/codoop_tickets/worktrees"
+
+# Ticket-document review flow: "strict" confirms each design phase;
+# "one_pass" keeps grilling, then generates all ticket documents before one
+# final promotion confirmation.
+ticket_design_mode = "strict"

@@ -122,6 +122,10 @@ Skill 编排多个专家角色（PM、GTM、UX/UI、架构师）协作：
 /skill codoop-ticket 帮我设计电商平台的用户搜索功能工单
 ```
 
+在 `codoop_flow.toml` 中设置 `ticket_design_mode = "strict"`，可逐阶段审查；
+设置为 `"one_pass"` 时保留完整拷问，随后一次生成完整工单包，最后只确认是否
+提升。缺少该字段时默认 `strict`。
+
 **独立工具**（也被 codoop-ticket 调用）：
 ```
 /skill spec-driven-development 设计技术规格（不需要手工编排）

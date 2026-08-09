@@ -37,7 +37,7 @@ A ticket is a complete design document package for one feature module:
 | `todo.md` | Atomic task list (≤100 lines code/task) | Auto-inferred |
 | `metadata.json` | Ticket metadata (modules, execution settings) | Auto-inferred |
 
-The table above shows a **feature** ticket (需求单). A **fix** ticket (修复单) is
+The table above shows a **feature** ticket. A **fix** ticket is
 lighter — see "Ticket Types" below.
 
 ## Ticket Types
@@ -46,24 +46,25 @@ Every ticket has a `ticket_type` (stored in `metadata.json`, default `feature`):
 
 | Type | For | Required docs | Skips |
 |------|-----|---------------|-------|
-| `feature` (需求单) | New capability from a business need | `module_prd.md` + `spec.md` | — |
-| `fix` (修复单) | Repairing an existing bug/defect | `bug_report.md` | PRD + Spec stages |
+| `feature` | New capability from a business need | `module_prd.md` + `spec.md` | — |
+| `fix` | Repairing an existing bug/defect | `bug_report.md` | PRD + Spec stages |
 
 `plan.md` + `todo.md` are recommended (not blocking) for **both** types.
 
 **Inferring the type — decide automatically.** After the startup grilling
 confirms shared understanding, infer the type
-from the user's description (signals like "fix / bug / 报错 / 异常 / 坏了 / 回归 /
-修复" → `fix`; otherwise `feature`) and scaffold. Do not ask the
+from the user's description (signals such as "fix", "bug", "error", or
+"regression", including their equivalents in the user's language → `fix`;
+otherwise `feature`) and scaffold. Do not ask the
 user to confirm the type. If later context shows the type is wrong, change it
 and regenerate the affected ticket documents.
 
 Example:
 
 ```
-User: 搜索结果分页有时候会越界报错，帮我处理一下
-codoop-ticket: 创建修复单 (fix) 草稿，使用 bug_report.md 轻量流程
-              （跳过 PRD/Spec）…
+User: Search-result pagination sometimes exceeds its bounds and errors. Please fix it.
+codoop-ticket: Creating a fix draft with the lightweight bug_report.md flow
+              (skipping PRD/Spec)…
 ```
 
 When initializing via CLI, pass the type explicitly:
@@ -74,11 +75,35 @@ the user already specified it).
 
 - ✅ Design a complete ticket from business requirements
 - ✅ Phase 1 has produced product and design specs; now design incremental feature tickets
-- ✅ Need human review and feedback at each stage
+- ✅ Need staged review or one-pass ticket generation after grilling
 
 ## Implementation Notes
 
 This skill uses shared modules from `_shared/codoop_lib_v1/` (which are also used by `codoop-execute`). The CLI automatically imports these from the parent `_shared/` directory, so you can invoke both `codoop-ticket.py` (Loop 2) and `codoop_tools.py` (Loop 3) without worrying about module location — they share the same library code.
+
+## Ticket Design Mode
+
+Before the Startup sequence, resolve the configuration path: reuse an explicit
+`--config <path>` already supplied in the session; otherwise, when operating in
+the target repository, use `./codoop_flow.toml`; otherwise use a known
+`<target_repo>/codoop_flow.toml`. If none is known, ask for the path. Read
+`ticket_design_mode` from that file before deciding the ticket flow.
+
+Its allowed values are `"strict"` and `"one_pass"`; a missing field means
+`"strict"`. If the value is invalid, stop and ask the user to correct the
+configuration rather than silently choosing a mode.
+
+- `"strict"`: use the existing phase-by-phase review and confirmation flow.
+- `"one_pass"`: keep the Startup: Market Research and Grilling sequence
+  unchanged. Once the user confirms shared understanding, generate every
+  applicable ticket artifact in one pass: PRD or bug report, Spec when needed,
+  preview when needed, Plan, ToDo, and Metadata. Infer `visual_preview` and
+  `ui_capture` with the established standards; do not add a document-stage or
+  Metadata confirmation. Validate, show the completed ticket summary, and ask
+  once for explicit promotion approval.
+
+Both modes require explicit approval before promotion to `pending/`. Do not
+skip grilling or infer product decisions merely because `"one_pass"` is set.
 
 ## Startup: Market Research and Grilling
 
@@ -106,7 +131,7 @@ Before initializing a ticket or writing ticket documents, run this sequence:
 **Process**:
 1. Complete the Startup: Market Research and Grilling sequence.
 2. PM agent writes `module_prd.md` from the confirmed direction and Phase 1 context.
-3. You review, provide feedback, modify until satisfied.
+3. In `"strict"` mode, you review, provide feedback, modify until satisfied.
 
 **Example**:
 ```
@@ -162,12 +187,12 @@ The agent may translate the user's plain-language answer into formal user
 stories, acceptance criteria, BDD, and technical constraints in the documents.
 `module_prd.md` remains business-only; `spec.md` remains precise and technical.
 
-**Review summaries.** At each phase gate, lead with a short plain-language
+**Review summaries.** In `"strict"` mode, at each phase gate, lead with a short plain-language
 summary: what users can do, what is intentionally out of scope, and which
 decision (if any) needs approval. Offer the detailed PRD, spec, or plan for
 review rather than requiring the user to understand it before they can respond.
-The existing explicit approvals for phase progression and promotion remain
-mandatory.
+Phase progression requires explicit approval only in `"strict"` mode;
+promotion approval remains mandatory in both modes.
 
 ### 【Phase 2】Technical Spec (spec.md)
 
@@ -179,8 +204,8 @@ mandatory.
    - API interface design (backend, web, mobile platforms)
    - Database fields and data models
    - UI interaction flows
-3. Decide whether the feature creates or materially changes a user-visible screen, primary task flow, or interaction state. If it does, set `visual_preview: true` in `metadata.json` and generate `preview.html` before asking the user to review the phase. Otherwise leave it `false` and state that no visual preview is needed.
-4. You review, provide feedback, modify until satisfied
+3. Decide whether the feature creates or materially changes a user-visible screen, primary task flow, or interaction state. If it does, set `visual_preview: true` in `metadata.json` and generate `preview.html`; in `"strict"` mode, do this before asking the user to review the phase. Otherwise leave it `false` and state that no visual preview is needed.
+4. In `"strict"` mode, you review, provide feedback, modify until satisfied.
 
 #### Visual Preview (`preview.html`)
 
@@ -190,7 +215,7 @@ Generate this file only for a `feature` ticket with `visual_preview: true`. It i
 - Cover the new or changed local screen/area, one primary user path, and the states needed to understand it (for example: empty, loading, error, success, confirmation, or permission state).
 - Make only the key interactions clickable with local mock data and client-side state. Do not call real APIs, require login, add dependencies, or reproduce unrelated product flows.
 - Use clear placeholder content only where final content is unknown; do not leave the whole page as a wireframe or a static screenshot.
-- Present the preview and ask for explicit feedback before Phase 3. Apply approved feedback to `module_prd.md` and `spec.md`, then regenerate the preview if the change affects it.
+- In `"strict"` mode, present the preview and ask for explicit feedback before Phase 3. Apply approved feedback to `module_prd.md` and `spec.md`, then regenerate the preview if the change affects it.
 
 `visual_preview: true` makes `preview.html` a promotion requirement. It is independent from `ui_capture`, which checks screenshots of the real implementation after development.
 
@@ -222,7 +247,7 @@ spec.md includes:
    - `plan.md`: implementation steps (Step 1, Step 2, etc.)
    - `todo.md`: atomic task list (each ≤100 lines code)
 3. Reference `/skill definition-of-done` to understand completion standards
-4. You review, provide feedback, modify until satisfied
+4. In `"strict"` mode, you review, provide feedback, modify until satisfied.
 
 **Example**:
 ```
@@ -247,16 +272,18 @@ todo.md:
 2. Inspect the confirmed spec for new or changed user-visible screens,
    interactions, or task flows:
    - Keep `visual_preview: true` only when the Phase 2 preview was required
-     and reviewed; otherwise keep it `false`. Never enable it for a pure
+     (and reviewed in `"strict"` mode); otherwise keep it `false`. Never enable it for a pure
      backend, infrastructure, refactoring, or non-visual configuration ticket.
    - If present, explain in plain language that the delivery can also check the
      actual screens and interactions, save screenshots, and have UI/UX reviewers
-     inspect them. Recommend enabling it and ask the user to confirm.
+     inspect them. In `"strict"` mode, recommend enabling it and ask the user to
+     confirm; in `"one_pass"` mode, set it from the established standards.
    - If the work is backend-only, infrastructure, refactoring, or otherwise has
      no user-visible behavior, keep it off and state that no screenshot check is
      needed.
-3. Set `ui_capture` from that decision, then show the complete inferred
-   `metadata.json`; the user confirms or modifies it.
+3. Set `ui_capture` from that decision. In `"strict"` mode, show the complete
+   inferred `metadata.json` for the user to confirm or modify; in `"one_pass"`
+   mode, continue directly to validation and the final promotion decision.
 
 Ask about the outcome, not the field name. For example:
 
@@ -322,9 +349,9 @@ Or concisely:
 Design the e-commerce search feature for our platform.
 ```
 
-### Phase Confirmation Flow
+### Phase Confirmation Flow (`"strict"` only)
 
-After each phase, you review and confirm:
+In `"strict"` mode, after each phase, you review and confirm:
 
 ```
 User: This PRD looks good, move to spec phase

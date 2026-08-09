@@ -39,6 +39,21 @@ The skill orchestrates a PM and Architect with you as director, guiding you thro
 
 ## Workflow
 
+### Ticket Design Mode
+
+`codoop_flow.toml` controls how ticket documents are reviewed:
+
+| Value | Behavior |
+|---|---|
+| `"strict"` (default) | Keep the current phase-by-phase review and confirmation flow. |
+| `"one_pass"` | Keep the complete grilling intake, then generate every applicable PRD, Spec, preview, Plan, ToDo, and Metadata file without phase confirmations. The agent infers Metadata values using the existing standards, shows the completed ticket summary, and asks once whether to promote it to `pending/`. |
+
+If the field is absent, use `"strict"` for backward compatibility. Both modes
+always require explicit confirmation before promotion; `one_pass` never skips
+grilling or auto-promotes a ticket.
+
+The phase gates below describe `"strict"` mode.
+
 ### Phase 1 — Requirement Design (module_prd.md)
 
 1. **research and grill** — `codoop-ticket` reads project context; for a feature, researches comparable products and recommends a project-specific direction; then it loads `grilling` and asks one decision at a time about scope, user intent, and acceptance criteria
@@ -67,7 +82,7 @@ The skill orchestrates a PM and Architect with you as director, guiding you thro
 
 ### Post-Phase 3 — Metadata Auto-Inference
 
-After Phase 3, `codoop-ticket` calls `update_metadata_from_docs` to automatically infer `metadata.json` from your `spec.md` and task files. `visual_preview` remains true only when the Phase 2 preview was required and reviewed; its presence is a blocking promotion requirement. Separately, the skill checks whether delivery should inspect the actual implementation with saved screenshots and UI/UX review (`ui_capture`). Backend-only, infrastructure, refactoring, and internal-only work keep both off without an unnecessary question. The human reviews the result and confirms or modifies before validation.
+After Phase 3, `codoop-ticket` calls `update_metadata_from_docs` to automatically infer `metadata.json` from your `spec.md` and task files. `visual_preview` remains true only when the Phase 2 preview was required (and reviewed in `"strict"` mode); its presence is a blocking promotion requirement. Separately, the skill determines whether delivery should inspect the actual implementation with saved screenshots and UI/UX review (`ui_capture`). Backend-only, infrastructure, refactoring, and internal-only work keep both off. In `"strict"` mode, the human reviews or modifies the result before validation; in `"one_pass"` mode, the agent applies these standards without a separate Metadata confirmation.
 
 ### Validation & Promotion
 
@@ -207,11 +222,12 @@ Typically called after Phase 3 is complete, before validating and promoting.
 
 ### `codoop_flow.toml`
 
-Only one field matters for Loop 2:
+These fields matter for Loop 2:
 
 | Field | Type | Required | Meaning |
 |---|---|---|---|
 | `target_repo` | string (path) | Yes | Path to your target git repo. Loop 2 writes ticket directories under `<target_repo>/docs/tickets/`. |
+| `ticket_design_mode` | string | No | `"strict"` (default) confirms each design phase; `"one_pass"` generates the complete ticket package after grilling, then asks once before promotion. |
 
 ### `metadata.json` Schema
 
@@ -232,7 +248,7 @@ Every ticket's `metadata.json` must satisfy this schema:
 | `ticket_type` | string | `"feature"` | `"feature"` (需求单) or `"fix"` (修复单). Selects required docs in Loop 2 and the commit prefix (`feat`/`fix`) in Loop 3 |
 | `coding_engine` | string or null | null | Which AI tool for this ticket: `claude`, `codex`, `cursor`. If absent, uses global default. |
 | `max_healing_attempts` | int | 3 | Maximum self-healing retries in Loop 3 before moving to `failed/` |
-| `visual_preview` | bool | false | Requires a reviewed `preview.html` for a user-visible feature before promotion; this static prototype is separate from runtime verification |
+| `visual_preview` | bool | false | Requires `preview.html` for a user-visible feature before promotion; `strict` mode also reviews this static prototype, which is separate from runtime verification |
 | `ui_capture` | bool | false | If true, delivery writes screenshots under `public/qa-screenshots/`; review adds UI/UX personas |
 
 **Validation:** All required fields must be present with correct types.
@@ -256,9 +272,9 @@ This anchors every ticket to the global product strategy rather than inventing i
 
 The `promote` command's filesystem move (`drafts/` → `pending/`) is the only handoff mechanism. Loop 3's scheduler polls `pending/`, picks the oldest ticket, and consumes:
 
-- `metadata.json` — drives scheduler decisions (modules, self-heal budget, ui_capture flag) and records whether a reviewed visual preview is part of the ticket
+- `metadata.json` — drives scheduler decisions (modules, self-heal budget, ui_capture flag) and records whether a visual preview is part of the ticket
 - `module_prd.md` + `spec.md` — progressively disclosed to the coding engine at startup
-- `preview.html` — read alongside the design docs when present so implementation follows the reviewed local visual flow
+- `preview.html` — read alongside the design docs when present so implementation follows the local visual flow
 - `plan.md` + `todo.md` — Loop 3 reads the todo list step-by-step and checks off items as they complete
 - `public/qa-screenshots/` — created at runtime during UI-ticket delivery
 
@@ -305,7 +321,7 @@ The skill reads the spec, builds a dependency graph, slices vertically (feature-
 ## Key Design Principles
 
 - **Deterministic Input for Deterministic Output** — High fidelity requirements enable Loop 3 to execute reliably without guessing.
-- **Three-Phase Human Collaboration** — Phase 1 (PRD) → Phase 2 (Spec) → Phase 3 (Tasks), with explicit human confirmation between each phase.
+- **Selectable Collaboration Mode** — `"strict"` confirms each PRD → Spec → Tasks phase; `"one_pass"` retains grilling and produces the complete package before one promotion decision.
 - **Type-Fit Flow** — `feature` tickets run the full PRD → Spec → Tasks flow; `fix` tickets use a lighter `bug_report.md` flow. The skill infers and chooses the type automatically.
 - **Metadata Auto-Inference** — Loop 2 automatically infers `metadata.json` from spec content, saving humans from manual, error-prone configuration.
 - **Dual-Mode Sub-Skills** — spec-driven-development and planning-and-task-breakdown work both standalone and as integrated phases of codoop-ticket.
