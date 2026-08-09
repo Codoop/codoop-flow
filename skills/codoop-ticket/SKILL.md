@@ -7,15 +7,12 @@ description: Design work tickets (PRD → Spec → Plan) in three stages. It fir
 
 Help users systematically design work tickets in-session through three stages: requirements, technical specs, and task breakdown.
 
-## Codoop Workspace Layout
+## Project Paths
 
-When the target project is Codoop, use this root layout as the source of truth:
-
-- `backend/` — service API; `desktop/` — independent desktop client; `web/` — independent web client; `mobile/` — reserved mobile client.
-- `deploy/` — release, packaging, Docker, and operations scripts; `resources/` — shared source assets copied selectively into client packages.
-- `docs/` — product, architecture, API-contract, and ticket documents.
-
-Do not assume a root workspace or shared dependencies. Scope each ticket to the directories it actually changes; do not add `mobile/`, `deploy/`, `resources/`, or `docs/` only because they exist.
+Read `[project_paths]` from `codoop_flow.toml`. If it is missing, run the
+sibling `codoop-init` skill first. Values are the repository's real directories
+and may use custom names. Generate implementation tasks only for configured
+project types; describe unlisted systems only as external contracts.
 
 ## Scope Boundary
 
@@ -79,7 +76,9 @@ the user already specified it).
 
 ## Implementation Notes
 
-This skill uses shared modules from `_shared/codoop_lib_v1/` (which are also used by `codoop-execute`). The CLI automatically imports these from the parent `_shared/` directory, so you can invoke both `codoop-ticket.py` (Loop 2) and `codoop_tools.py` (Loop 3) without worrying about module location — they share the same library code.
+Locate this `SKILL.md` as `$SKILL`. Invoke the plugin-level ticket CLI at
+`$SKILL/../../runtime/codoop-flow/codoop-ticket.py`. Codex and Claude install
+this Runtime once for all codoop-flow skills.
 
 ## Ticket Design Mode
 
@@ -109,7 +108,7 @@ skip grilling or infer product decisions merely because `"one_pass"` is set.
 
 Before initializing a ticket or writing ticket documents, run this sequence:
 
-1. Read relevant `docs/backlog/`, project documentation, and existing code to establish project facts and constraints.
+1. Read `project_paths`, relevant `docs/backlog/`, project documentation, and existing code to establish project facts and constraints.
 2. For a **feature** ticket, use available web/search tools to identify relevant existing products. Prefer primary product pages and documentation; report only patterns that are relevant to the requested feature. If browsing is unavailable, state that plainly rather than inventing competitors. A **fix** ticket skips market research unless the user requests it.
 3. Present a short, evidence-based recommendation: comparable patterns to keep, gaps or risks to avoid, and the tailored product direction that best fits this project's users, existing product decisions, architecture, and scope. Learn from competitors; do not copy branded UI, copy, or proprietary flows.
 4. Load and run the `grilling` skill on the proposal. It asks one decision at a time, looks up facts from the project or available tools instead of asking for them, offers a recommended answer, and waits for the response before continuing.
@@ -201,9 +200,10 @@ promotion approval remains mandatory in both modes.
 **Process**:
 1. Load `/skill spec-driven-development`
 2. Design `spec.md` based on `module_prd.md`:
-   - API interface design (backend, web, mobile platforms)
-   - Database fields and data models
-   - UI interaction flows
+   - implementation details for configured project types and their real paths
+   - external API behavior a configured client needs, without backend tasks
+   - database details only when `backend` is configured and owns the data
+   - UI interaction flows when applicable
 3. Decide whether the feature creates or materially changes a user-visible screen, primary task flow, or interaction state. If it does, set `visual_preview: true` in `metadata.json` and generate `preview.html`; in `"strict"` mode, do this before asking the user to review the phase. Otherwise leave it `false` and state that no visual preview is needed.
 4. In `"strict"` mode, you review, provide feedback, modify until satisfied.
 
@@ -268,7 +268,7 @@ todo.md:
 
 **Process**:
 1. Automatically infer from `spec.md`:
-   - `modules`: extract from spec headers (## Backend → backend, ## Web → web)
+   - `modules`: include only types present in `project_paths`. An external API section does not add `backend`.
 2. Inspect the confirmed spec for new or changed user-visible screens,
    interactions, or task flows:
    - Keep `visual_preview: true` only when the Phase 2 preview was required
@@ -406,7 +406,7 @@ If business model, GTM strategy, or cross-module impact surfaces, confirm with u
 
 ```
 This is ticket-scoped technical spec design, building on existing architecture.
-Focus on "<module_name>" APIs, database changes, implementation details per platform.
+Focus on implementation inside the configured project path. Record external API needs as contracts, not backend work.
 If global architecture changes, performance overhauls, or scope expansion surfaces, confirm with user.
 ```
 
@@ -431,29 +431,30 @@ Loop 2 can be used independently via CLI without requiring codoop-flow:
 
 ```bash
 # Initialize a new ticket draft (feature by default)
-python skills/codoop-ticket/scripts/codoop-ticket.py \
+python3 $SKILL/../../runtime/codoop-flow/codoop-ticket.py \
   ticket init ticket_001 --config codoop_flow.toml --title "Add user search"
 
 # Initialize a fix ticket (scaffolds bug_report.md instead of PRD + Spec)
-python skills/codoop-ticket/scripts/codoop-ticket.py \
+python3 $SKILL/../../runtime/codoop-flow/codoop-ticket.py \
   ticket init ticket_002 --type fix --config codoop_flow.toml --title "Fix pagination overflow"
 
 # Validate ticket completeness
-python skills/codoop-ticket/scripts/codoop-ticket.py \
+python3 $SKILL/../../runtime/codoop-flow/codoop-ticket.py \
   ticket validate ticket_001 --config codoop_flow.toml
 
 # Promote a confirmed ticket from drafts/ to pending/ and commit that ticket
-python skills/codoop-ticket/scripts/codoop-ticket.py \
+python3 $SKILL/../../runtime/codoop-flow/codoop-ticket.py \
   ticket promote ticket_001 --config codoop_flow.toml
 
 # Update metadata.json from docs
-python skills/codoop-ticket/scripts/codoop-ticket.py \
+python3 $SKILL/../../runtime/codoop-flow/codoop-ticket.py \
   ticket update-metadata ticket_001 --config codoop_flow.toml
 ```
 
-### Completely Independent
+### Independent Workflow
 
-Loop 2 has no dependencies on Loop 3 (codoop-flow). 
-Only requirement: a `codoop_flow.toml` pointing to the target project.
+Loop 2 does not depend on the execution skill. It uses the shared plugin Runtime
+and requires a `codoop_flow.toml` pointing to the target project.
 
-For setup, use: `python skills/codoop-execute/scripts/codoop.py setup <target-repo>`
+For setup, use:
+`python3 $SKILL/../../runtime/codoop-flow/codoop.py setup <target-repo>`

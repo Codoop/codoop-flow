@@ -61,15 +61,14 @@ codex plugin add codoop-flow@codoop-flow
 然后重启/打开 Codex。日常流程只需要两句话：
 
 ```text
-使用 $codoop-flow，帮这个仓库初始化 codoop-flow。
-使用 $codoop-flow，针对 codoop_flow.toml 跑下一张工单。
+使用 $codoop-init，分析这个已有仓库并初始化 codoop-flow。
+使用 codoop-execute skill，针对 codoop_flow.toml 跑下一张工单。
 ```
 
 本地开发备用方式：
 
 ```bash
-mkdir -p "${CODEX_HOME:-$HOME/.codex}/skills"
-cp -R skills/codoop-execute "${CODEX_HOME:-$HOME/.codex}/skills/"
+bash scripts/install-skills.sh --agent codex
 ```
 
 ### Claude Code
@@ -80,6 +79,8 @@ cp -R skills/codoop-execute "${CODEX_HOME:-$HOME/.codex}/skills/"
 /plugin marketplace add Codoop/codoop-flow
 /plugin install codoop-flow@codoop-flow
 ```
+
+请安装完整插件；其中的 Skill 共用一份 Runtime，不再单独作为 Claude 插件发布。
 
 也可以直接告诉 Claude Code：从 `Codoop/codoop-flow` 安装 codoop-flow 插件，然后针对当前仓库运行。
 
@@ -200,15 +201,20 @@ Skill 编排多个专家角色（PM、GTM、UX/UI、架构师）协作：
 在 Claude Code 里直接说：
 
 ```text
-使用 codoop-execute skill，帮这个仓库初始化 codoop-flow。
+使用 codoop-init skill，分析这个已有仓库并初始化 codoop-flow。
 ```
 
 或手动运行：
 
 ```bash
-python3 skills/codoop-execute/scripts/codoop.py setup /path/to/your/repo \
-  --config /path/to/your/repo/codoop_flow.toml
+python3 runtime/codoop-flow/codoop.py setup /path/to/your/repo \
+  --config /path/to/your/repo/codoop_flow.toml \
+  --project-path backend=server \
+  --project-path web=admin-console
 ```
+
+新项目固定使用 `backend/`、`web/`、`desktop/`、`mobile/`。`codoop-init`
+只创建用户选择的目录，目录内只有 `.gitkeep`，不会生成可运行项目。
 
 **② 放工单**到 `docs/tickets/pending/ticket_001/`，每个工单包含：
 - `metadata.json`（[字段说明](#工单-metadatajson)）
@@ -263,7 +269,7 @@ Agent 挑最旧的 pending 工单，跑完整流程（挑单 → 写码 → 验�
    - 提交和归档（in_progress → done）
    - 优雅处理失败
 
-3. **评审 persona**（在 `_shared/agents/` 中）：验证通过后，agent 运行多个评审者——
+3. **评审 persona**（在 `runtime/codoop-flow/agents/` 中）：验证通过后，agent 运行多个评审者——
    - `code-reviewer` — 正确性、可读性、安全性、性能
    - `security-auditor` — 漏洞扫描
    - `test-engineer` — 测试策略和覆盖率
@@ -302,10 +308,10 @@ Agent 挑最旧的 pending 工单，跑完整流程（挑单 → 写码 → 验�
 
 ```bash
 # 起草：在 drafts/ 生成 metadata + 空文档骨架
-python3 skills/codoop-ticket/scripts/codoop-ticket.py ticket init ticket_001 --config codoop_flow.toml --title "add hello module"
+python3 runtime/codoop-flow/codoop-ticket.py ticket init ticket_001 --config codoop_flow.toml --title "add hello module"
 # 编辑 drafts/ticket_001/ 里的 module_prd.md（业务）、spec.md（契约）；visual_preview 为 true 时还需编辑 preview.html
-python3 skills/codoop-ticket/scripts/codoop-ticket.py ticket validate ticket_001 --config codoop_flow.toml   # 校验必填文档
-python3 skills/codoop-ticket/scripts/codoop-ticket.py ticket promote  ticket_001 --config codoop_flow.toml   # drafts → pending
+python3 runtime/codoop-flow/codoop-ticket.py ticket validate ticket_001 --config codoop_flow.toml   # 校验必填文档
+python3 runtime/codoop-flow/codoop-ticket.py ticket promote  ticket_001 --config codoop_flow.toml   # drafts → pending
 ```
 
 想从零探索一个新想法（多角色设计会话，产出到 `docs/backlog/`），在会话内调用 skill：
@@ -369,16 +375,20 @@ codoop-flow/
 ├── .agents/plugins/marketplace.json # Codex marketplace 清单
 ├── .claude-plugin/                # Claude Code 插件声明
 ├── .codex-plugin/                 # Codex 插件声明
+├── runtime/codoop-flow/           # Codex 与 Claude 共用的一份 Runtime
+│   ├── codoop.py                  # 初始化 CLI
+│   ├── codoop_tools.py            # 第三环确定性护栏
+│   ├── codoop-ticket.py           # 工单生命周期 CLI
+│   ├── codoop_lib_v1/             # 共享 Python 库
+│   └── agents/                    # 共享评审 persona
 ├── skills/
-│   ├── _shared/                   # 共享代码 & agent personas（所有 skills 使用）
-│   │   ├── codoop_lib_v1/         #   共享库（ticket、config、verify 等）
-│   │   └── agents/                #   评审 persona（code-reviewer、security-auditor 等）
+│   ├── codoop-init/               # ★项目分析与初始化
 │   ├── codoop-execute/            # ★第三环：Agent 编排执行
 │   ├── codoop-ticket/             # ★第二环：人类工单设计
 │   ├── codoop-discover/           # ★第一环：创意探索设计
 │   ├── codoop-ux-walkthrough/     # ★基于 persona 的非阻塞体验洞察
-│   └── [其他 6 个 skill]/         # 独立学科
-├── tests/test_skeleton.py         # 14 个骨架测试（子进程调 CLI，不依赖 AI）
+│   └── [其他 7 个 skill]/         # 独立学科
+├── tests/test_skeleton.py         # 子进程 CLI 测试，不依赖 AI
 ├── LICENSE                         # MIT
 └── docs/
     ├── install.md                 # 多 agent 安装说明
@@ -456,7 +466,7 @@ Agent 自动重试（默认预算 3 次）。全部失败后，工单搬到 `fai
 目标工程必须先 `git init`。codoop-flow 在你工程的 git 仓库里流转工单。
 
 **agent 说找不到 skill / 命令？**
-Claude Code 确认插件已安装。再手动验证护栏就位：`python3 skills/codoop-execute/scripts/codoop_tools.py --config codoop_flow.toml status`。
+Claude Code 确认完整的 `codoop-flow` 插件已安装。再手动验证护栏就位：`python3 runtime/codoop-flow/codoop_tools.py --config codoop_flow.toml status`。
 
 **工单一直卡在 `failed/`？**
 打开 `failed/<id>/healing_report.md` 后，让 agent 恢复该工单（或执行 `codoop_tools.py --config <toml> resume <id>`）。它会回到 `in_progress/` 并保留恢复 worktree；不要移回 `pending/`，该路径可能 reset 恢复中的改动。

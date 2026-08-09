@@ -145,7 +145,7 @@ docs/backlog/
 
 ### 七个专家代理
 
-所有代理定义在 `/skills/_shared/agents/` 中，由 `codoop-discover` skill 编排：
+所有代理定义在 `/runtime/codoop-flow/agents/` 中，由 `codoop-discover` skill 编排：
 
 | 代理 | 文件 | 角色 |
 |---|---|---|

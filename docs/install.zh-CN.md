@@ -2,10 +2,12 @@
 
 [English](./install.md) · **简体中文**
 
-codoop-flow 包含**七个核心独立 skill**，分别应对 AI 驱动开发的不同阶段：
+codoop-flow 包含 **12 个独立 Skill**，分别应对 AI 驱动开发的不同阶段：
 
 | Skill | 用途 | 阶段 |
 |-------|------|------|
+| **codoop-init** | 分析已有项目的自定义目录，或创建新项目的标准空目录 | 初始化 |
+| **grilling** | 每次只问一个大白话问题，确认产品决策 | 探索 / 工单需求确认 |
 | **codoop-discover** | 产品设计与架构规划（0→1 阶段） | 开码前 |
 | **codoop-ticket** | 工单编排（PRD → Spec → Plan） | 工单设计 |
 | **spec-driven-development** | 设计技术规格 | 工单设计 / 独立使用 |
@@ -13,8 +15,13 @@ codoop-flow 包含**七个核心独立 skill**，分别应对 AI 驱动开发的
 | **definition-of-done** | 项目级完成标准检查清单 | 质量守门 |
 | **codoop-execute** | 代码实现与交付（隔离 worktree） | 编码 & 发布 |
 | **codoop-ux-walkthrough** | 用指定 persona 体验流程并产出非阻塞体验报告 | 独立使用 / 第三环批准后 |
+| **incremental-implementation** | 把大改动拆成可逐步验证的小改动 | 第三环写码 / 独立使用 |
+| **debugging-and-error-recovery** | 定位根因并指导失败恢复 | 第三环排错 / 独立使用 |
+| **test-driven-development** | 按先写测试、再实现的方式开发 | 第三环验证 / 独立使用 |
 
-每个 skill 都是**自包含**的：带了编排说明书(`SKILL.md`)、确定性 CLI 和共享的 sub-agent personas。所以无论装到哪个 agent，只要那个目录能被读到、且能跑 `python3`，技能就能工作。
+每个 skill 都可以在完整的 codoop-flow 插件中独立触发。确定性 CLI、共享
+Python 模块和评审 persona 只保留一份，统一放在
+`runtime/codoop-flow/`；skill 不再各自携带脚本。
 
 > 前提：目标机器有 `python3`(标准库即可,无第三方依赖);目标工程是一个 git 仓库,
 > 且有 `docs/tickets/{pending,in_progress,done,failed}/`。准备一份 `codoop_flow.toml`
@@ -22,7 +29,7 @@ codoop-flow 包含**七个核心独立 skill**，分别应对 AI 驱动开发的
 
 ---
 
-## 一键安装（全部 7 个核心 skill）
+## 一键安装（全部 12 个 Skill）
 
 克隆一次，然后运行：
 
@@ -31,7 +38,11 @@ git clone https://github.com/Codoop/codoop-flow.git
 bash codoop-flow/scripts/install-skills.sh
 ```
 
-这会把所有 7 个核心 skill 复制到 `~/.codex/skills/` 和 `~/.claude/skills/`。再跑一次就是原地更新。用 `--agent codex` 或 `--agent claude` 只装到某一个 agent。用 `--dry-run` 预览但不实际复制。
+这会把全部 12 个 Skill 和一份共享 Runtime 安装到两个 agent。Codex
+使用 `~/.codex/runtime/codoop-flow/`，Claude 使用
+`~/.claude/runtime/codoop-flow/`。再跑一次就是原地更新。用
+`--agent codex` 或 `--agent claude` 只装到某一个 agent。用 `--dry-run`
+预览但不实际复制。
 
 ---
 
@@ -47,8 +58,8 @@ codex plugin add codoop-flow@codoop-flow
 然后重启/打开 Codex。日常流程只需要两句话：
 
 ```text
-使用 $codoop-flow，帮这个仓库初始化 codoop-flow。
-使用 $codoop-flow，针对 /path/to/codoop_flow.toml 跑下一张工单。
+使用 $codoop-init，分析这个仓库并初始化 codoop-flow。
+使用 codoop-execute skill，针对 /path/to/codoop_flow.toml 跑下一张工单。
 ```
 
 本地开发时也可以不走插件安装，改为克隆并用安装脚本：
@@ -64,6 +75,9 @@ bash codoop-flow/scripts/install-skills.sh --agent codex
 /plugin marketplace add Codoop/codoop-flow
 /plugin install codoop-flow@codoop-flow
 ```
+
+请安装完整的 `codoop-flow` 插件项。各 Skill 共用插件 Runtime，不再作为
+独立 Claude 插件发布。
 
 > SSH 报错?市场默认用 SSH 克隆。没配 SSH key 就用完整 HTTPS:
 > ```
@@ -123,18 +137,20 @@ claude --plugin-dir /path/to/codoop-flow
 
 ## 通用拷贝(Cursor / Gemini / 其他)
 
-每个 skill 都是自包含目录，任何 agent 都可以把全部 7 个核心 skill 拷进自己的技能/规则目录:
+请保持插件结构完整。如果某个 agent 必须复制 skill 目录，就把公开 skill
+和 Runtime 分别复制到同一个 agent 根目录下的 `skills/` 与 `runtime/`：
 
 ```bash
 git clone https://github.com/Codoop/codoop-flow.git
-# 拷全部 7 个核心 skill — 每个都自带 SKILL.md
-for skill in codoop-discover codoop-ticket spec-driven-development \
+# 拷全部 12 个 Skill — 每个都自带 SKILL.md
+for skill in codoop-init grilling codoop-discover codoop-ticket spec-driven-development \
              planning-and-task-breakdown definition-of-done codoop-execute \
-             codoop-ux-walkthrough; do
+             codoop-ux-walkthrough incremental-implementation \
+             debugging-and-error-recovery test-driven-development; do
   cp -R "codoop-flow/skills/$skill"  <目标 agent 的技能目录>/
 done
-# _shared 被 codoop-discover 用相对路径引用
-cp -R codoop-flow/skills/_shared <目标 agent 的技能目录>/
+mkdir -p <agent根目录>/runtime
+cp -R codoop-flow/runtime/codoop-flow <agent根目录>/runtime/
 ```
 
 各 agent 的落脚点(参考各自文档,可能随版本变化):
@@ -145,7 +161,9 @@ cp -R codoop-flow/skills/_shared <目标 agent 的技能目录>/
 | 其他 agent | skill 是纯 Markdown，把每个 `SKILL.md` 内容作为 system prompt / instructions 喂进去 | 直接对话 |
 | Gemini CLI | 放进其 skills 目录 | 自动发现 |
 
-**关键**:拷完后确保 `scripts/` 和 `references/` 等跟各 `SKILL.md` 保持在同一父目录下——SKILL.md 里所有路径都是相对自己的(`$SKILL/scripts/...`、`$SKILL/references/...`),拆开就找不到 CLI 和评审 persona 了。
+**关键**：保持 `<agent根目录>/skills/` 和
+`<agent根目录>/runtime/codoop-flow/` 同级。每个 Skill 都从自己的
+`SKILL.md` 相对定位 Runtime；只搬 Skill 文件夹会找不到 CLI 和评审 persona。
 
 ---
 
@@ -153,7 +171,7 @@ cp -R codoop-flow/skills/_shared <目标 agent 的技能目录>/
 
 ```bash
 codex plugin list
-python3 <skill路径>/scripts/codoop_tools.py --config <toml> status
+python3 <agent根目录>/runtime/codoop-flow/codoop_tools.py --config <toml> status
 ```
 能打印出各阶段工单计数(JSON)就说明护栏 CLI 就位、config 正确。
 

@@ -62,15 +62,14 @@ Install the codoop-flow Codex plugin from Codoop/codoop-flow, then set up this r
 Then restart/open Codex. The normal workflow is just:
 
 ```text
-Use $codoop-flow to set up this repo for codoop-flow.
-Use $codoop-flow to run the next ticket against codoop_flow.toml.
+Use $codoop-init to inspect this existing repo and set up codoop-flow.
+Use the codoop-execute skill to run the next ticket against codoop_flow.toml.
 ```
 
 Local development fallback:
 
 ```bash
-mkdir -p "${CODEX_HOME:-$HOME/.codex}/skills"
-cp -R skills/codoop-execute "${CODEX_HOME:-$HOME/.codex}/skills/"
+bash scripts/install-skills.sh --agent codex
 ```
 
 ### Claude Code
@@ -81,6 +80,9 @@ Install the plugin:
 /plugin marketplace add Codoop/codoop-flow
 /plugin install codoop-flow@codoop-flow
 ```
+
+Install the complete plugin; its skills share one bundled Runtime and are not
+published as separate Claude plugins.
 
 Or tell Claude Code to install the codoop-flow plugin from `Codoop/codoop-flow`
 and then run it against your repo.
@@ -207,15 +209,21 @@ Outputs ticket specs to `docs/tickets/pending/ticket_001/`.
 In Claude Code, ask:
 
 ```text
-Use the codoop-execute skill to set up this repo for codoop-flow.
+Use the codoop-init skill to inspect this existing repo and set up codoop-flow.
 ```
 
 Or manually:
 
 ```bash
-python3 skills/codoop-execute/scripts/codoop.py setup /path/to/your/repo \
-  --config /path/to/your/repo/codoop_flow.toml
+python3 runtime/codoop-flow/codoop.py setup /path/to/your/repo \
+  --config /path/to/your/repo/codoop_flow.toml \
+  --project-path backend=server \
+  --project-path web=admin-console
 ```
+
+For a new project, `codoop-init` uses the fixed names `backend/`, `web/`,
+`desktop/`, and `mobile/`, creates only the selected directories, and puts only
+`.gitkeep` inside them. It does not generate runnable applications.
 
 **② Add tickets** to `docs/tickets/pending/ticket_001/`, each containing:
 - `metadata.json` ([fields](#ticket-metadatajson))
@@ -270,7 +278,7 @@ Once installed you barely need to remember commands — **the skill is written f
    - Commit and archive (in_progress → done)
    - Handle failures gracefully
 
-3. **Review personas** (in `_shared/agents/`): After verify passes, agent runs multiple reviewers:
+3. **Review personas** (in `runtime/codoop-flow/agents/`): After verify passes, agent runs multiple reviewers:
    - `code-reviewer` — correctness, readability, security, performance
    - `security-auditor` — vulnerability scanning
    - `test-engineer` — test strategy and coverage
@@ -310,10 +318,10 @@ After `setup`, you can also use the human-facing CLI to turn an idea into a tick
 
 ```bash
 # Draft: scaffold metadata + empty docs under drafts/
-python3 skills/codoop-ticket/scripts/codoop-ticket.py ticket init ticket_001 --config codoop_flow.toml --title "add hello module"
+python3 runtime/codoop-flow/codoop-ticket.py ticket init ticket_001 --config codoop_flow.toml --title "add hello module"
 # Edit drafts/ticket_001/: module_prd.md (business), spec.md (contract), and preview.html when visual_preview is true
-python3 skills/codoop-ticket/scripts/codoop-ticket.py ticket validate ticket_001 --config codoop_flow.toml   # check required docs
-python3 skills/codoop-ticket/scripts/codoop-ticket.py ticket promote  ticket_001 --config codoop_flow.toml   # confirmed drafts → pending + dedicated ticket commit
+python3 runtime/codoop-flow/codoop-ticket.py ticket validate ticket_001 --config codoop_flow.toml   # check required docs
+python3 runtime/codoop-flow/codoop-ticket.py ticket promote  ticket_001 --config codoop_flow.toml   # confirmed drafts → pending + dedicated ticket commit
 ```
 
 To explore a brand-new idea (multi-role design session, output to `docs/backlog/`), invoke the skill in-session:
@@ -377,16 +385,20 @@ codoop-flow/
 ├── .agents/plugins/marketplace.json # Codex marketplace manifest
 ├── .claude-plugin/                # Claude Code plugin manifests
 ├── .codex-plugin/                 # Codex plugin manifest
+├── runtime/codoop-flow/           # one shared Runtime for Codex and Claude
+│   ├── codoop.py                  # setup CLI
+│   ├── codoop_tools.py            # deterministic Loop 3 guardrails
+│   ├── codoop-ticket.py           # ticket lifecycle CLI
+│   ├── codoop_lib_v1/             # shared Python library
+│   └── agents/                    # shared review personas
 ├── skills/
-│   ├── _shared/                   # shared code & agents (used by all skills)
-│   │   ├── codoop_lib_v1/         #   shared libraries (ticket, config, verify, etc.)
-│   │   └── agents/                #   review personas (code-reviewer, security-auditor, etc.)
+│   ├── codoop-init/               # ★Project inspection and initialization
 │   ├── codoop-execute/            # ★Loop 3: Agent-Centric code execution
 │   ├── codoop-ticket/             # ★Loop 2: Human-Centric ticket design  
 │   ├── codoop-discover/           # ★Loop 1: Venture-Discovery product design
 │   ├── codoop-ux-walkthrough/     # ★Persona-based, non-blocking experience insight
-│   └── [6 other skills]/          # standalone disciplines
-├── tests/test_skeleton.py         # 14 skeleton tests (subprocess CLI calls, no AI)
+│   └── [7 other skills]/          # standalone disciplines
+├── tests/test_skeleton.py         # subprocess CLI tests, no AI
 ├── LICENSE                         # MIT
 └── docs/
     ├── install.md                 # multi-agent install guide
@@ -462,7 +474,7 @@ It clones over SSH by default. Without an SSH key, use the full HTTPS URL: `/plu
 The target project must be `git init`-ed first. codoop-flow flows tickets inside your project's git repo.
 
 **The agent says it can't find the skill / command?**
-For Claude Code, confirm the plugin is installed. Then verify the guardrail is in place: `python3 skills/codoop-execute/scripts/codoop_tools.py --config codoop_flow.toml status`.
+For Claude Code, confirm the complete `codoop-flow` plugin is installed. Then verify the guardrail is in place: `python3 runtime/codoop-flow/codoop_tools.py --config codoop_flow.toml status`.
 
 **A ticket is stuck in `failed/`?**
 Open `failed/<id>/healing_report.md`, then ask the agent to resume that ticket (or run `codoop_tools.py --config <toml> resume <id>`). It returns the ticket to `in_progress/` and preserves its retained worktree; do not move it back to `pending/`, which can reset recovery work.

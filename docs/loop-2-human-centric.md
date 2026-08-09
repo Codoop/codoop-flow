@@ -154,7 +154,7 @@ Loop 2 has an independent CLI tool `codoop-ticket.py` that is completely indepen
 All commands can be invoked via:
 
 ```bash
-python skills/codoop-ticket/scripts/codoop-ticket.py ticket <command> <args>
+python3 runtime/codoop-flow/codoop-ticket.py ticket <command> <args>
 ```
 
 Or directly call the skill in any AI coding tool:

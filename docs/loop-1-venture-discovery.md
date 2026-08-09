@@ -153,7 +153,7 @@ All files are **locked by design** — no file is ever placed at the root of `do
 
 ### The Seven Expert Agents
 
-All agents are defined in `/skills/_shared/agents/` and are orchestrated by the `codoop-discover` skill:
+All agents are defined in `/runtime/codoop-flow/agents/` and are orchestrated by the `codoop-discover` skill:
 
 | Agent | File | Role |
 |---|---|---|

@@ -17,8 +17,8 @@ import argparse
 import sys
 from pathlib import Path
 
-# Add _shared to path for shared libraries
-sys.path.insert(0, str(Path(__file__).parents[2] / "_shared"))
+# The shared library lives beside this plugin-level CLI.
+sys.path.insert(0, str(Path(__file__).parent))
 from codoop_lib_v1.config import load_config
 from codoop_lib_v1.gitutil import GitError, git
 from codoop_lib_v1.ticket import Ticket

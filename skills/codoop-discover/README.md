@@ -93,7 +93,7 @@ After discovery is complete:
 
 ## Expert Agents
 
-This skill reads expert personas from `skills/_shared/agents/`:
+This skill reads expert personas from `runtime/codoop-flow/agents/`:
 
 - `product-sprint-prioritizer.md` — PM/Product Strategy expert
 - `sales-offer-lead-gen-strategist.md` — GTM/Business Strategy expert

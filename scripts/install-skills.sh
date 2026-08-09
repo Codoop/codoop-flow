@@ -4,8 +4,11 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 SKILLS_DIR="$REPO_ROOT/skills"
+RUNTIME_DIR="$REPO_ROOT/runtime/codoop-flow"
 
 SKILLS=(
+  codoop-init
+  grilling
   codoop-discover
   codoop-ticket
   spec-driven-development
@@ -13,6 +16,9 @@ SKILLS=(
   definition-of-done
   codoop-ux-walkthrough
   codoop-execute
+  incremental-implementation
+  debugging-and-error-recovery
+  test-driven-development
 )
 
 DRY_RUN=0
@@ -39,16 +45,19 @@ fi
 
 _install_to() {
   local label="$1" dest_base="$2"
+  local agent_home dest_runtime
+  agent_home="$(dirname "$dest_base")"
+  dest_runtime="$agent_home/runtime/codoop-flow"
   echo ""
   echo "==> $label  →  $dest_base"
   [[ $DRY_RUN -eq 0 ]] && mkdir -p "$dest_base"
 
-  # _shared must be co-located with skills (codoop-discover uses ../../_shared/)
-  if [[ -d "$SKILLS_DIR/_shared" ]]; then
-    if [[ $DRY_RUN -eq 1 ]]; then echo "  [dry-run] _shared"; else
-      rm -rf "$dest_base/_shared" && cp -R "$SKILLS_DIR/_shared" "$dest_base/_shared"
-      echo "  + _shared"
-    fi
+  if [[ $DRY_RUN -eq 1 ]]; then
+    echo "  [dry-run] runtime/codoop-flow"
+  else
+    mkdir -p "$agent_home/runtime"
+    rm -rf "$dest_runtime" && cp -R "$RUNTIME_DIR" "$dest_runtime"
+    echo "  + runtime/codoop-flow"
   fi
 
   for skill in "${SKILLS[@]}"; do
@@ -71,13 +80,18 @@ cat <<'EOF'
 Copy each skill directory into your agent's rules/skills location:
 
   cp -R skills/codoop-discover                <agent-skills-dir>/
+  cp -R skills/codoop-init                    <agent-skills-dir>/
+  cp -R skills/grilling                       <agent-skills-dir>/
   cp -R skills/codoop-ticket                  <agent-skills-dir>/
   cp -R skills/spec-driven-development        <agent-skills-dir>/
   cp -R skills/planning-and-task-breakdown    <agent-skills-dir>/
   cp -R skills/definition-of-done             <agent-skills-dir>/
   cp -R skills/codoop-ux-walkthrough          <agent-skills-dir>/
   cp -R skills/codoop-execute                 <agent-skills-dir>/
-  cp -R skills/_shared                        <agent-skills-dir>/
+  cp -R skills/incremental-implementation     <agent-skills-dir>/
+  cp -R skills/debugging-and-error-recovery   <agent-skills-dir>/
+  cp -R skills/test-driven-development        <agent-skills-dir>/
+  cp -R runtime/codoop-flow                   <agent-home>/runtime/
 
 Cursor: place each SKILL.md in .cursor/rules/, or point the agent at skills/.
 Gemini CLI: see ~/.gemini/skills/ or the agent's documented path.

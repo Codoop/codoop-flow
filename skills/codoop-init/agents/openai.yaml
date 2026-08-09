@@ -1,0 +1,4 @@
+interface:
+  display_name: "Codoop Init"
+  short_description: "Inspect or create a codoop-flow project layout"
+  default_prompt: "Use $codoop-init to inspect an existing repository or create selected empty project directories, then initialize codoop-flow."

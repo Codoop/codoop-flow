@@ -1,6 +1,6 @@
 {
   "name": "codoop-flow",
-  "version": "0.1.6-alpha.2",
+  "version": "0.1.6-alpha.3",
   "description": "Guardrailed AI coding ticket pipeline: pick, build, verify, multi-review, and archive one ticket at a time.",
   "author": {
     "name": "Codoop",
@@ -32,7 +32,7 @@
     ],
     "websiteURL": "https://github.com/Codoop/codoop-flow",
     "defaultPrompt": [
-      "Set up this repo for codoop-flow.",
+      "Use $codoop-init to inspect or create this project and set up codoop-flow.",
       "Run the next codoop-flow ticket.",
       "Draft and promote a codoop-flow ticket."
     ],

@@ -11,7 +11,7 @@ approve or reject a release, edit code, or create follow-up tickets.
 
 ## Core Rules
 
-- Read `$SKILL/../_shared/agents/persona-walkthrough.md` and use it as the
+- Read `$SKILL/../../runtime/codoop-flow/agents/persona-walkthrough.md` and use it as the
   persona prompt without changing its contents.
 - Distinguish what was observed from what was inferred. This is a qualitative
   simulation, not user research or statistical evidence.
@@ -61,7 +61,7 @@ experience_report.md; do not request code changes or create tickets.
 ## Workflow
 
 1. Read the original persona prompt in
-   `$SKILL/../_shared/agents/persona-walkthrough.md`.
+   `$SKILL/../../runtime/codoop-flow/agents/persona-walkthrough.md`.
 2. State the persona, the task to complete, the available evidence, and any
    assumptions.
 3. Experience the primary path. When feasible, also try one recovery/error path

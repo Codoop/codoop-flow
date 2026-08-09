@@ -11,7 +11,7 @@
 set -u
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-TOOLS="$ROOT/skills/codoop-execute/scripts/codoop_tools.py"
+TOOLS="$ROOT/runtime/codoop-flow/codoop_tools.py"
 PY="${PYTHON:-python3}"
 
 TMP="$(mktemp -d)"

@@ -78,11 +78,12 @@ def init_draft(
         else:
             language = "zh"
 
+    default_module = next(iter(config.project_paths), "core")
     stub = {
         "ticket_id": ticket_id,
         "title": title or ticket_id,
         "ticket_type": ticket_type,
-        "modules": ["backend"],
+        "modules": [default_module],
         "max_healing_attempts": 3,
         "ui_capture": False,
         "visual_preview": False,
@@ -120,7 +121,7 @@ def init_draft(
             "# 执行步骤计划 (Plan)\n\n- 步骤 1: ...\n", encoding="utf-8"
         )
         (draft / "todo.md").write_text(
-            "# 原子任务 (Todo)\n\n- [ ] [backend] ...\n", encoding="utf-8"
+            f"# 原子任务 (Todo)\n\n- [ ] [{default_module}] ...\n", encoding="utf-8"
         )
     else:  # English
         if ticket_type == "fix":
@@ -151,7 +152,7 @@ def init_draft(
             "# Implementation Plan\n\n- Step 1: ...\n", encoding="utf-8"
         )
         (draft / "todo.md").write_text(
-            "# Atomic Tasks (Todo)\n\n- [ ] [backend] ...\n", encoding="utf-8"
+            f"# Atomic Tasks (Todo)\n\n- [ ] [{default_module}] ...\n", encoding="utf-8"
         )
 
     return draft
@@ -215,7 +216,7 @@ def update_metadata_from_docs(config: Config, ticket_id: str) -> dict:
     """Intelligently update metadata.json based on the design docs (spec, plan, todo).
 
     Infers:
-    - modules: extracted from spec.md's "## Backend", "## Web", etc. section headers
+    - modules: extracted from owned-project headings in spec.md
 
     Returns the updated metadata dict (but does NOT write to disk yet).
     User can review and accept/modify before validate().
@@ -243,7 +244,7 @@ def update_metadata_from_docs(config: Config, ticket_id: str) -> dict:
             if line.startswith("## "):
                 section = line[3:].strip().lower()
                 # Common module names
-                if any(m in section for m in ["backend", "api", "server"]):
+                if any(m in section for m in ["backend", "server"]):
                     modules.add("backend")
                 if any(m in section for m in ["web", "frontend", "react", "vue"]):
                     modules.add("web")
@@ -252,9 +253,18 @@ def update_metadata_from_docs(config: Config, ticket_id: str) -> dict:
                 if any(m in section for m in ["desktop", "electron", "tauri"]):
                     modules.add("desktop")
 
-    # Default to backend if nothing inferred
+    if config.project_paths:
+        modules.intersection_update(config.project_paths)
+
+    # Keep a confirmed/configured scope if headings do not identify one.
     if not modules:
-        modules = {"backend"}
+        existing = metadata.get("modules") or []
+        modules = {
+            module for module in existing
+            if not config.project_paths or module in config.project_paths
+        }
+    if not modules:
+        modules = {next(iter(config.project_paths), "core")}
 
     modules = sorted(list(modules))
 

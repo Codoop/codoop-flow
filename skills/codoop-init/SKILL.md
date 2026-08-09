@@ -1,0 +1,67 @@
+---
+name: codoop-init
+description: Inspect an existing repository or create selected empty project directories, then initialize or refresh codoop-flow configuration. Use when setting up codoop-flow, when existing backend/web/desktop/mobile directories use custom names, when a standalone client lives at the repository root, or when starting a new empty multi-project repository.
+---
+
+# Codoop Init
+
+Initialize codoop-flow from the repository that exists or the empty project the
+user explicitly asks to create. Use only these system project types: `backend`,
+`web`, `desktop`, and `mobile`.
+
+Locate the absolute directory containing this `SKILL.md` as `$SKILL` before
+running the plugin-level Runtime commands below. Both Codex and Claude install
+the Runtime at `$SKILL/../../runtime/codoop-flow/`.
+
+## Existing project
+
+1. Locate the Git root and inspect top-level directories, build manifests,
+   source files, and existing project docs. Ignore dependencies and generated
+   output.
+2. Map each owned system project type to its real relative directory. Preserve
+   custom names: `backend=server`, `web=admin-console`, and similar mappings are
+   valid. If one client is the repository itself, map its type to `.`.
+3. Omit projects outside this repository. An external backend may appear in
+   client contracts, but it is not a `backend` project path.
+4. Ask one plain-language question only when repository evidence cannot resolve
+   a project type or ownership boundary.
+5. Do not move, rename, wrap, or create application directories in this mode.
+
+Run the sibling setup CLI with one mapping per owned project:
+
+```bash
+python3 "$SKILL/../../runtime/codoop-flow/codoop.py" setup <repo-root> \
+  --config <repo-root>/codoop_flow.toml \
+  --project-path backend=server \
+  --project-path web=admin-console
+```
+
+## New project
+
+Use this mode only when the user explicitly asks to create a new project. If
+the requested project types are missing, ask which of `backend`, `web`,
+`desktop`, and `mobile` they need.
+
+1. Use the fixed directory name matching each selected type. Do not ask for or
+   accept custom names.
+2. Create only selected types; never create every platform by default.
+3. Initialize Git in the target directory when needed.
+4. Run setup with `--create-project-dirs`:
+
+```bash
+python3 "$SKILL/../../runtime/codoop-flow/codoop.py" setup <repo-root> \
+  --config <repo-root>/codoop_flow.toml \
+  --project-path web=web \
+  --project-path mobile=mobile \
+  --create-project-dirs
+```
+
+This creates each selected directory with only `.gitkeep`. Do not generate
+framework files, package manifests, build files, source code, or runnable
+scaffolding. Refuse to overwrite a non-empty project directory.
+
+## Verify
+
+Read the resulting `codoop_flow.toml` and report the mapping in plain language.
+Confirm that every path is relative and real, no unselected project was
+created, and `docs/tickets/{pending,in_progress,done,failed}/` exists.

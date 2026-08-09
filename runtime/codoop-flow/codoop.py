@@ -19,24 +19,40 @@ import argparse
 import sys
 from pathlib import Path
 
-# Add _shared to path for shared libraries
-sys.path.insert(0, str(Path(__file__).parents[2] / "_shared"))
+# The shared library lives beside this plugin-level CLI.
+sys.path.insert(0, str(Path(__file__).parent))
 from codoop_lib_v1.config import load_config, setup_target
 from codoop_lib_v1.tickets_cli import init_draft, promote, validate_draft, update_metadata_from_docs, write_metadata
 
 
+def _parse_project_path(value: str) -> tuple[str, str]:
+    project_type, separator, path = value.partition("=")
+    if not separator or not project_type or not path:
+        raise argparse.ArgumentTypeError("expected TYPE=PATH, for example web=admin-console")
+    return project_type, path
+
+
 def _cmd_setup(args) -> int:
     try:
+        project_paths = dict(args.project_path) if args.project_path else None
+        if args.project_path and len(project_paths) != len(args.project_path):
+            raise ValueError("each project type may be configured only once")
         config, cfg_path = setup_target(
             args.target_repo,
             worktree_root=args.worktree_root,
             config_path=args.config,
+            project_paths=project_paths,
+            create_project_dirs=args.create_project_dirs,
         )
     except (ValueError, FileExistsError) as e:
         print(f"error: {e}")
         return 1
-    print(f"created config: {cfg_path}")
+    print(f"config ready: {cfg_path}")
     print(f"ticket pipeline ready under: {config.tickets_dir}")
+    if config.project_paths:
+        print("project paths: " + ", ".join(
+            f"{kind}={path}" for kind, path in config.project_paths.items()
+        ))
     print("Next: add a ticket to pending/, then in Codex or Claude Code say")
     print(f'  "use the codoop-execute skill and run a ticket against {cfg_path}"')
     return 0
@@ -92,7 +108,7 @@ def _cmd_ticket_update_metadata(args) -> int:
 
 def _cmd_install(args) -> int:
     import subprocess
-    install_sh = Path(__file__).parents[3] / "scripts" / "install-skills.sh"
+    install_sh = Path(__file__).parents[2] / "scripts" / "install-skills.sh"
     if not install_sh.exists():
         print(f"error: install script not found: {install_sh}", file=sys.stderr)
         return 1
@@ -112,9 +128,18 @@ def main() -> int:
     p_setup.add_argument("target_repo", help="path to the target git repo to drive")
     p_setup.add_argument("--config", default=None, help="where to write codoop_flow.toml (default: ./codoop_flow.toml)")
     p_setup.add_argument("--worktree-root", default="~/codoop_tickets/worktrees", help="where per-ticket worktrees are created")
+    p_setup.add_argument(
+        "--project-path", action="append", type=_parse_project_path,
+        metavar="TYPE=PATH",
+        help="map backend/web/desktop/mobile to an existing relative directory; repeat as needed",
+    )
+    p_setup.add_argument(
+        "--create-project-dirs", action="store_true",
+        help="create selected standard project directories with only .gitkeep",
+    )
     p_setup.set_defaults(func=_cmd_setup)
 
-    p_install = sub.add_parser("install", help="copy all 6 skills to global agent paths")
+    p_install = sub.add_parser("install", help="copy the core skills to global agent paths")
     p_install.add_argument("--agent", choices=["codex", "claude", "all"],
                           help="target agent (default: auto-detect both)")
     p_install.add_argument("--dry-run", action="store_true",

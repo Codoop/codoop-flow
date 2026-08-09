@@ -1,6 +1,6 @@
 ---
 name: codoop-execute
-description: Drive the codoop-flow Agent-Centric ticket pipeline in-session from Codex, Claude Code, or another coding agent. Use when the user asks to run tickets, process the pending queue, or work a specific ticket through build/verify/review/ship. Orchestrates a deterministic guardrail CLI (scripts/codoop_tools.py) plus the current agent's coding, review, and self-healing work.
+description: Drive the codoop-flow Agent-Centric ticket pipeline in-session from Codex, Claude Code, or another coding agent. Use when the user asks to run tickets, process the pending queue, or work a specific ticket through build/verify/review/ship. Orchestrates the plugin-level deterministic Runtime plus the current agent's coding, review, and self-healing work.
 ---
 
 # codoop-execute orchestration
@@ -8,37 +8,27 @@ description: Drive the codoop-flow Agent-Centric ticket pipeline in-session from
 You are the orchestrator of the codoop-flow Agent-Centric loop (Loop 3, engineering
 design §5). You do the intelligent work **in this session**: writing code,
 self-healing, review judgment, and living-doc sync. A small guardrail CLI
-(`scripts/codoop_tools.py`, inside this skill) handles everything that must be
+(`runtime/codoop-flow/codoop_tools.py`) handles everything that must be
 100% deterministic — claiming tickets, moving folders, managing the isolated git
 worktree, checking the UI screenshot gate, committing.
 **Never do the CLI's job by hand** (don't move ticket folders or create worktrees
 yourself) — always call the tool, because those steps must never be guessed.
 
-## This skill uses shared libraries
+## Plugin Runtime
 
-The core CLI logic lives here, but shared modules are in the `_shared/` directory:
+Codex and Claude install the whole plugin. All skills call the same Runtime:
 
 ```
-$SKILL/
-├── SKILL.md                       (this file)
-└── scripts/
-    ├── codoop_tools.py            guardrail CLI (Loop 3)
-    └── codoop.py                  human CLI (setup/install global commands)
-
-_SHARED/
-└── codoop_lib_v1/                 shared modules (codoop-execute + codoop-ticket)
-    ├── config.py
-    ├── ticket.py
-    ├── verify.py
-    ├── worktree.py
-    ├── gitutil.py
-    └── ignore.py
+$SKILL/../../runtime/codoop-flow/
+├── codoop_tools.py                guardrail CLI (Loop 3)
+├── codoop.py                      setup CLI
+├── codoop-ticket.py               ticket lifecycle CLI
+├── codoop_lib_v1/                 shared Python modules
+└── agents/                        shared review personas
 ```
 
 **First, locate `$SKILL`** — the absolute path of the directory containing this
-SKILL.md. Build every path below from it (e.g. `$SKILL/scripts/codoop_tools.py`).
-The CLI automatically imports `codoop_lib_v1/` from `$SKILL/../../_shared/`, so just
-invoke it by absolute path with your launch Python.
+SKILL.md. Build every path below from it and invoke the Runtime by absolute path.
 
 ## Prerequisites
 
@@ -49,21 +39,16 @@ invoke it by absolute path with your launch Python.
 ## Setup a target repo
 
 If the user asks to onboard, install, set up, or initialize codoop-flow for a
-target project, run:
-
-```
-python3 $SKILL/scripts/codoop.py setup <target-repo> --config <target-repo>/codoop_flow.toml
-```
-
-This creates `docs/tickets/{pending,in_progress,done,failed}/` in the target
-repo and writes `codoop_flow.toml`. After setup, tell the user to add or draft a
-ticket, then run the normal loop below against that config.
+target project, read `$SKILL/../codoop-init/SKILL.md` and follow it. Do not call
+the setup CLI without the project mappings selected by `codoop-init`. After
+setup, tell the user to add or draft a ticket, then run the normal loop below
+against the generated config.
 
 ## The loop (one ticket, end to end)
 
 ### 1. Pick
 ```
-python3 $SKILL/scripts/codoop_tools.py --config <toml> pick
+python3 $SKILL/../../runtime/codoop-flow/codoop_tools.py --config <toml> pick
 ```
 Parse the JSON, then branch on `reason`:
 - `picked:true` — you claimed a fresh ticket. **Record `lease_token`** and pass
@@ -88,7 +73,7 @@ When a human explicitly asks to retry a specific failed ticket, do **not** move
 it to `pending/` or call ordinary `pick`; that path can reset a reused branch
 and discard recovery work. Instead run:
 ```
-python3 $SKILL/scripts/codoop_tools.py --config <toml> resume <ticket_id>
+python3 $SKILL/../../runtime/codoop-flow/codoop_tools.py --config <toml> resume <ticket_id>
 ```
 This moves `failed/<ticket_id>` back to `in_progress/`, mints a new lease, and
 reuses the retained worktree without a reset. Read `previous_report` from the
@@ -104,7 +89,12 @@ history could be recovered. The prior `healing_report.md` is preserved under a
   flow), and `plan.md` + `todo.md` (steps). Also read the target
   repo's `docs/tech/project-structure.md` and `docs/tech/tech-standards.md` if
   present — respect them as hard architectural boundaries.
-- Load `$SKILL/../../incremental-implementation/SKILL.md` discipline
+- Read `[project_paths]` from `codoop_flow.toml` and map the ticket's `modules`
+  to their real directories. Keep implementation inside those mapped paths;
+  repository workflow docs remain allowed. Never create or modify an
+  unconfigured backend or platform project. External API requirements guide
+  client code only.
+- Load `$SKILL/../incremental-implementation/SKILL.md` discipline
   and implement the ticket **inside the `worktree` directory only**.
 - **Edit-scope rule:** A `Scope` heading in `spec.md` or `bug_report.md` is
   guidance, not an implicit allowlist. Prefer it, but make the smallest
@@ -136,13 +126,13 @@ failing again.
 
 Then run the deterministic screenshot gate:
 ```
-python3 $SKILL/scripts/codoop_tools.py --config <toml> verify <ticket_id> --lease <token>
+python3 $SKILL/../../runtime/codoop-flow/codoop_tools.py --config <toml> verify <ticket_id> --lease <token>
 ```
 Exit 0 / `ok:true` = the UI screenshot gate passed (when `ui_capture` is
 enabled). Otherwise read `reasons`.
 
 ### 4. Self-heal (your work) — only on ticket failures
-- Apply `$SKILL/../../debugging-and-error-recovery/SKILL.md` triage to the
+- Apply `$SKILL/../debugging-and-error-recovery/SKILL.md` triage to the
   reported ticket failure or reviewer finding, never to a baseline blocker.
 - Fix the **root cause** with a minimal change; follow Scope guidance and
   report any necessary exception. Re-run the independent validation steps and
@@ -162,21 +152,21 @@ evidence for recovery. Do not spend healing attempts on it. This exception is
 for exact baseline fingerprints only, never a repository-wide lint exemption.
 
 ### 5. Review (your reviewers) — after verify passes
-Run the review personas from `$SKILL/../../_shared/agents/` against `git diff` in
+Run the review personas from `$SKILL/../../runtime/codoop-flow/agents/` against `git diff` in
 the worktree. Prefer parallel subagents when the host provides them (for example
 Codex multi-agent tools or Claude Code Task). If no subagent facility is
 available, perform the same reviews serially in this session. Approval must be
 **unanimous**; any Critical/Important defect = REJECT.
 
 Always run these three (static group):
-- `code-reviewer` → `$SKILL/../../_shared/agents/code-reviewer.md`
-- `security-auditor` → `$SKILL/../../_shared/agents/security-auditor.md`
-- `test-engineer` → `$SKILL/../../_shared/agents/test-engineer.md`
+- `code-reviewer` → `$SKILL/../../runtime/codoop-flow/agents/code-reviewer.md`
+- `security-auditor` → `$SKILL/../../runtime/codoop-flow/agents/security-auditor.md`
+- `test-engineer` → `$SKILL/../../runtime/codoop-flow/agents/test-engineer.md`
 
 If `ui_capture` is true, ALSO run these two (dynamic UI/UX group), and give them
 the `screenshot_dir` to actually inspect the rendered screens:
-- `evidence-collector` → `$SKILL/../../_shared/agents/testing-evidence-collector.md`
-- `reality-checker` → `$SKILL/../../_shared/agents/testing-reality-checker.md`
+- `evidence-collector` → `$SKILL/../../runtime/codoop-flow/agents/testing-evidence-collector.md`
+- `reality-checker` → `$SKILL/../../runtime/codoop-flow/agents/testing-reality-checker.md`
 
 For each reviewer: read its markdown, use it as the review persona, hand it the
 diff, verification report, and screenshot dir for the UI two, and require a
@@ -210,12 +200,12 @@ under `docs/prd/` and `docs/tech/`, never source):
 - Update `docs/tech/project-structure.md` for new/moved files.
 - Append a concise entry to `docs/tech/changelog.md`.
 Adopt the technical-writer discipline
-(`$SKILL/../../_shared/agents/engineering-technical-writer.md`).
+(`$SKILL/../../runtime/codoop-flow/agents/engineering-technical-writer.md`).
 
 ### 8. Finish (the tool)
 Draft a Conventional Commit message, then:
 ```
-python3 $SKILL/scripts/codoop_tools.py --config <toml> finish <ticket_id> --lease <token> --message "<conventional commit>"
+python3 $SKILL/../../runtime/codoop-flow/codoop_tools.py --config <toml> finish <ticket_id> --lease <token> --message "<conventional commit>"
 ```
 This stages (excluding generated noise), commits on `dev/<ticket_id>`, moves the
 ticket to `done/`, and removes the worktree. **Pushing is the human's call** —
@@ -223,7 +213,7 @@ tell the user the branch is ready; only push if they ask.
 
 ### Fail (the tool) — when the healing budget is exhausted
 ```
-python3 $SKILL/scripts/codoop_tools.py --config <toml> fail <ticket_id> --lease <token> --report "<what failed, denoised>"
+python3 $SKILL/../../runtime/codoop-flow/codoop_tools.py --config <toml> fail <ticket_id> --lease <token> --report "<what failed, denoised>"
 ```
 Writes `healing_report.md` into `failed/<ticket_id>/`, releases the lease, and
 retains the worktree with its uncommitted changes. The report identifies the
@@ -235,14 +225,13 @@ with the ordinary `pick` flow, because that flow resets a reused worktree.
 
 The same package ships a human CLI for the other two loops (design §2 / §4):
 ```
-# One-shot target repo setup:
-python3 $SKILL/scripts/codoop.py setup <repo> --config <repo>/codoop_flow.toml
+# One-shot target repo setup: use the sibling codoop-init skill.
 # Venture-Discovery: interactive multi-role design session -> docs/backlog/
-python3 $SKILL/scripts/codoop.py discover --config <toml> "an idea"
+python3 $SKILL/../../runtime/codoop-flow/codoop.py discover --config <toml> "an idea"
 # Human-Centric ticket lifecycle:
-python3 $SKILL/scripts/codoop.py ticket init <id> --config <toml> --title "..."
-python3 $SKILL/scripts/codoop.py ticket validate <id> --config <toml>
-python3 $SKILL/scripts/codoop.py ticket promote  <id> --config <toml>
+python3 $SKILL/../../runtime/codoop-flow/codoop.py ticket init <id> --config <toml> --title "..."
+python3 $SKILL/../../runtime/codoop-flow/codoop.py ticket validate <id> --config <toml>
+python3 $SKILL/../../runtime/codoop-flow/codoop.py ticket promote  <id> --config <toml>
 ```
 
 ## Running periodically
@@ -265,7 +254,7 @@ intentional: a stuck ticket waits for a human, it doesn't get silently bypassed.
 Leases never expire on their own — liveness is your call. To see how far an
 in_progress ticket got:
 ```
-python3 $SKILL/scripts/codoop_tools.py --config <toml> status
+python3 $SKILL/../../runtime/codoop-flow/codoop_tools.py --config <toml> status
 ```
 Each `in_progress` entry shows `held_by`, `acquired_at`, `todo` (e.g. `3/8`),
 `worktree_dirty`, and `dev_commits` — enough to judge "unfinished, needs a
@@ -274,13 +263,13 @@ fresh runner." A ticket is by definition unfinished as long as it sits under
 
 To hand a stuck ticket to a new runner (voids the old lease, mints a new one):
 ```
-python3 $SKILL/scripts/codoop_tools.py --config <toml> takeover <ticket_id>
+python3 $SKILL/../../runtime/codoop-flow/codoop_tools.py --config <toml> takeover <ticket_id>
 ```
 Use the returned `lease_token` for the rest of that run.
 
 ## Guardrails recap (why the split)
 
-| Deterministic → `scripts/codoop_tools.py` | Intelligent → you (in-session) |
+| Deterministic → `runtime/codoop-flow/codoop_tools.py` | Intelligent → you (in-session) |
 |---|---|
 | pick / move folders / worktree lifecycle | write code, self-heal |
 | lease / ownership arbitration (one runner per ticket) | resume vs. stop decision (follow the CLI's `reason`) |

@@ -13,21 +13,22 @@ is parsed and asserted.
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 import sys
 import tempfile
 from pathlib import Path
 
-# The CLI script is under skills/codoop-execute/scripts/; shared libraries are in skills/_shared/.
+# Plugin-level CLIs and shared libraries live in one runtime used by every skill.
 _ROOT = Path(__file__).resolve().parent.parent
-_SCRIPTS = _ROOT / "skills" / "codoop-execute" / "scripts"
-_SHARED = _ROOT / "skills" / "_shared"
-sys.path.insert(0, str(_SHARED))
+_RUNTIME = _ROOT / "runtime" / "codoop-flow"
+sys.path.insert(0, str(_RUNTIME))
 
 from codoop_lib_v1.config import Config, load_config, setup_target  # noqa: E402
 
-_TOOLS = _SCRIPTS / "codoop_tools.py"
-_TICKET_CLI = _ROOT / "skills" / "codoop-ticket" / "scripts" / "codoop-ticket.py"
+_TOOLS = _RUNTIME / "codoop_tools.py"
+_CODOOP_CLI = _RUNTIME / "codoop.py"
+_TICKET_CLI = _RUNTIME / "codoop-ticket.py"
 
 
 def _git(*args: str, cwd: Path) -> None:
@@ -89,6 +90,155 @@ def test_ticket_design_mode_config(root: Path, worktrees: Path) -> None:
     print("  ok: invalid ticket design mode is rejected")
 
 
+def test_project_paths_config(root: Path, worktrees: Path) -> None:
+    print("[test] config: custom project paths")
+    cfg_path = _write_config(root, worktrees)
+    _check(load_config(cfg_path).project_paths == {},
+           "old configs remain valid without project paths")
+
+    cfg_path.write_text(
+        f'target_repo = "{root}"\n'
+        f'worktree_root = "{worktrees}"\n\n'
+        '[project_paths]\n'
+        'backend = "server"\n'
+        'web = "apps/admin-console"\n'
+        'desktop = "mac client"\n',
+        encoding="utf-8",
+    )
+    _check(
+        load_config(cfg_path).project_paths == {
+            "backend": "server",
+            "web": "apps/admin-console",
+            "desktop": "mac client",
+        },
+        "system project types map to custom directory names",
+    )
+
+    cfg_path.write_text(
+        f'target_repo = "{root}"\n\n[project_paths]\nmobile = "../mobile"\n',
+        encoding="utf-8",
+    )
+    try:
+        load_config(cfg_path)
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("project paths outside the repository must fail")
+    print("  ok: project paths cannot escape the repository")
+
+
+def test_shared_runtime_layout() -> None:
+    print("[test] plugin: skills share one runtime")
+    runtime = _ROOT / "runtime" / "codoop-flow"
+    for relative in (
+        "codoop.py",
+        "codoop_tools.py",
+        "codoop-ticket.py",
+        "codoop_lib_v1/config.py",
+        "agents/code-reviewer.md",
+    ):
+        _check((runtime / relative).is_file(), f"runtime contains {relative}")
+
+    _check(not (_ROOT / "skills" / "_shared").exists(),
+           "skills contains only invokable skills")
+
+    skill_runtime_refs = {
+        "codoop-init": ("runtime/codoop-flow/codoop.py",),
+        "codoop-execute": (
+            "runtime/codoop-flow/codoop.py",
+            "runtime/codoop-flow/codoop_tools.py",
+            "runtime/codoop-flow/agents/",
+        ),
+        "codoop-ticket": ("runtime/codoop-flow/codoop-ticket.py",),
+        "codoop-discover": ("runtime/codoop-flow/agents/",),
+        "codoop-ux-walkthrough": ("runtime/codoop-flow/agents/",),
+    }
+    for skill, references in skill_runtime_refs.items():
+        content = (_ROOT / "skills" / skill / "SKILL.md").read_text(
+            encoding="utf-8"
+        )
+        for reference in references:
+            _check(reference in content, f"{skill} uses {reference}")
+        _check("skills/_shared" not in content,
+               f"{skill} does not depend on an internal pseudo-skill")
+        _check("codoop-execute/scripts" not in content,
+               f"{skill} does not depend on codoop-execute scripts")
+
+    execute_dir = _ROOT / "skills" / "codoop-execute"
+    execute_skill = (execute_dir / "SKILL.md").read_text(encoding="utf-8")
+    for relative in (
+        "../codoop-init/SKILL.md",
+        "../incremental-implementation/SKILL.md",
+        "../debugging-and-error-recovery/SKILL.md",
+    ):
+        _check(f"$SKILL/{relative}" in execute_skill,
+               f"codoop-execute references {relative}")
+        _check((execute_dir / relative).resolve().is_file(),
+               f"codoop-execute reference exists: {relative}")
+    _check("codoop.py setup" not in execute_skill,
+           "codoop-execute routes setup through codoop-init")
+
+    discover_skill = (
+        _ROOT / "skills" / "codoop-discover" / "SKILL.md"
+    ).read_text(encoding="utf-8")
+    for external_skill in ("pm-skills", "ui-ux-pro-max"):
+        _check(external_skill not in discover_skill,
+               f"codoop-discover does not require {external_skill}")
+
+
+def test_manual_installer_shares_runtime_for_codex_and_claude() -> None:
+    print("[test] install: Codex and Claude share one runtime per agent home")
+    expected_skills = sorted(
+        path.parent.name for path in (_ROOT / "skills").glob("*/SKILL.md")
+    )
+    with tempfile.TemporaryDirectory() as td:
+        base = Path(td)
+        homes = {
+            "codex": base / "codex",
+            "claude": base / "claude",
+        }
+        env = os.environ.copy()
+        env["CODEX_HOME"] = str(homes["codex"])
+        env["CLAUDE_HOME"] = str(homes["claude"])
+        proc = subprocess.run(
+            ["bash", str(_ROOT / "scripts" / "install-skills.sh"), "--agent", "all"],
+            env=env,
+            capture_output=True,
+            text=True,
+        )
+        _check(proc.returncode == 0, f"installer succeeded: {proc.stderr}")
+        for agent, home in homes.items():
+            runtime = home / "runtime" / "codoop-flow"
+            _check((runtime / "codoop.py").is_file(),
+                   f"{agent} install contains the shared runtime")
+            installed_skills = sorted(
+                path.name for path in (home / "skills").iterdir() if path.is_dir()
+            )
+            _check(installed_skills == expected_skills,
+                   f"{agent} install contains every public skill")
+            _check(not (home / "skills" / "_shared").exists(),
+                   f"{agent} skills directory contains no internal pseudo-skill")
+            help_result = subprocess.run(
+                [sys.executable, str(runtime / "codoop.py"), "--help"],
+                capture_output=True,
+                text=True,
+            )
+            _check(help_result.returncode == 0,
+                   f"{agent} installed runtime is executable: {help_result.stderr}")
+
+
+def test_marketplaces_publish_the_complete_plugin() -> None:
+    print("[test] plugin: Codex and Claude marketplaces publish the complete bundle")
+    for relative in (
+        ".agents/plugins/marketplace.json",
+        ".claude-plugin/marketplace.json",
+    ):
+        marketplace = json.loads((_ROOT / relative).read_text(encoding="utf-8"))
+        names = [plugin["name"] for plugin in marketplace["plugins"]]
+        _check(names == ["codoop-flow"],
+               f"{relative} exposes only the complete codoop-flow bundle")
+
+
 def test_setup_writes_strict_ticket_design_mode(root: Path, worktrees: Path) -> None:
     print("[test] setup: writes strict ticket design mode")
     cfg_path = root / "codoop_flow.toml"
@@ -97,6 +247,134 @@ def test_setup_writes_strict_ticket_design_mode(root: Path, worktrees: Path) -> 
     _check(config.ticket_design_mode == "strict", "setup defaults to strict mode")
     _check('ticket_design_mode = "strict"' in cfg_path.read_text(encoding="utf-8"),
            "setup writes strict mode to config")
+
+
+def test_setup_existing_project_uses_custom_names(root: Path, worktrees: Path) -> None:
+    print("[test] setup: existing project keeps custom names")
+    (root / "server").mkdir()
+    (root / "admin-console").mkdir()
+    cfg_path = root / "codoop_flow.toml"
+    config, _ = setup_target(
+        root,
+        worktrees,
+        cfg_path,
+        project_paths={"backend": "server", "web": "admin-console"},
+    )
+    _check(config.project_paths == {"backend": "server", "web": "admin-console"},
+           "custom directory names are recorded")
+    _check(not (root / "web").exists(), "setup does not rename or duplicate existing projects")
+
+
+def test_setup_existing_standalone_client_uses_root(root: Path, worktrees: Path) -> None:
+    print("[test] setup: existing standalone client stays at repository root")
+    cfg_path = root / "codoop_flow.toml"
+    config, _ = setup_target(
+        root,
+        worktrees,
+        cfg_path,
+        project_paths={"mobile": "."},
+    )
+    _check(config.project_paths == {"mobile": "."},
+           "standalone client maps to the repository root")
+    _check(not (root / "mobile").exists(),
+           "existing standalone client is not wrapped in mobile/")
+
+
+def test_setup_new_project_creates_only_empty_standard_dirs(root: Path, worktrees: Path) -> None:
+    print("[test] setup: new project creates selected empty standard dirs")
+    cfg_path = root / "codoop_flow.toml"
+    config, _ = setup_target(
+        root,
+        worktrees,
+        cfg_path,
+        project_paths={"web": "web", "mobile": "mobile"},
+        create_project_dirs=True,
+    )
+    _check(config.project_paths == {"web": "web", "mobile": "mobile"},
+           "new project records selected standard directories")
+    for name in ("web", "mobile"):
+        _check([path.name for path in (root / name).iterdir()] == [".gitkeep"],
+               f"{name} contains only .gitkeep")
+    _check(not (root / "desktop").exists(), "unselected projects are not created")
+
+    repeated, _ = setup_target(
+        root,
+        worktrees,
+        cfg_path,
+        project_paths={"web": "web", "mobile": "mobile"},
+        create_project_dirs=True,
+    )
+    _check(repeated.project_paths == {"web": "web", "mobile": "mobile"},
+           "rerunning new-project setup is safe")
+
+    try:
+        setup_target(
+            root,
+            worktrees,
+            cfg_path,
+            project_paths={"desktop": "custom-desktop"},
+            create_project_dirs=True,
+        )
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("new projects must use codoop's standard names")
+    _check(not (root / "custom-desktop").exists(), "invalid custom new-project path is not created")
+
+    try:
+        setup_target(root, worktrees, cfg_path, create_project_dirs=True)
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("new project setup must select at least one project type")
+    print("  ok: new project setup requires at least one selected project")
+
+
+def test_setup_rejects_project_symlink_outside_repo(root: Path, worktrees: Path) -> None:
+    print("[test] setup: project paths cannot escape through symlinks")
+    outside = root.parent / f"{root.name}_outside"
+    outside.mkdir()
+    (root / "web").symlink_to(outside, target_is_directory=True)
+    try:
+        setup_target(
+            root,
+            worktrees,
+            root / "codoop_flow.toml",
+            project_paths={"web": "web"},
+            create_project_dirs=True,
+        )
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("project symlinks outside the repository must fail")
+    _check(not (outside / ".gitkeep").exists(),
+           "setup does not write through an escaping symlink")
+
+
+def test_setup_cli_creates_selected_new_project(root: Path, worktrees: Path) -> None:
+    print("[test] setup CLI: creates a selected new project directory")
+    cfg_path = root / "codoop_flow.toml"
+    proc = subprocess.run(
+        [
+            sys.executable,
+            str(_CODOOP_CLI),
+            "setup",
+            str(root),
+            "--config",
+            str(cfg_path),
+            "--worktree-root",
+            str(worktrees),
+            "--project-path",
+            "desktop=desktop",
+            "--create-project-dirs",
+        ],
+        capture_output=True,
+        text=True,
+    )
+    _check(proc.returncode == 0, f"setup CLI succeeded: {proc.stderr}")
+    _check((root / "desktop" / ".gitkeep").exists(), "CLI created desktop/.gitkeep")
+    _check(load_config(cfg_path).project_paths == {"desktop": "desktop"},
+           "CLI persisted the selected project path")
 
 
 def _make_ticket(
@@ -481,6 +759,30 @@ def test_ticket_metadata_has_no_test_command(root: Path, worktrees: Path) -> Non
     _check("test_command" not in updated, "metadata update does not add test commands")
 
 
+def test_client_ticket_stays_in_configured_scope(root: Path, worktrees: Path) -> None:
+    print("[test] ticket metadata: client scope excludes external backend")
+    from codoop_lib_v1.tickets_cli import init_draft, update_metadata_from_docs
+    cfg = Config(
+        target_repo=root,
+        worktree_root=worktrees,
+        project_paths={"mobile": "."},
+    )
+    draft = init_draft(cfg, "ticket_client", title="mobile profile")
+    metadata = json.loads((draft / "metadata.json").read_text(encoding="utf-8"))
+    _check(metadata["modules"] == ["mobile"], "draft starts in the configured client")
+    _check("[mobile]" in (draft / "todo.md").read_text(encoding="utf-8"),
+           "todo scaffold uses the configured client")
+
+    (draft / "spec.md").write_text(
+        "# Spec\n## Mobile Client\nBuild the profile screen.\n"
+        "## External API Contract\nCall GET /profile.\n",
+        encoding="utf-8",
+    )
+    updated = update_metadata_from_docs(cfg, "ticket_client")
+    _check(updated["modules"] == ["mobile"],
+           "external API requirements do not create backend work")
+
+
 def test_confirmed_promotion_commits_only_ticket(root: Path, worktrees: Path) -> None:
     print("[test] ticket promote: confirmed promotion commits only the ticket")
     from codoop_lib_v1.tickets_cli import init_draft
@@ -585,9 +887,18 @@ def test_promote_blocks_incomplete(root: Path, worktrees: Path) -> None:
 
 
 def main() -> int:
+    test_shared_runtime_layout()
+    test_manual_installer_shares_runtime_for_codex_and_claude()
+    test_marketplaces_publish_the_complete_plugin()
     tests = [
         test_ticket_design_mode_config,
+        test_project_paths_config,
         test_setup_writes_strict_ticket_design_mode,
+        test_setup_existing_project_uses_custom_names,
+        test_setup_existing_standalone_client_uses_root,
+        test_setup_new_project_creates_only_empty_standard_dirs,
+        test_setup_rejects_project_symlink_outside_repo,
+        test_setup_cli_creates_selected_new_project,
         test_pick_moves_and_creates_worktree,
         test_pick_reports_when_in_progress_busy,
         test_pick_mints_lease,
@@ -609,6 +920,7 @@ def main() -> int:
         test_ticket_lifecycle,
         test_visual_preview_gate,
         test_ticket_metadata_has_no_test_command,
+        test_client_ticket_stays_in_configured_scope,
         test_confirmed_promotion_commits_only_ticket,
         test_fix_ticket_lifecycle,
         test_promote_blocks_incomplete,

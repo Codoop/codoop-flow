@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.6-alpha.3] - 2026-08-08
+
+### Added
+
+- **Repository-aware initialization.** The new `codoop-init` skill maps the
+  standard backend/web/desktop/mobile types to custom existing directory names.
+  For an explicitly new project, it creates only selected standard directories
+  with `.gitkeep` and no runnable scaffolding.
+
+### Changed
+
+- Discovery, ticket design, and execution now limit implementation to projects
+  listed in `[project_paths]`. External backend needs remain client contracts,
+  not backend implementation tasks.
+- Codex and Claude skills now share one plugin-level Runtime under
+  `runtime/codoop-flow/`; `codoop-init` no longer calls scripts owned by
+  `codoop-execute`, and marketplace installation publishes the complete plugin.
+- Manual installation now installs all 12 public skills for both Codex and
+  Claude from the same bundle.
+- Discovery no longer requires separately installed `pm-skills` or
+  `ui-ux-pro-max` skills.
+- Project path validation now rejects symbolic-link escapes before creating
+  project files.
+
 ## [0.1.6-alpha.2] - 2026-08-08
 
 ### Added

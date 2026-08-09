@@ -161,7 +161,7 @@ Loop 2 有独立的 CLI 工具 `codoop-ticket.py`，完全独立于 Loop 3 的 `
 所有命令都可以通过以下方式调用：
 
 ```bash
-python skills/codoop-ticket/scripts/codoop-ticket.py ticket <command> <args>
+python3 runtime/codoop-flow/codoop-ticket.py ticket <command> <args>
 ```
 
 或者在 AI 编码工具中直接调用 skill：

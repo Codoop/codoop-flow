@@ -12,3 +12,11 @@ worktree_root = "~/codoop_tickets/worktrees"
 # "one_pass" keeps grilling, then generates all ticket documents before one
 # final promotion confirmation.
 ticket_design_mode = "strict"
+
+# System project type -> real relative directory. Existing projects may use
+# custom names; omit project types this repository does not own.
+[project_paths]
+backend = "backend"
+web = "web"
+desktop = "desktop"
+mobile = "mobile"

@@ -2,12 +2,14 @@
 
 **English** · [简体中文](./install.zh-CN.md)
 
-codoop-flow includes **ten independent skills**, each addressing a different stage of AI-driven development:
+codoop-flow includes **twelve public skills**, each addressing a different stage of AI-driven development:
 
 **Core Loop Skills:**
 
 | Skill | Purpose | Stage |
 |-------|---------|-------|
+| **codoop-init** | Inspect existing custom paths or create selected empty standard project directories | Setup |
+| **grilling** | Resolve product decisions one plain-language question at a time | Discovery / ticket intake |
 | **codoop-discover** | Product design & architecture (0→1 planning) | Loop 1 |
 | **codoop-ticket** | Orchestrate ticket design (PRD → Spec → Plan) | Loop 2 |
 | **spec-driven-development** | Design technical specs before coding | Loop 2 / standalone |
@@ -24,13 +26,15 @@ codoop-flow includes **ten independent skills**, each addressing a different sta
 | **debugging-and-error-recovery** | Systematic root-cause analysis & self-healing | Loop 3 Debug phase / standalone |
 | **test-driven-development** | Red-Green-Refactor cycle with high coverage | Loop 3 Verify phase / standalone |
 
-Each skill is **self-contained**: it carries the orchestration guide (`SKILL.md`), any deterministic CLI, and shared sub-agent personas. So no matter which agent you install it into, as long as the directory is readable and `python3` runs, the skills work.
+Each skill is independently invokable inside the complete codoop-flow plugin.
+Deterministic CLIs, shared Python modules, and review personas live once under
+`runtime/codoop-flow/`; skills do not copy or own those files.
 
 > Prerequisites: the machine has `python3` (standard library only, zero third-party deps); the target project is a git repo with `docs/tickets/{pending,in_progress,done,failed}/`. Prepare a `codoop_flow.toml` pointing at the target project (see `codoop_flow.toml.example`).
 
 ---
 
-## One-shot install (all 7 core skills)
+## One-shot install (all 12 skills)
 
 Clone the repo once, then run:
 
@@ -39,7 +43,10 @@ git clone https://github.com/Codoop/codoop-flow.git
 bash codoop-flow/scripts/install-skills.sh
 ```
 
-This copies all 7 core skills to `~/.codex/skills/` and `~/.claude/skills/`. Re-running updates skills in-place. Use `--agent codex` or `--agent claude` to target one agent. Use `--dry-run` to preview.
+This copies all 12 skills plus one shared Runtime to both agents. Codex uses
+`~/.codex/runtime/codoop-flow/`; Claude uses
+`~/.claude/runtime/codoop-flow/`. Re-running updates them in place. Use
+`--agent codex` or `--agent claude` to target one agent. Use `--dry-run` to preview.
 
 ---
 
@@ -55,8 +62,8 @@ codex plugin add codoop-flow@codoop-flow
 Then restart/open Codex. The normal workflow is just:
 
 ```text
-Use $codoop-flow to set up this repo for codoop-flow.
-Use $codoop-flow to run the next ticket against /path/to/codoop_flow.toml.
+Use $codoop-init to inspect this repo and set up codoop-flow.
+Use the codoop-execute skill to run the next ticket against /path/to/codoop_flow.toml.
 ```
 
 For local development without plugin installation, clone and use the install script:
@@ -72,6 +79,9 @@ bash codoop-flow/scripts/install-skills.sh --agent codex
 /plugin marketplace add Codoop/codoop-flow
 /plugin install codoop-flow@codoop-flow
 ```
+
+Install the complete `codoop-flow` plugin entry. Individual codoop-flow skills
+share its Runtime and are not published as separate Claude plugins.
 
 > SSH error? The marketplace clones over SSH by default. Without an SSH key, use the full HTTPS URL:
 > ```
@@ -146,19 +156,21 @@ Or schedule continuously with:
 
 ## Generic copy (Cursor / Gemini / others)
 
-Each skill is a self-contained directory; any agent can copy all ten into its own skills/rules directory:
+Keep the plugin layout together. If an agent requires copied skill folders,
+copy the public skills and the Runtime to matching `skills/` and `runtime/`
+directories under the same agent home:
 
 ```bash
 git clone https://github.com/Codoop/codoop-flow.git
-# Copy all 10 skills — each brings its own SKILL.md
-for skill in codoop-discover codoop-ticket spec-driven-development \
+# Copy all 12 public skills — each brings its own SKILL.md
+for skill in codoop-init grilling codoop-discover codoop-ticket spec-driven-development \
              planning-and-task-breakdown definition-of-done codoop-execute \
              codoop-ux-walkthrough incremental-implementation \
              debugging-and-error-recovery test-driven-development; do
   cp -R "codoop-flow/skills/$skill"  <the agent's skills directory>/
 done
-# _shared is referenced by all skills via relative path
-cp -R codoop-flow/skills/_shared <the agent's skills directory>/
+mkdir -p <agent-home>/runtime
+cp -R codoop-flow/runtime/codoop-flow <agent-home>/runtime/
 ```
 
 Where each agent expects it (check their own docs, may change across versions):
@@ -169,7 +181,9 @@ Where each agent expects it (check their own docs, may change across versions):
 | Other agents | The skills are plain Markdown; feed each `SKILL.md`'s content as system prompt / instructions | Just talk to it |
 | Gemini CLI | Put them in its skills directory | Auto-discovered |
 
-**Key point**: after copying, make sure `scripts/` and `references/` etc. stay in the same parent directory as each skill's `SKILL.md` — all paths in SKILL.md are relative to itself (`$SKILL/scripts/...`, `$SKILL/references/...`), so splitting them apart breaks the CLI and review personas.
+**Key point**: keep `<agent-home>/skills/` and `<agent-home>/runtime/codoop-flow/`
+at the same level. Every codoop-flow skill resolves the Runtime relative to its
+own `SKILL.md`; moving only a skill folder breaks its CLI and review personas.
 
 ---
 
@@ -177,7 +191,7 @@ Where each agent expects it (check their own docs, may change across versions):
 
 ```bash
 codex plugin list
-python3 <skill-path>/scripts/codoop_tools.py --config <toml> status
+python3 <agent-home>/runtime/codoop-flow/codoop_tools.py --config <toml> status
 ```
 
 If it prints ticket counts per stage (JSON), the guardrail CLI is in place and the config is correct.
