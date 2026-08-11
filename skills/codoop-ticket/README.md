@@ -41,6 +41,7 @@ Set the following in `codoop_flow.toml`:
 
 ```toml
 ticket_design_mode = "strict" # or "one_pass"
+output_language = "zh-CN"     # any BCP 47 tag, or "auto"
 ```
 
 - `strict` (default) keeps the workflow above: review and confirm each phase.
@@ -49,6 +50,8 @@ ticket_design_mode = "strict" # or "one_pass"
   stop for PRD, Spec, Plan/ToDo, preview, or Metadata confirmation.
 - Both modes show the completed ticket summary and require explicit approval
   before promotion to `pending/`. A missing field defaults to `strict`.
+- `output_language` keeps questions, summaries, and final ticket documents in
+  one language. `"auto"` follows the user's current language.
 
 The phase confirmations below apply to `strict` mode.
 

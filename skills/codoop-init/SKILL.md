@@ -13,6 +13,19 @@ Locate the absolute directory containing this `SKILL.md` as `$SKILL` before
 running the plugin-level Runtime commands below. Both Codex and Claude install
 the Runtime at `$SKILL/../../runtime/codoop-flow/`.
 
+## Output Language
+
+Preserve an existing explicit `output_language` unless the user asks to change
+it. When it is missing or a new config is being created, ask which output
+language to use before running setup. Ask one plain-language question, recommend
+the current conversation language, mention `"auto"`, and accept any BCP 47
+language tag. Common choices include `"zh-CN"`, `"zh-TW"`, `"en"`, `"ja"`,
+`"ko"`, `"es"`, `"fr"`, `"de"`, `"pt-BR"`, `"it"`, `"ru"`, `"ar"`, `"hi"`,
+`"id"`, `"tr"`, `"vi"`, and `"th"`; do not present this as a closed list.
+Pass the answer as `--output-language <language>`.
+Use the configured language for user-facing prose. `"auto"` follows the user's
+current language. An explicit request for the current task overrides the config.
+
 ## Existing project
 
 1. Locate the Git root and inspect top-level directories, build manifests,
@@ -32,6 +45,7 @@ Run the sibling setup CLI with one mapping per owned project:
 ```bash
 python3 "$SKILL/../../runtime/codoop-flow/codoop.py" setup <repo-root> \
   --config <repo-root>/codoop_flow.toml \
+  --output-language <language> \
   --project-path backend=server \
   --project-path web=admin-console
 ```
@@ -51,6 +65,7 @@ the requested project types are missing, ask which of `backend`, `web`,
 ```bash
 python3 "$SKILL/../../runtime/codoop-flow/codoop.py" setup <repo-root> \
   --config <repo-root>/codoop_flow.toml \
+  --output-language <language> \
   --project-path web=web \
   --project-path mobile=mobile \
   --create-project-dirs
@@ -62,6 +77,7 @@ scaffolding. Refuse to overwrite a non-empty project directory.
 
 ## Verify
 
-Read the resulting `codoop_flow.toml` and report the mapping in plain language.
+Read the resulting `codoop_flow.toml` and report the mapping and output language
+in plain language.
 Confirm that every path is relative and real, no unselected project was
 created, and `docs/tickets/{pending,in_progress,done,failed}/` exists.

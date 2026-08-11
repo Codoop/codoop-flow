@@ -13,6 +13,11 @@ worktree_root = "~/codoop_tickets/worktrees"
 # final promotion confirmation.
 ticket_design_mode = "strict"
 
+# Language for Skill replies and generated prose/documents. Use "auto" to
+# follow the user's current language, or any BCP 47 language tag. Common
+# examples: zh-CN, zh-TW, en, ja, ko, es, fr, de, pt-BR, it, ru, ar, hi.
+output_language = "zh-CN"
+
 # System project type -> real relative directory. Existing projects may use
 # custom names; omit project types this repository does not own.
 [project_paths]

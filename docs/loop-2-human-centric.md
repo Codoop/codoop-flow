@@ -43,6 +43,10 @@ The skill orchestrates a PM and Architect with you as director, guiding you thro
 
 `codoop_flow.toml` controls how ticket documents are reviewed:
 
+It also controls the conversation and final document language through
+`output_language`. Any BCP 47 language tag is accepted; `"auto"` follows the
+user's current language.
+
 | Value | Behavior |
 |---|---|
 | `"strict"` (default) | Keep the current phase-by-phase review and confirmation flow. |
@@ -171,7 +175,9 @@ Or directly call the skill in any AI coding tool:
 
 **Args:**
 - `--title` — ticket title (detected for language if `--language auto`)
-- `--language` — `auto` (default, detects CJK → `zh`, otherwise `en`), or explicit `zh` / `en`
+- `--language` — `auto` (default, detects CJK → `zh`, otherwise `en`), or explicit
+  `zh` / `en`. This affects only the deterministic empty scaffold; the Skill
+  writes final ticket documents using `output_language` from `codoop_flow.toml`.
 - `--type` — `feature` (default) or `fix`; selects the scaffold and the required-docs rule
 - `--config` — path to `codoop_flow.toml`
 
@@ -228,6 +234,7 @@ These fields matter for Loop 2:
 |---|---|---|---|
 | `target_repo` | string (path) | Yes | Path to your target git repo. Loop 2 writes ticket directories under `<target_repo>/docs/tickets/`. |
 | `ticket_design_mode` | string | No | `"strict"` (default) confirms each design phase; `"one_pass"` generates the complete ticket package after grilling, then asks once before promotion. |
+| `output_language` | string | No | Any BCP 47 language tag for Skill replies and generated ticket documents; `"auto"` (default) follows the user's current language. |
 
 ### `metadata.json` Schema
 

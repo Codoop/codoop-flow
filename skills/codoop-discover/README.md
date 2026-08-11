@@ -27,6 +27,10 @@ SKILL: Based on your answers, invokes PM, GTM, UI, Architect agents in-session
 SKILL: Generates comprehensive backlog documentation in docs/backlog/
 ```
 
+`codoop-discover` reads `output_language` from `codoop_flow.toml` for every
+question, role prompt, summary, and generated document. Use any BCP 47 language
+tag, or `"auto"` to follow the user's current language.
+
 ## How It Works
 
 ### The 8-Step Workflow

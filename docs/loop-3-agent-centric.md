@@ -393,6 +393,7 @@ outside changed files are baseline blockers, not triggers.
 |---|---|---|---|---|
 | `target_repo` | string (path) | Yes | — | Absolute path to target git repo. Expanded via `expanduser().resolve()`. |
 | `worktree_root` | string (path) | No | `~/codoop_tickets/worktrees` | Directory where per-ticket worktrees are created. Expanded via `expanduser()`. |
+| `output_language` | string | No | `"auto"` | BCP 47 language tag for user-facing replies, delivery reports, and delegated agent prose. `"auto"` follows the user's current language. |
 
 The ticket pipeline directories (`pending/`, `in_progress/`, `done/`, `failed/`) are derived from `<target_repo>/docs/tickets/`. They are created by `codoop setup` but never configured in the TOML.
 

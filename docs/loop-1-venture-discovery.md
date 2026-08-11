@@ -177,7 +177,10 @@ The `codoop.py` documentation references a `discover` subcommand in the README e
 
 ## Configuration
 
-Loop 1 requires no configuration file. It reads from your existing `codoop_flow.toml` (if present) only to determine the `target_repo` so it can write outputs to the correct `docs/backlog/` directory.
+Loop 1 reads `target_repo`, `project_paths`, and `output_language` from the
+existing `codoop_flow.toml`. Set `output_language` to a language such as
+`"zh-CN"`, `"pt-BR"`, or `"ar"`; any BCP 47 language tag is accepted. Use
+`"auto"` to follow the current user language.
 
 **No `metadata.json` is used in Loop 1** — all output is human-readable markdown and YAML specifications.
 
@@ -230,4 +233,4 @@ Loop 1 applies four conditional quality requirements to all generated designs:
 - **Document-Driven, Not Code-Driven** — Loop 1 produces zero code. `scaffolding-blueprint.md` is an architectural drawing, not executable scaffolding.
 - **Decentralized Drafting Before Centralized Audit** — All roles draft independently and raise `[CHALLENGE]` flags. The Alignment Agent runs last as an independent auditor.
 - **SNAP as Non-Negotiable** — The skill explicitly refuses to make assumptions. Every ambiguity resolved during Loop 1 avoids 10x cost during implementation.
-- **Output Language Adaptation** — If your session is in Chinese, output is in Chinese. No forced language.
+- **Stable Output Language** — `output_language` controls replies and generated documents; `"auto"` follows the current user language.

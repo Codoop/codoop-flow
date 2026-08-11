@@ -90,6 +90,34 @@ def test_ticket_design_mode_config(root: Path, worktrees: Path) -> None:
     print("  ok: invalid ticket design mode is rejected")
 
 
+def test_output_language_config(root: Path, worktrees: Path) -> None:
+    print("[test] config: output language")
+    cfg_path = _write_config(root, worktrees)
+    _check(load_config(cfg_path).output_language == "auto",
+           "old configs default output language to auto")
+
+    cfg_path.write_text(
+        f'target_repo = "{root}"\n'
+        'output_language = "zh-CN"\n',
+        encoding="utf-8",
+    )
+    _check(load_config(cfg_path).output_language == "zh-CN",
+           "explicit output language is loaded")
+
+    cfg_path.write_text(
+        f'target_repo = "{root}"\n'
+        'output_language = ""\n',
+        encoding="utf-8",
+    )
+    try:
+        load_config(cfg_path)
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("empty output language must fail")
+    print("  ok: empty output language is rejected")
+
+
 def test_project_paths_config(root: Path, worktrees: Path) -> None:
     print("[test] config: custom project paths")
     cfg_path = _write_config(root, worktrees)
@@ -247,6 +275,30 @@ def test_setup_writes_strict_ticket_design_mode(root: Path, worktrees: Path) -> 
     _check(config.ticket_design_mode == "strict", "setup defaults to strict mode")
     _check('ticket_design_mode = "strict"' in cfg_path.read_text(encoding="utf-8"),
            "setup writes strict mode to config")
+    _check(config.output_language == "auto", "setup defaults output language to auto")
+    _check('output_language = "auto"' in cfg_path.read_text(encoding="utf-8"),
+           "setup writes output language to config")
+
+
+def test_setup_sets_and_updates_output_language(root: Path, worktrees: Path) -> None:
+    print("[test] setup: sets and updates output language")
+    cfg_path = root / "codoop_flow.toml"
+    cfg_path.write_text(
+        f'target_repo = "{root}"\n'
+        f'worktree_root = "{worktrees}"\n\n'
+        '[project_paths]\n'
+        'backend = "backend"\n',
+        encoding="utf-8",
+    )
+    config, _ = setup_target(root, worktrees, cfg_path, output_language="zh-CN")
+    _check(config.output_language == "zh-CN", "setup records selected language")
+    _check(config.project_paths == {"backend": "backend"},
+           "adding output language preserves legacy project paths")
+
+    config, _ = setup_target(root, worktrees, cfg_path, output_language="pt-BR")
+    _check(config.output_language == "pt-BR", "setup accepts and updates any language tag")
+    _check(cfg_path.read_text(encoding="utf-8").count("output_language =") == 1,
+           "setup keeps one output language setting")
 
 
 def test_setup_existing_project_uses_custom_names(root: Path, worktrees: Path) -> None:
@@ -364,6 +416,8 @@ def test_setup_cli_creates_selected_new_project(root: Path, worktrees: Path) -> 
             str(cfg_path),
             "--worktree-root",
             str(worktrees),
+            "--output-language",
+            "zh-CN",
             "--project-path",
             "desktop=desktop",
             "--create-project-dirs",
@@ -375,6 +429,8 @@ def test_setup_cli_creates_selected_new_project(root: Path, worktrees: Path) -> 
     _check((root / "desktop" / ".gitkeep").exists(), "CLI created desktop/.gitkeep")
     _check(load_config(cfg_path).project_paths == {"desktop": "desktop"},
            "CLI persisted the selected project path")
+    _check(load_config(cfg_path).output_language == "zh-CN",
+           "CLI persisted the selected output language")
 
 
 def _make_ticket(
@@ -892,8 +948,10 @@ def main() -> int:
     test_marketplaces_publish_the_complete_plugin()
     tests = [
         test_ticket_design_mode_config,
+        test_output_language_config,
         test_project_paths_config,
         test_setup_writes_strict_ticket_design_mode,
+        test_setup_sets_and_updates_output_language,
         test_setup_existing_project_uses_custom_names,
         test_setup_existing_standalone_client_uses_root,
         test_setup_new_project_creates_only_empty_standard_dirs,

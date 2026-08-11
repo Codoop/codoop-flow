@@ -169,7 +169,9 @@ docs/backlog/
 
 ## 配置
 
-第一环不需要配置文件。它只在存在 `codoop_flow.toml` 时读取，以确定 `target_repo`，从而把输出写到正确的 `docs/backlog/` 目录。
+第一环从现有 `codoop_flow.toml` 读取 `target_repo`、`project_paths` 和
+`output_language`。它接受任意 BCP 47 语言标签，例如 `"zh-CN"`、
+`"zh-TW"`、`"pt-BR"` 或 `"ar"`；设为 `"auto"` 时跟随用户当前使用的语言。
 
 **第一环不使用 `metadata.json`** — 所有输出都是人类可读的 markdown 和 YAML 规格。
 
@@ -221,4 +223,4 @@ docs/backlog/
 - **文档驱动，非代码驱动** — 第一环生成零代码。`scaffolding-blueprint.md` 是架构图，不是可执行样板。
 - **分散起草前的集中审计** — 所有角色独立起草并提出 `[异议]` 标志。对齐代理最后运行作为独立审计员。
 - **SNAP 作为不可协商** — skill 明确拒绝做假设。第一环解决的每个模糊性都能避免实现中 10 倍的代价。
-- **输出语言自适应** — 如果你的会话是中文，输出就是中文。没有强制语言。
+- **稳定输出语言** — `output_language` 控制回复与生成文档；`"auto"` 跟随用户当前使用的语言。

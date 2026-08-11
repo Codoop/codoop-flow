@@ -131,6 +131,11 @@ design phase, or `"one_pass"` to keep the full grilling intake and generate
 the complete ticket package before one final promotion confirmation. A missing
 field defaults to `strict`.
 
+Set `output_language` to any BCP 47 language tag, such as `"zh-CN"`, `"en"`,
+or `"pt-BR"`, to keep Skill replies and generated documents in that language.
+Use `"auto"` to follow the user's current language. `codoop-init` asks for this
+choice when it creates a config.
+
 **Standalone tools** (also called by codoop-ticket):
 ```
 /skill spec-driven-development Design technical specs before coding
@@ -217,6 +222,7 @@ Or manually:
 ```bash
 python3 runtime/codoop-flow/codoop.py setup /path/to/your/repo \
   --config /path/to/your/repo/codoop_flow.toml \
+  --output-language zh-CN \
   --project-path backend=server \
   --project-path web=admin-console
 ```

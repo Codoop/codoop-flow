@@ -92,6 +92,13 @@ Its allowed values are `"strict"` and `"one_pass"`; a missing field means
 `"strict"`. If the value is invalid, stop and ask the user to correct the
 configuration rather than silently choosing a mode.
 
+Read `output_language` from the same config. Use it for every user-facing
+message, question, summary, generated ticket document, and delegated agent
+prompt. `"auto"` or a missing field follows the user's current language. An
+explicit request for the current task overrides the config. Translate scaffold
+headings when writing the final documents; do not inherit a different language
+from templates, research, or existing source files.
+
 - `"strict"`: use the existing phase-by-phase review and confirmation flow.
 - `"one_pass"`: keep the Startup: Market Research and Grilling sequence
   unchanged. Once the user confirms shared understanding, generate every

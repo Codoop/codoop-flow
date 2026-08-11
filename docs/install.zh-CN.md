@@ -27,6 +27,11 @@ Python 模块和评审 persona 只保留一份，统一放在
 > 且有 `docs/tickets/{pending,in_progress,done,failed}/`。准备一份 `codoop_flow.toml`
 > 指向目标工程(见 `codoop_flow.toml.example`)。
 
+初始化时，`codoop-init` 会询问输出语言并写入 `codoop_flow.toml` 的
+`output_language`。它接受任意 BCP 47 语言标签，例如 `zh-CN`、`en`、`ko`、
+`es`、`pt-BR` 或 `ar`；`auto` 跟随用户当前使用的语言。手动初始化可传入
+`--output-language <language>`。
+
 ---
 
 ## 一键安装（全部 12 个 Skill）

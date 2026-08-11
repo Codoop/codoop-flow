@@ -127,6 +127,10 @@ Skill 编排多个专家角色（PM、GTM、UX/UI、架构师）协作：
 设置为 `"one_pass"` 时保留完整拷问，随后一次生成完整工单包，最后只确认是否
 提升。缺少该字段时默认 `strict`。
 
+将 `output_language` 设为任意 BCP 47 语言标签（例如 `"zh-CN"`、`"en"`
+或 `"pt-BR"`），即可固定 Skill 回复和生成文档的语言；设为 `"auto"` 时跟随
+用户当前使用的语言。`codoop-init` 创建配置时会询问这个选择。
+
 **独立工具**（也被 codoop-ticket 调用）：
 ```
 /skill spec-driven-development 设计技术规格（不需要手工编排）
@@ -209,6 +213,7 @@ Skill 编排多个专家角色（PM、GTM、UX/UI、架构师）协作：
 ```bash
 python3 runtime/codoop-flow/codoop.py setup /path/to/your/repo \
   --config /path/to/your/repo/codoop_flow.toml \
+  --output-language zh-CN \
   --project-path backend=server \
   --project-path web=admin-console
 ```

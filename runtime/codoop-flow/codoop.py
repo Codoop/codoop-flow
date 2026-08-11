@@ -43,12 +43,14 @@ def _cmd_setup(args) -> int:
             config_path=args.config,
             project_paths=project_paths,
             create_project_dirs=args.create_project_dirs,
+            output_language=args.output_language,
         )
     except (ValueError, FileExistsError) as e:
         print(f"error: {e}")
         return 1
     print(f"config ready: {cfg_path}")
     print(f"ticket pipeline ready under: {config.tickets_dir}")
+    print(f"output language: {config.output_language}")
     if config.project_paths:
         print("project paths: " + ", ".join(
             f"{kind}={path}" for kind, path in config.project_paths.items()
@@ -128,6 +130,10 @@ def main() -> int:
     p_setup.add_argument("target_repo", help="path to the target git repo to drive")
     p_setup.add_argument("--config", default=None, help="where to write codoop_flow.toml (default: ./codoop_flow.toml)")
     p_setup.add_argument("--worktree-root", default="~/codoop_tickets/worktrees", help="where per-ticket worktrees are created")
+    p_setup.add_argument(
+        "--output-language", default=None,
+        help="BCP 47 language tag for Skill output (for example zh-CN, pt-BR, ar), or auto",
+    )
     p_setup.add_argument(
         "--project-path", action="append", type=_parse_project_path,
         metavar="TYPE=PATH",

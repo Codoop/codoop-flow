@@ -32,6 +32,11 @@ Deterministic CLIs, shared Python modules, and review personas live once under
 
 > Prerequisites: the machine has `python3` (standard library only, zero third-party deps); the target project is a git repo with `docs/tickets/{pending,in_progress,done,failed}/`. Prepare a `codoop_flow.toml` pointing at the target project (see `codoop_flow.toml.example`).
 
+During setup, `codoop-init` asks for an output language and stores it as
+`output_language` in `codoop_flow.toml`. It accepts any BCP 47 language tag,
+such as `zh-CN`, `en`, `ko`, `es`, `pt-BR`, or `ar`; `auto` follows the user's
+current language. Manual setup can pass `--output-language <language>`.
+
 ---
 
 ## One-shot install (all 12 skills)

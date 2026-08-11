@@ -36,6 +36,12 @@ SKILL.md. Build every path below from it and invoke the Runtime by absolute path
   `--config <path>`. Ask the user for the path if it isn't obvious; reuse it for
   every call in the run.
 
+Read `output_language` from that config before starting. Use it for all
+user-facing replies and generated prose, including reports and delegated agent
+prompts. `"auto"` or a missing field follows the user's current language. An
+explicit request for the current task overrides the config. Do not translate
+source-code identifiers, commands, logs, or required protocol literals.
+
 ## Setup a target repo
 
 If the user asks to onboard, install, set up, or initialize codoop-flow for a

@@ -9,6 +9,11 @@ Run a qualitative, first-person walkthrough of a real product task. This skill
 produces hypotheses and improvement ideas for human review; it does **not**
 approve or reject a release, edit code, or create follow-up tickets.
 
+When `codoop_flow.toml` is available, read `output_language` and use it for the
+walkthrough conversation, persona prompt, and `experience_report.md`. `"auto"`
+or a missing field follows the user's current language. An explicit request for
+the current task overrides the config.
+
 ## Core Rules
 
 - Read `$SKILL/../../runtime/codoop-flow/agents/persona-walkthrough.md` and use it as the

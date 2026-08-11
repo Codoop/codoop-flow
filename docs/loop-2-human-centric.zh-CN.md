@@ -43,6 +43,9 @@
 
 `codoop_flow.toml` 控制工单文档的审查方式：
 
+它还通过 `output_language` 控制对话与最终文档语言。可使用任意 BCP 47
+语言标签；`"auto"` 跟随用户当前使用的语言。
+
 | 值 | 行为 |
 |---|---|
 | `"strict"`（默认） | 保持当前逐阶段审查与确认流程。 |
@@ -178,7 +181,9 @@ python3 runtime/codoop-flow/codoop-ticket.py ticket <command> <args>
 
 **参数：**
 - `--title` — 工单标题（如果 `--language auto` 则检测语言）
-- `--language` — `auto`（默认，检测 CJK → `zh`，否则 `en`），或明确 `zh` / `en`
+- `--language` — `auto`（默认，检测 CJK → `zh`，否则 `en`），或明确 `zh` / `en`。
+  它只影响确定性空白脚手架；Skill 会按 `codoop_flow.toml` 中的
+  `output_language` 写入最终工单文档。
 - `--type` — `feature`（默认）或 `fix`；决定脚手架与必需文档规则
 - `--config` — `codoop_flow.toml` 的路径
 
@@ -235,6 +240,7 @@ python3 runtime/codoop-flow/codoop-ticket.py ticket <command> <args>
 |---|---|---|---|
 | `target_repo` | 字符串（路径） | 是 | 你的目标 git 仓库路径。第二环在 `<target_repo>/docs/tickets/` 下写入工单目录。 |
 | `ticket_design_mode` | 字符串 | 否 | `"strict"`（默认）逐阶段确认；`"one_pass"` 在拷问后一次生成完整工单包，提升前只询问一次。 |
+| `output_language` | 字符串 | 否 | Skill 回复与生成工单文档所用的任意 BCP 47 语言标签；`"auto"`（默认）跟随用户当前使用的语言。 |
 
 ### `metadata.json` 模式
 

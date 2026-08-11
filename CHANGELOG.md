@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.6-alpha.4] - 2026-08-11
+
+### Added
+
+- **Configurable output language.** `codoop_flow.toml` now accepts
+  `output_language` as any BCP 47 language tag, such as `zh-CN`, `en`,
+  `pt-BR`, or `ar`. Use `auto` to follow the user's current language.
+- **Language selection during setup.** `codoop-init` asks for the preferred
+  output language when creating a config, while manual setup can pass
+  `--output-language <language>`. Re-running setup can update the choice.
+
+### Changed
+
+- Discovery, ticket design, execution, UX walkthroughs, delegated personas,
+  summaries, and generated reports now consistently follow the configured
+  output language instead of inheriting a language from templates or source
+  documents.
+- Existing configs remain compatible and default to `output_language = "auto"`.
+
 ## [0.1.6-alpha.3] - 2026-08-08
 
 ### Added

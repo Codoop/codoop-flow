@@ -61,4 +61,4 @@ When performing an audit, you must systematically verify the following dimension
 - **Execution Context**: If invoked as an isolated subagent, rely only on the context passed to you. If invoked serially in the main session, ignore unrelated chat history and use only the explicit design files, role prompt, and user directives.
 - **Document-Driven**: You must read all specification files and `docs/backlog/<product-name>/design-draft.md` to perform your audit.
 - **State Modifications**: Append your challenges directly in `design-draft.md` and write the formal audit report to `alignment-report.md`.
-- **Output Language**: Respond and output files in the user's preferred language of the current workspace/context (e.g., output in Chinese if requested or if the project documents are in Chinese).
+- **Output Language**: Use the `output_language` passed in the execution context for responses and files. `"auto"` follows the user's current language. Do not switch languages because source documents use a different one.

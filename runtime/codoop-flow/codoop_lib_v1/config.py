@@ -33,6 +33,9 @@ class Config:
     ticket_design_mode: str = "strict"
     # System project type -> actual repository-relative directory.
     project_paths: dict[str, str] = field(default_factory=dict)
+    # Language for user-facing prose and generated documents; "auto" follows
+    # the user's current language.
+    output_language: str = "auto"
 
     @property
     def tickets_dir(self) -> Path:
@@ -69,6 +72,7 @@ def setup_target(
     config_path: str | Path | None = None,
     project_paths: dict[str, str] | None = None,
     create_project_dirs: bool = False,
+    output_language: str | None = None,
 ) -> tuple[Config, Path]:
     """One-shot onboarding: create the ticket pipeline dirs in the target repo
     and write out a codoop_flow.toml. Returns (config, config_path).
@@ -89,6 +93,8 @@ def setup_target(
             f"{cfg_path} already exists and points at a different "
             f"target_repo ({existing.target_repo}); remove it first"
         )
+    language = _validate_output_language(output_language) \
+        if output_language is not None else None
 
     paths = _validate_project_paths(project_paths or {})
     if create_project_dirs and not paths:
@@ -110,18 +116,24 @@ def setup_target(
     if existing:
         if project_paths is not None:
             _write_project_paths(cfg_path, paths)
+        if language is not None:
+            _write_output_language(cfg_path, language)
+        if project_paths is not None or language is not None:
             existing = load_config(cfg_path)
         config = existing
     else:
+        language = language or "auto"
         config = Config(
             target_repo=repo,
             worktree_root=wt_root,
             project_paths=paths,
+            output_language=language,
         )
         cfg_path.write_text(
             f'target_repo = "{repo}"\n'
             f'worktree_root = "{worktree_root}"\n'
             'ticket_design_mode = "strict"\n'
+            f'output_language = {json.dumps(language, ensure_ascii=False)}\n'
             + _format_project_paths(paths),
             encoding="utf-8",
         )
@@ -156,12 +168,14 @@ def load_config(path: str | Path | None = None) -> Config:
         raise ValueError(
             "config ticket_design_mode must be 'strict' or 'one_pass'"
         )
+    output_language = _validate_output_language(raw.get("output_language", "auto"))
     project_paths = _validate_project_paths(raw.get("project_paths", {}))
 
     return Config(
         target_repo=target_repo,
         worktree_root=worktree_root,
         ticket_design_mode=ticket_design_mode,
+        output_language=output_language.strip(),
         project_paths=project_paths,
     )
 
@@ -182,6 +196,12 @@ def _validate_project_paths(value: object) -> dict[str, str]:
             raise ValueError("config project_paths must stay inside target_repo")
         paths[project_type] = raw_path
     return paths
+
+
+def _validate_output_language(value: object) -> str:
+    if not isinstance(value, str) or not value.strip():
+        raise ValueError("config output_language must be a non-empty string")
+    return value.strip()
 
 
 def _validate_new_project_paths(repo: Path, paths: dict[str, str]) -> None:
@@ -235,4 +255,24 @@ def _write_project_paths(path: Path, paths: dict[str, str]) -> None:
             len(lines),
         )
         lines[start:end] = [block]
+    path.write_text("".join(lines), encoding="utf-8")
+
+
+def _write_output_language(path: Path, language: str) -> None:
+    lines = path.read_text(encoding="utf-8").splitlines(keepends=True)
+    assignment = f'output_language = {json.dumps(language, ensure_ascii=False)}\n'
+    index = next(
+        (index for index, line in enumerate(lines)
+         if line.partition("=")[0].strip() == "output_language"),
+        None,
+    )
+    if index is None:
+        index = next(
+            (index for index, line in enumerate(lines)
+             if line.lstrip().startswith("[")),
+            len(lines),
+        )
+        lines.insert(index, assignment)
+    else:
+        lines[index] = assignment
     path.write_text("".join(lines), encoding="utf-8")

@@ -19,6 +19,12 @@ The keys describe the system project type; the values are the real directories
 and may use any existing name. Design code only for listed projects. Treat
 unlisted systems as external context or contracts, never implementation work.
 
+Also read `output_language`. Use it for every user-facing message, question,
+summary, generated document, and delegated role prompt. `"auto"` or a missing
+field follows the user's current language. An explicit request for the current
+task overrides the config. Translate template headings and labels as needed;
+never switch languages merely because a source document or template uses one.
+
 ## Sub-Agent Expert Roles
 
 This skill invokes the following expert personas from the plugin Runtime (`../../runtime/codoop-flow/agents/`):
@@ -204,4 +210,4 @@ To ensure that the first internal testing version (Alpha/Beta) of any applicatio
 ---
 
 ## 8. Output Language Rule
-- **Rule**: The bundled visual-design template is currently Chinese. Generate Chinese documents by default; if the user explicitly requests another language, translate the headings and table labels while preserving the template structure.
+- **Rule**: Follow the configured output language from **Project Paths** for all prose and generated documents. Preserve the bundled visual-design template structure while translating its Chinese headings and labels when needed.

@@ -358,6 +358,7 @@ python3 <SKILL>/../../runtime/codoop-flow/codoop_tools.py --config <toml> fail <
 |---|---|---|---|---|
 | `target_repo` | 字符串（路径） | 是 | — | 目标 git 仓库的绝对路径。通过 `expanduser().resolve()` 展开。 |
 | `worktree_root` | 字符串（路径） | 否 | `~/codoop_tickets/worktrees` | 每个工单 worktree 的创建目录。通过 `expanduser()` 展开。 |
+| `output_language` | 字符串 | 否 | `"auto"` | 用户回复、交付报告和委派 agent 文本所用的 BCP 47 语言标签；`"auto"` 跟随用户当前使用的语言。 |
 
 工单管道目录（`pending/`、`in_progress/`、`done/`、`failed/`）从 `<target_repo>/docs/tickets/` 派生。由 `codoop setup` 创建但从不在 TOML 中配置。
 
