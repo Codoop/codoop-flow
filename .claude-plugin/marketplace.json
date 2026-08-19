@@ -9,7 +9,7 @@
   "plugins": [
     {
       "name": "codoop-flow",
-      "version": "0.1.6",
+      "version": "0.1.7-alpha.1",
       "source": ".",
       "description": "Drive codoop-flow tickets in-session: pick -> build -> verify -> review -> ship, plus project initialization, discovery, and ticket design.",
       "homepage": "https://github.com/Codoop/codoop-flow",

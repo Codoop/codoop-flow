@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.7-alpha.1] - 2026-08-19
+
+### Added
+
+- **Cursor support (experimental).** codoop-flow now installs on Cursor as a
+  first-class plugin. Cursor ships a plugin system and reads the same
+  `SKILL.md` format as Claude and Codex, so all three hosts share one `skills/`
+  tree and one bundled Runtime — no fork. A new `.cursor-plugin/plugin.json`
+  manifest declares the skills; `install-skills.sh --agent cursor` provides a
+  copy-based fallback. Cursor's parallel subagents let `codoop-execute` run the
+  review personas concurrently, matching Codex/Claude.
+
+  > This release wires up and documents Cursor support per Cursor's plugin and
+  > skills specs, but it has not yet been validated on a live Cursor install.
+  > Treat Cursor as experimental until confirmed end to end.
+
+### Changed
+
+- Made the Runtime-location wording in `codoop-init` and `codoop-execute`
+  agent-neutral, and promoted Cursor from a "generic copy" note to a
+  first-class install section in the README and `docs/install` (English and
+  Simplified Chinese), including badges, repository layout, and the
+  compatibility table.
+
 ## [0.1.6] - 2026-08-19
 
 ### Added
