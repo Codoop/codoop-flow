@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.6] - 2026-08-19
+
 ### Added
 
 - **Config is git-ignored during setup.** `codoop-init` now adds
@@ -14,6 +16,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   per-developer choices (output language, project paths), so keeping it local
   prevents teammates who share the plugin from clashing over it. The step is
   idempotent and skipped when the config lives outside the repository.
+
+### Changed
+
+- Promoted the `0.1.6-alpha.x` line to a stable `0.1.6` release. This rolls up
+  configurable output language, repository-aware project setup, and
+  configurable ticket design modes from the alpha series.
 
 ## [0.1.6-alpha.4] - 2026-08-11
 
