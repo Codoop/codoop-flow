@@ -81,3 +81,7 @@ Read the resulting `codoop_flow.toml` and report the mapping and output language
 in plain language.
 Confirm that every path is relative and real, no unselected project was
 created, and `docs/tickets/{pending,in_progress,done,failed}/` exists.
+Confirm the config file is listed in the repository `.gitignore`; setup adds it
+automatically because the config holds per-developer choices that must not be
+committed. Tell the user the config stays local so teammates' settings never
+clash.

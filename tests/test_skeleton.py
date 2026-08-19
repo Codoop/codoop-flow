@@ -280,6 +280,40 @@ def test_setup_writes_strict_ticket_design_mode(root: Path, worktrees: Path) -> 
            "setup writes output language to config")
 
 
+def test_setup_gitignores_config(root: Path, worktrees: Path) -> None:
+    print("[test] setup: adds config to .gitignore")
+    cfg_path = root / "codoop_flow.toml"
+    setup_target(root, worktrees, cfg_path)
+    gitignore = root / ".gitignore"
+    _check(gitignore.exists(), "setup creates .gitignore when missing")
+    _check("/codoop_flow.toml" in gitignore.read_text(encoding="utf-8").splitlines(),
+           "setup ignores the config file")
+
+    # Re-running must not duplicate the entry.
+    setup_target(root, worktrees, cfg_path)
+    _check(gitignore.read_text(encoding="utf-8").count("/codoop_flow.toml") == 1,
+           "re-running setup does not duplicate the ignore entry")
+
+
+def test_setup_appends_config_to_existing_gitignore(root: Path, worktrees: Path) -> None:
+    print("[test] setup: preserves existing .gitignore entries")
+    gitignore = root / ".gitignore"
+    gitignore.write_text("node_modules/\n", encoding="utf-8")
+    cfg_path = root / "codoop_flow.toml"
+    setup_target(root, worktrees, cfg_path)
+    contents = gitignore.read_text(encoding="utf-8")
+    _check("node_modules/" in contents, "setup keeps existing ignore entries")
+    _check("/codoop_flow.toml" in contents.splitlines(), "setup appends the config entry")
+
+
+def test_setup_skips_gitignore_when_config_outside_repo(root: Path, worktrees: Path) -> None:
+    print("[test] setup: leaves .gitignore alone for external config")
+    cfg_path = root.parent / "outside_flow.toml"
+    setup_target(root, worktrees, cfg_path)
+    _check(not (root / ".gitignore").exists(),
+           "config outside the repo is not added to .gitignore")
+
+
 def test_setup_sets_and_updates_output_language(root: Path, worktrees: Path) -> None:
     print("[test] setup: sets and updates output language")
     cfg_path = root / "codoop_flow.toml"
@@ -951,6 +985,9 @@ def main() -> int:
         test_output_language_config,
         test_project_paths_config,
         test_setup_writes_strict_ticket_design_mode,
+        test_setup_gitignores_config,
+        test_setup_appends_config_to_existing_gitignore,
+        test_setup_skips_gitignore_when_config_outside_repo,
         test_setup_sets_and_updates_output_language,
         test_setup_existing_project_uses_custom_names,
         test_setup_existing_standalone_client_uses_root,

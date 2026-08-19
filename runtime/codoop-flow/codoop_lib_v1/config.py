@@ -140,7 +140,38 @@ def setup_target(
 
     for stage in TICKET_STAGES:
         (config.tickets_dir / stage).mkdir(parents=True, exist_ok=True)
+
+    # The config captures per-developer choices (output language, project
+    # paths). Committing it would clash across teammates, so keep it local.
+    _ensure_config_gitignored(repo, cfg_path)
     return config, cfg_path
+
+
+def _ensure_config_gitignored(repo: Path, cfg_path: Path) -> None:
+    """Add the config file to the target repo's .gitignore.
+
+    The config holds per-developer choices, so teammates sharing the plugin
+    must not commit it. Idempotent, and a no-op when the config lives outside
+    the repository. The entry is repo-relative with forward slashes so it
+    matches regardless of where setup was invoked.
+    """
+    try:
+        relative = cfg_path.resolve().relative_to(repo)
+    except ValueError:
+        return  # config lives outside the repo; nothing to ignore
+    entry = "/" + relative.as_posix()
+
+    gitignore = repo / ".gitignore"
+    lines = gitignore.read_text(encoding="utf-8").splitlines() \
+        if gitignore.exists() else []
+    if any(line.strip() in (entry, relative.as_posix()) for line in lines):
+        return
+
+    with gitignore.open("a", encoding="utf-8") as f:
+        if lines and lines[-1].strip():
+            f.write("\n")
+        f.write(f"# codoop-flow local config (per-developer, do not commit)\n")
+        f.write(f"{entry}\n")
 
 
 def load_config(path: str | Path | None = None) -> Config:

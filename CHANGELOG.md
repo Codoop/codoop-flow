@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Config is git-ignored during setup.** `codoop-init` now adds
+  `codoop_flow.toml` to the target repository's `.gitignore`. The config holds
+  per-developer choices (output language, project paths), so keeping it local
+  prevents teammates who share the plugin from clashing over it. The step is
+  idempotent and skipped when the config lives outside the repository.
+
 ## [0.1.6-alpha.4] - 2026-08-11
 
 ### Added
