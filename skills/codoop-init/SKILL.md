@@ -10,8 +10,9 @@ user explicitly asks to create. Use only these system project types: `backend`,
 `web`, `desktop`, and `mobile`.
 
 Locate the absolute directory containing this `SKILL.md` as `$SKILL` before
-running the plugin-level Runtime commands below. Both Codex and Claude install
-the Runtime at `$SKILL/../../runtime/codoop-flow/`.
+running the plugin-level Runtime commands below. Every host that installs the
+whole plugin (Codex, Claude Code, Cursor, ...) keeps the Runtime at
+`$SKILL/../../runtime/codoop-flow/`.
 
 ## Output Language
 

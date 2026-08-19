@@ -48,10 +48,14 @@ git clone https://github.com/Codoop/codoop-flow.git
 bash codoop-flow/scripts/install-skills.sh
 ```
 
-This copies all 12 skills plus one shared Runtime to both agents. Codex uses
-`~/.codex/runtime/codoop-flow/`; Claude uses
-`~/.claude/runtime/codoop-flow/`. Re-running updates them in place. Use
-`--agent codex` or `--agent claude` to target one agent. Use `--dry-run` to preview.
+This copies all 12 skills plus one shared Runtime to each agent. Codex uses
+`~/.codex/runtime/codoop-flow/`; Claude uses `~/.claude/runtime/codoop-flow/`;
+Cursor uses `~/.cursor/runtime/codoop-flow/`. Re-running updates them in place.
+Use `--agent codex`, `--agent claude`, or `--agent cursor` to target one agent.
+Use `--dry-run` to preview.
+
+> For Cursor, installing the plugin (see the Cursor section below) is preferred
+> over this copy; the script's `--agent cursor` mode is a fallback.
 
 ---
 
@@ -159,11 +163,50 @@ Or schedule continuously with:
 
 ---
 
-## Generic copy (Cursor / Gemini / others)
+## Cursor
 
-Keep the plugin layout together. If an agent requires copied skill folders,
-copy the public skills and the Runtime to matching `skills/` and `runtime/`
-directories under the same agent home:
+Cursor reads the same `SKILL.md` format as Claude and Codex and ships a plugin
+system, so codoop-flow installs as one plugin — skills and their shared Runtime
+stay adjacent, exactly as on the other agents. The manifest lives at
+`.cursor-plugin/plugin.json`.
+
+**Local / development** — symlink the repo into Cursor's local plugin dir, then
+reload:
+
+```bash
+git clone https://github.com/Codoop/codoop-flow.git
+ln -s "$(pwd)/codoop-flow" ~/.cursor/plugins/local/codoop-flow
+# In Cursor: run "Developer: Reload Window" (or restart)
+```
+
+After reload, open the **Customize** panel to confirm the plugin loaded, then
+invoke skills by typing `/` and searching by name (e.g. `/codoop-init`,
+`/codoop-execute`), or just describe the task — Cursor discovers skills from
+their `description` like the other agents:
+
+```
+/codoop-init inspect this repo and set up codoop-flow
+Use codoop-execute to run the next ticket against /path/to/codoop_flow.toml
+```
+
+Cursor supports parallel **subagents**, so `codoop-execute` can run the review
+personas concurrently just like Codex/Claude.
+
+**Fallback (no plugin system):** copy skills + Runtime into the Cursor home,
+keeping them adjacent:
+
+```bash
+bash codoop-flow/scripts/install-skills.sh --agent cursor
+```
+
+This writes `~/.cursor/skills/` and `~/.cursor/runtime/codoop-flow/`.
+
+---
+
+## Generic copy (Gemini / other agents)
+
+Keep the plugin layout together. Copy the public skills and the Runtime to
+matching `skills/` and `runtime/` directories under the same agent home:
 
 ```bash
 git clone https://github.com/Codoop/codoop-flow.git
@@ -182,9 +225,8 @@ Where each agent expects it (check their own docs, may change across versions):
 
 | Agent | Where | How to trigger |
 |---|---|---|
-| Cursor | Put each `SKILL.md` in `.cursor/rules/`, or point the agent at `skills/` | Reference the rule in conversation |
-| Other agents | The skills are plain Markdown; feed each `SKILL.md`'s content as system prompt / instructions | Just talk to it |
 | Gemini CLI | Put them in its skills directory | Auto-discovered |
+| Other agents | The skills are plain Markdown; feed each `SKILL.md`'s content as system prompt / instructions | Just talk to it |
 
 **Key point**: keep `<agent-home>/skills/` and `<agent-home>/runtime/codoop-flow/`
 at the same level. Every codoop-flow skill resolves the Runtime relative to its

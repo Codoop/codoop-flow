@@ -9,6 +9,7 @@ pick → build → verify → multi-review → archive, one ticket per closed lo
 
 ![Codex Skill](https://img.shields.io/badge/Codex-skill-111827)
 ![Claude Code Plugin](https://img.shields.io/badge/Claude%20Code-plugin-8A63D2)
+![Cursor Plugin](https://img.shields.io/badge/Cursor-plugin-000000)
 ![Python](https://img.shields.io/badge/python-3.11%2B-blue)
 ![Zero deps](https://img.shields.io/badge/deps-zero-brightgreen)
 ![License](https://img.shields.io/badge/license-MIT-green)
@@ -89,7 +90,23 @@ and then run it against your repo.
 
 > SSH error? Use the full HTTPS URL: `/plugin marketplace add https://github.com/Codoop/codoop-flow.git`
 > Local development: `claude --plugin-dir /path/to/codoop-flow`
-> Other agents (Cursor / Gemini): see [`docs/install.md`](./docs/install.md).
+
+### Cursor
+
+Cursor reads the same `SKILL.md` format and ships a plugin system, so
+codoop-flow installs as one plugin. For local development, symlink the repo and
+reload:
+
+```bash
+git clone https://github.com/Codoop/codoop-flow.git
+ln -s "$(pwd)/codoop-flow" ~/.cursor/plugins/local/codoop-flow
+# In Cursor: run "Developer: Reload Window"
+```
+
+Then invoke skills with `/codoop-init`, `/codoop-execute`, etc. See
+[`docs/install.md`](./docs/install.md) for details and the copy-based fallback.
+
+> Other agents (Gemini / …): see [`docs/install.md`](./docs/install.md).
 
 **Prerequisites**: the target project is a git repo; the machine has `python3` (standard library only, zero third-party deps).
 
@@ -391,7 +408,8 @@ codoop-flow/
 ├── .agents/plugins/marketplace.json # Codex marketplace manifest
 ├── .claude-plugin/                # Claude Code plugin manifests
 ├── .codex-plugin/                 # Codex plugin manifest
-├── runtime/codoop-flow/           # one shared Runtime for Codex and Claude
+├── .cursor-plugin/                # Cursor plugin manifest
+├── runtime/codoop-flow/           # one shared Runtime for all agents
 │   ├── codoop.py                  # setup CLI
 │   ├── codoop_tools.py            # deterministic Loop 3 guardrails
 │   ├── codoop-ticket.py           # ticket lifecycle CLI
@@ -435,7 +453,8 @@ The skill is a self-contained directory; any coding agent that can read files an
 | Codex CLI | ✅ first-class | same plugin install flow |
 | Claude Code | ✅ first-class | plugin marketplace (see [Install](#install)) |
 | Claude CLI | ✅ first-class | same local `claude` command used by Claude Code |
-| Cursor / Gemini | 🟡 generic copy | copy the `skills/` dir, see [`docs/install.md`](./docs/install.md) |
+| Cursor | ✅ first-class | plugin (`.cursor-plugin/`); symlink to `~/.cursor/plugins/local/`, see [`docs/install.md`](./docs/install.md) |
+| Gemini / others | 🟡 generic copy | copy the `skills/` dir, see [`docs/install.md`](./docs/install.md) |
 
 > If the host lacks a subagent tool, run the review personas serially in the same session.
 

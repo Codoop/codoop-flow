@@ -43,11 +43,15 @@ git clone https://github.com/Codoop/codoop-flow.git
 bash codoop-flow/scripts/install-skills.sh
 ```
 
-这会把全部 12 个 Skill 和一份共享 Runtime 安装到两个 agent。Codex
+这会把全部 12 个 Skill 和一份共享 Runtime 安装到各 agent。Codex
 使用 `~/.codex/runtime/codoop-flow/`，Claude 使用
-`~/.claude/runtime/codoop-flow/`。再跑一次就是原地更新。用
-`--agent codex` 或 `--agent claude` 只装到某一个 agent。用 `--dry-run`
-预览但不实际复制。
+`~/.claude/runtime/codoop-flow/`，Cursor 使用
+`~/.cursor/runtime/codoop-flow/`。再跑一次就是原地更新。用
+`--agent codex`、`--agent claude` 或 `--agent cursor` 只装到某一个 agent。
+用 `--dry-run` 预览但不实际复制。
+
+> Cursor 推荐直接装插件（见下方 Cursor 章节），脚本的 `--agent cursor`
+> 只是插件系统不可用时的兜底。
 
 ---
 
@@ -140,10 +144,47 @@ claude --plugin-dir /path/to/codoop-flow
 
 ---
 
-## 通用拷贝(Cursor / Gemini / 其他)
+## Cursor
 
-请保持插件结构完整。如果某个 agent 必须复制 skill 目录，就把公开 skill
-和 Runtime 分别复制到同一个 agent 根目录下的 `skills/` 与 `runtime/`：
+Cursor 读取的 `SKILL.md` 格式与 Claude、Codex 完全一致，并且自带插件
+系统。因此 codoop-flow 以「一个插件」的方式安装——skill 和它们共享的
+Runtime 保持同层，与其他 agent 完全一样。插件清单位于
+`.cursor-plugin/plugin.json`。
+
+**本地 / 开发**——把仓库软链到 Cursor 的本地插件目录，然后重载：
+
+```bash
+git clone https://github.com/Codoop/codoop-flow.git
+ln -s "$(pwd)/codoop-flow" ~/.cursor/plugins/local/codoop-flow
+# 在 Cursor 里执行 "Developer: Reload Window"（或重启）
+```
+
+重载后，打开 **Customize** 面板确认插件已加载，然后输入 `/` 按名字搜索来
+触发 skill（如 `/codoop-init`、`/codoop-execute`），或者直接描述任务——
+Cursor 会像其他 agent 一样按 `description` 自动发现 skill：
+
+```
+/codoop-init 分析这个仓库并初始化 codoop-flow
+使用 codoop-execute，针对 /path/to/codoop_flow.toml 跑下一张工单
+```
+
+Cursor 支持并行 **subagent**，所以 `codoop-execute` 能像 Codex/Claude
+一样并行运行评审 persona。
+
+**兜底（无插件系统时）：** 把 skill 和 Runtime 拷进 Cursor 根目录，保持同层：
+
+```bash
+bash codoop-flow/scripts/install-skills.sh --agent cursor
+```
+
+这会写入 `~/.cursor/skills/` 和 `~/.cursor/runtime/codoop-flow/`。
+
+---
+
+## 通用拷贝(Gemini / 其他 agent)
+
+请保持插件结构完整。把公开 skill 和 Runtime 分别复制到同一个 agent
+根目录下的 `skills/` 与 `runtime/`：
 
 ```bash
 git clone https://github.com/Codoop/codoop-flow.git
@@ -162,9 +203,8 @@ cp -R codoop-flow/runtime/codoop-flow <agent根目录>/runtime/
 
 | Agent | 放哪 | 怎么触发 |
 |---|---|---|
-| Cursor | 每个 `SKILL.md` 放进 `.cursor/rules/`，或让 agent 引用整个 `skills/` | 在对话里引用规则 |
-| 其他 agent | skill 是纯 Markdown，把每个 `SKILL.md` 内容作为 system prompt / instructions 喂进去 | 直接对话 |
 | Gemini CLI | 放进其 skills 目录 | 自动发现 |
+| 其他 agent | skill 是纯 Markdown，把每个 `SKILL.md` 内容作为 system prompt / instructions 喂进去 | 直接对话 |
 
 **关键**：保持 `<agent根目录>/skills/` 和
 `<agent根目录>/runtime/codoop-flow/` 同级。每个 Skill 都从自己的

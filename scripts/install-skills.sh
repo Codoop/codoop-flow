@@ -29,7 +29,7 @@ while [[ $# -gt 0 ]]; do
     --dry-run)   DRY_RUN=1 ;;
     --agent)     AGENT="$2"; shift ;;
     --agent=*)   AGENT="${1#--agent=}" ;;
-    -h|--help)   echo "Usage: install-skills.sh [--agent codex|claude|all] [--dry-run]"; exit 0 ;;
+    -h|--help)   echo "Usage: install-skills.sh [--agent codex|claude|cursor|all] [--dry-run]"; exit 0 ;;
     *)           echo "Unknown option: $1" >&2; exit 1 ;;
   esac
   shift
@@ -41,6 +41,9 @@ if [[ "$AGENT" == "auto" || "$AGENT" == "codex"  || "$AGENT" == "all" ]]; then
 fi
 if [[ "$AGENT" == "auto" || "$AGENT" == "claude" || "$AGENT" == "all" ]]; then
   TARGETS+=("claude:${CLAUDE_HOME:-$HOME/.claude}/skills")
+fi
+if [[ "$AGENT" == "auto" || "$AGENT" == "cursor" || "$AGENT" == "all" ]]; then
+  TARGETS+=("cursor:${CURSOR_HOME:-$HOME/.cursor}/skills")
 fi
 
 _install_to() {
@@ -76,24 +79,23 @@ done
 
 cat <<'EOF'
 
-==> Other agents (Cursor / Gemini / etc.)
-Copy each skill directory into your agent's rules/skills location:
+==> Cursor (plugin install, preferred)
+Cursor reads the same SKILL.md format and ships a plugin system. Prefer
+installing the whole plugin so skills and the Runtime stay adjacent:
 
-  cp -R skills/codoop-discover                <agent-skills-dir>/
-  cp -R skills/codoop-init                    <agent-skills-dir>/
-  cp -R skills/grilling                       <agent-skills-dir>/
-  cp -R skills/codoop-ticket                  <agent-skills-dir>/
-  cp -R skills/spec-driven-development        <agent-skills-dir>/
-  cp -R skills/planning-and-task-breakdown    <agent-skills-dir>/
-  cp -R skills/definition-of-done             <agent-skills-dir>/
-  cp -R skills/codoop-ux-walkthrough          <agent-skills-dir>/
-  cp -R skills/codoop-execute                 <agent-skills-dir>/
-  cp -R skills/incremental-implementation     <agent-skills-dir>/
-  cp -R skills/debugging-and-error-recovery   <agent-skills-dir>/
-  cp -R skills/test-driven-development        <agent-skills-dir>/
-  cp -R runtime/codoop-flow                   <agent-home>/runtime/
+  # local development: symlink the repo, then reload Cursor
+  ln -s "$(pwd)" ~/.cursor/plugins/local/codoop-flow
 
-Cursor: place each SKILL.md in .cursor/rules/, or point the agent at skills/.
+The manifest lives at .cursor-plugin/plugin.json. The script's --agent cursor
+copy above ($HOME/.cursor/skills + runtime) is a fallback for when the plugin
+system is unavailable.
+
+==> Other agents (Gemini / etc.)
+Copy each skill directory plus the Runtime, keeping them adjacent:
+
+  cp -R skills/<name>       <agent-skills-dir>/    # for each of the 12 skills
+  cp -R runtime/codoop-flow <agent-home>/runtime/
+
 Gemini CLI: see ~/.gemini/skills/ or the agent's documented path.
 EOF
 

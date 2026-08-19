@@ -16,7 +16,7 @@ yourself) — always call the tool, because those steps must never be guessed.
 
 ## Plugin Runtime
 
-Codex and Claude install the whole plugin. All skills call the same Runtime:
+Codex, Claude Code, and Cursor install the whole plugin. All skills call the same Runtime:
 
 ```
 $SKILL/../../runtime/codoop-flow/

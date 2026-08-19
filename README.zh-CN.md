@@ -9,6 +9,7 @@
 
 ![Codex Skill](https://img.shields.io/badge/Codex-skill-111827)
 ![Claude Code Plugin](https://img.shields.io/badge/Claude%20Code-plugin-8A63D2)
+![Cursor Plugin](https://img.shields.io/badge/Cursor-plugin-000000)
 ![Python](https://img.shields.io/badge/python-3.11%2B-blue)
 ![Zero deps](https://img.shields.io/badge/deps-zero-brightgreen)
 ![License](https://img.shields.io/badge/license-MIT-green)
@@ -86,7 +87,22 @@ bash scripts/install-skills.sh --agent codex
 
 > SSH 报错就改用完整 HTTPS：`/plugin marketplace add https://github.com/Codoop/codoop-flow.git`
 > 本地开发：`claude --plugin-dir /path/to/codoop-flow`
-> 其他 agent（Cursor / Gemini）见 [`docs/install.zh-CN.md`](./docs/install.zh-CN.md)。
+
+### Cursor
+
+Cursor 读取的 `SKILL.md` 格式与其他 agent 一致，并且自带插件系统，因此
+codoop-flow 以「一个插件」安装。本地开发时，把仓库软链进去再重载：
+
+```bash
+git clone https://github.com/Codoop/codoop-flow.git
+ln -s "$(pwd)/codoop-flow" ~/.cursor/plugins/local/codoop-flow
+# 在 Cursor 里执行 "Developer: Reload Window"
+```
+
+然后用 `/codoop-init`、`/codoop-execute` 等触发 skill。详情与拷贝兜底方式见
+[`docs/install.zh-CN.md`](./docs/install.zh-CN.md)。
+
+> 其他 agent（Gemini / …）见 [`docs/install.zh-CN.md`](./docs/install.zh-CN.md)。
 
 **前提**：目标工程是一个 git 仓库；机器有 `python3`（仅标准库，无第三方依赖）。
 
@@ -380,7 +396,8 @@ codoop-flow/
 ├── .agents/plugins/marketplace.json # Codex marketplace 清单
 ├── .claude-plugin/                # Claude Code 插件声明
 ├── .codex-plugin/                 # Codex 插件声明
-├── runtime/codoop-flow/           # Codex 与 Claude 共用的一份 Runtime
+├── .cursor-plugin/                # Cursor 插件声明
+├── runtime/codoop-flow/           # 所有 agent 共用的一份 Runtime
 │   ├── codoop.py                  # 初始化 CLI
 │   ├── codoop_tools.py            # 第三环确定性护栏
 │   ├── codoop-ticket.py           # 工单生命周期 CLI
@@ -424,7 +441,8 @@ skill 是自包含目录，任何有"读文件 + 跑 Bash"能力的 coding agent
 | Codex CLI | ✅ 一等公民 | 同一套插件安装流程 |
 | Claude Code | ✅ 一等公民 | 插件市场（见[安装](#安装)） |
 | Claude CLI | ✅ 一等公民 | 使用与 Claude Code 相同的本地 `claude` 命令 |
-| Cursor / Gemini | 🟡 通用拷贝 | 拷 `skills/` 目录，见 [`docs/install.zh-CN.md`](./docs/install.zh-CN.md) |
+| Cursor | ✅ 一等公民 | 插件（`.cursor-plugin/`）；软链到 `~/.cursor/plugins/local/`，见 [`docs/install.zh-CN.md`](./docs/install.zh-CN.md) |
+| Gemini / 其他 | 🟡 通用拷贝 | 拷 `skills/` 目录，见 [`docs/install.zh-CN.md`](./docs/install.zh-CN.md) |
 
 > 如果宿主没有 subagent 工具，就在同一个会话里串行运行评审 persona。
 
