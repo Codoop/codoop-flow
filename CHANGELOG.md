@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.7-alpha.2] - 2026-08-24
+
+### Added
+
+- **Conversation roles.** Setup can now save a user's usual professional
+  context: developer, product manager, designer, operations, founder, or
+  general user.
+
+### Changed
+
+- **Role-aware Skill conversations.** Skills use normal professional language
+  within the selected role and explain cross-field topics plainly. Users can
+  request simpler or more technical language at any time; code and generated
+  PRD, Spec, Plan, Todo, and report files remain precise and professional.
+
 ## [0.1.7-alpha.1] - 2026-08-19
 
 ### Added
