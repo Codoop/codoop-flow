@@ -14,6 +14,13 @@ walkthrough conversation, persona prompt, and `experience_report.md`. `"auto"`
 or a missing field follows the user's current language. An explicit request for
 the current task overrides the config.
 
+Read `user_role` too; a missing value means `general`. It changes only the live
+conversation: use normal professional terms inside the user's field, and explain
+cross-field topics in plain language. The user's current request for simpler or
+more professional language overrides it. Do not apply this profile to the
+persona prompt, report, code, ticket documents, or other generated files; those
+remain precise and professional.
+
 ## Core Rules
 
 - Read `$SKILL/../../runtime/codoop-flow/agents/persona-walkthrough.md` and use it as the

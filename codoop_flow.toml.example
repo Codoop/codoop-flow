@@ -18,6 +18,10 @@ ticket_design_mode = "strict"
 # examples: zh-CN, zh-TW, en, ja, ko, es, fr, de, pt-BR, it, ru, ar, hi.
 output_language = "zh-CN"
 
+# Usual professional context for live Skill conversations. Use `general` for a
+# normal user or any unlisted industry. This never changes generated artifacts.
+user_role = "product_manager"
+
 # System project type -> real relative directory. Existing projects may use
 # custom names; omit project types this repository does not own.
 [project_paths]

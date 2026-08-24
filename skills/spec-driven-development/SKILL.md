@@ -5,6 +5,16 @@ description: Creates specs before coding. Use when starting a new project, featu
 
 # Spec-Driven Development
 
+## Conversation Profile
+
+When `codoop_flow.toml` is available, read `user_role`; a missing value means
+`general`. It applies only to this conversation: use normal professional terms
+inside the user's field, and explain cross-field topics in plain language. The
+user may override it for the current conversation by asking for simpler or more
+professional language. Never apply the profile to code, PRD, Spec, Plan, Todo,
+reports, agent prompts, or other generated files; those stay precise and
+professional.
+
 ## Overview
 
 Write a structured specification before writing any code. The spec is the shared source of truth between you and the human engineer — it defines what we're building, why, and how we'll know it's done. Code without a spec is guessing.

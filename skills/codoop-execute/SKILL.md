@@ -42,6 +42,13 @@ prompts. `"auto"` or a missing field follows the user's current language. An
 explicit request for the current task overrides the config. Do not translate
 source-code identifiers, commands, logs, or required protocol literals.
 
+Read `user_role` from that config; a missing value means `general`. It changes
+only the live conversation: use normal professional terms inside the user's
+field, and explain cross-field topics in plain language. The user's current
+request for simpler or more professional language overrides it. Do not apply
+this profile to code, ticket documents, reports, or delegated agent prompts;
+those remain precise and professional.
+
 ## Setup a target repo
 
 If the user asks to onboard, install, set up, or initialize codoop-flow for a

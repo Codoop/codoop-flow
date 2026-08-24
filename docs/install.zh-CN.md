@@ -32,6 +32,10 @@ Python 模块和评审 persona 只保留一份，统一放在
 `es`、`pt-BR` 或 `ar`；`auto` 跟随用户当前使用的语言。手动初始化可传入
 `--output-language <language>`。
 
+初始化还会询问 `user_role`：`developer`、`product_manager`、`designer`、
+`operations`、`founder` 或 `general`（普通用户 / 其他行业）；手动初始化可传入
+`--user-role <role>`。它只影响实时对话，工单文档、报告和代码仍保持专业、精确。
+
 ---
 
 ## 一键安装（全部 12 个 Skill）

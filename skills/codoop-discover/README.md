@@ -31,6 +31,10 @@ SKILL: Generates comprehensive backlog documentation in docs/backlog/
 question, role prompt, summary, and generated document. Use any BCP 47 language
 tag, or `"auto"` to follow the user's current language.
 
+It also reads `user_role` for the live conversation only. Cross-field topics
+are explained plainly; generated documents and delegated role prompts remain
+precise and professional.
+
 ## How It Works
 
 ### The 8-Step Workflow

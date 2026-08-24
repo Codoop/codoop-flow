@@ -5,6 +5,16 @@ description: Delivers changes incrementally. Use when implementing any feature o
 
 # Incremental Implementation
 
+## Conversation Profile
+
+When `codoop_flow.toml` is available, read `user_role`; a missing value means
+`general`. It applies only to this conversation: use normal professional terms
+inside the user's field, and explain cross-field topics in plain language. The
+user may override it for the current conversation by asking for simpler or more
+professional language. Never apply the profile to code, PRD, Spec, Plan, Todo,
+reports, agent prompts, or other generated files; those stay precise and
+professional.
+
 ## Overview
 
 Build in thin vertical slices — implement one piece, test it, verify it, then expand. Avoid implementing an entire feature in one pass. Each increment should leave the system in a working, testable state. This is the execution discipline that makes large features manageable.

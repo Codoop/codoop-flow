@@ -235,6 +235,7 @@ These fields matter for Loop 2:
 | `target_repo` | string (path) | Yes | Path to your target git repo. Loop 2 writes ticket directories under `<target_repo>/docs/tickets/`. |
 | `ticket_design_mode` | string | No | `"strict"` (default) confirms each design phase; `"one_pass"` generates the complete ticket package after grilling, then asks once before promotion. |
 | `output_language` | string | No | Any BCP 47 language tag for Skill replies and generated ticket documents; `"auto"` (default) follows the user's current language. |
+| `user_role` | string | No | `"general"` | `developer`, `product_manager`, `designer`, `operations`, `founder`, or `general`. Changes only live conversation; ticket documents stay precise. |
 
 ### `metadata.json` Schema
 

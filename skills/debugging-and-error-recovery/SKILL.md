@@ -5,6 +5,16 @@ description: Guides systematic root-cause debugging. Use when tests fail, builds
 
 # Debugging and Error Recovery
 
+## Conversation Profile
+
+When `codoop_flow.toml` is available, read `user_role`; a missing value means
+`general`. It applies only to this conversation: use normal professional terms
+inside the user's field, and explain cross-field topics in plain language. The
+user may override it for the current conversation by asking for simpler or more
+professional language. Never apply the profile to code, PRD, Spec, Plan, Todo,
+reports, agent prompts, or other generated files; those stay precise and
+professional.
+
 ## Overview
 
 Systematic debugging with structured triage. When something breaks, stop adding features, preserve evidence, and follow a structured process to find and fix the root cause. Guessing wastes time. The triage checklist works for test failures, build errors, runtime bugs, and production incidents.

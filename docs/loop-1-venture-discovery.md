@@ -177,10 +177,12 @@ The `codoop.py` documentation references a `discover` subcommand in the README e
 
 ## Configuration
 
-Loop 1 reads `target_repo`, `project_paths`, and `output_language` from the
+Loop 1 reads `target_repo`, `project_paths`, `output_language`, and `user_role` from the
 existing `codoop_flow.toml`. Set `output_language` to a language such as
 `"zh-CN"`, `"pt-BR"`, or `"ar"`; any BCP 47 language tag is accepted. Use
-`"auto"` to follow the current user language.
+`"auto"` to follow the current user language. `user_role` is one of
+`developer`, `product_manager`, `designer`, `operations`, `founder`, or
+`general`; it affects only live conversation and never generated documents.
 
 **No `metadata.json` is used in Loop 1** — all output is human-readable markdown and YAML specifications.
 

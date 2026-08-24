@@ -27,6 +27,22 @@ Pass the answer as `--output-language <language>`.
 Use the configured language for user-facing prose. `"auto"` follows the user's
 current language. An explicit request for the current task overrides the config.
 
+## User Role
+
+Preserve an existing explicit `user_role` unless the user asks to change it.
+For a new config or a config without this setting, ask after resolving output
+language, one plain-language question at a time. Offer: `developer` (研发 / 工程师),
+`product_manager` (产品经理), `designer` (设计师), `operations` (运营 / 市场 / 销售),
+`founder` (管理者 / 创业者), and `general` (普通用户 / 其他行业). Pass the answer as
+`--user-role <role>`.
+
+`user_role` changes only the live conversation: use normal professional language
+within that role's field, and explain cross-field topics in plain language. It
+does not measure ability. An explicit request such as “说简单点” or “讲专业一点”
+overrides it for the current conversation. Never apply it to code, PRD, Spec,
+Plan, Todo, reports, agent prompts, or other generated files; those stay precise
+and professional.
+
 ## Existing project
 
 1. Locate the Git root and inspect top-level directories, build manifests,
@@ -47,6 +63,7 @@ Run the sibling setup CLI with one mapping per owned project:
 python3 "$SKILL/../../runtime/codoop-flow/codoop.py" setup <repo-root> \
   --config <repo-root>/codoop_flow.toml \
   --output-language <language> \
+  --user-role <role> \
   --project-path backend=server \
   --project-path web=admin-console
 ```
@@ -67,6 +84,7 @@ the requested project types are missing, ask which of `backend`, `web`,
 python3 "$SKILL/../../runtime/codoop-flow/codoop.py" setup <repo-root> \
   --config <repo-root>/codoop_flow.toml \
   --output-language <language> \
+  --user-role <role> \
   --project-path web=web \
   --project-path mobile=mobile \
   --create-project-dirs
@@ -78,8 +96,8 @@ scaffolding. Refuse to overwrite a non-empty project directory.
 
 ## Verify
 
-Read the resulting `codoop_flow.toml` and report the mapping and output language
-in plain language.
+Read the resulting `codoop_flow.toml` and report the mapping, output language,
+and user role in plain language.
 Confirm that every path is relative and real, no unselected project was
 created, and `docs/tickets/{pending,in_progress,done,failed}/` exists.
 Confirm the config file is listed in the repository `.gitignore`; setup adds it

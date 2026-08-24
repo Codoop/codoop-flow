@@ -153,6 +153,12 @@ or `"pt-BR"`, to keep Skill replies and generated documents in that language.
 Use `"auto"` to follow the user's current language. `codoop-init` asks for this
 choice when it creates a config.
 
+Set `user_role` to `developer`, `product_manager`, `designer`, `operations`,
+`founder`, or `general` (normal user / other industry). It changes only live
+Skill conversations: cross-field topics are explained plainly, while ticket
+documents and code stay precise. Ask for simpler or more technical language at
+any time to override it for the current conversation.
+
 **Standalone tools** (also called by codoop-ticket):
 ```
 /skill spec-driven-development Design technical specs before coding

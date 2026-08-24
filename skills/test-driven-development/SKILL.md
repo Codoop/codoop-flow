@@ -5,6 +5,16 @@ description: Drives development with tests. Use when implementing any logic, fix
 
 # Test-Driven Development
 
+## Conversation Profile
+
+When `codoop_flow.toml` is available, read `user_role`; a missing value means
+`general`. It applies only to this conversation: use normal professional terms
+inside the user's field, and explain cross-field topics in plain language. The
+user may override it for the current conversation by asking for simpler or more
+professional language. Never apply the profile to code, PRD, Spec, Plan, Todo,
+reports, agent prompts, or other generated files; those stay precise and
+professional.
+
 ## Overview
 
 Write a failing test before writing the code that makes it pass. For bug fixes, reproduce the bug with a test before attempting a fix. Tests are proof — "seems right" is not done. A codebase with good tests is an AI agent's superpower; a codebase without tests is a liability.

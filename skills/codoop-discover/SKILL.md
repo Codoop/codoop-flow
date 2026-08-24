@@ -25,6 +25,13 @@ field follows the user's current language. An explicit request for the current
 task overrides the config. Translate template headings and labels as needed;
 never switch languages merely because a source document or template uses one.
 
+Read `user_role` too; a missing value means `general`. It changes only the live
+conversation: use normal professional terms inside the user's field, and explain
+cross-field topics in plain language. The user's current request for simpler or
+more professional language overrides it. Do not apply this profile to generated
+documents, code, reports, or delegated agent prompts; those remain precise and
+professional.
+
 ## Sub-Agent Expert Roles
 
 This skill invokes the following expert personas from the plugin Runtime (`../../runtime/codoop-flow/agents/`):

@@ -169,9 +169,11 @@ docs/backlog/
 
 ## 配置
 
-第一环从现有 `codoop_flow.toml` 读取 `target_repo`、`project_paths` 和
+第一环从现有 `codoop_flow.toml` 读取 `target_repo`、`project_paths`、
 `output_language`。它接受任意 BCP 47 语言标签，例如 `"zh-CN"`、
 `"zh-TW"`、`"pt-BR"` 或 `"ar"`；设为 `"auto"` 时跟随用户当前使用的语言。
+它也读取 `user_role`（`developer`、`product_manager`、`designer`、`operations`、
+`founder` 或 `general`）；该字段只影响实时对话，不会改变生成文档。
 
 **第一环不使用 `metadata.json`** — 所有输出都是人类可读的 markdown 和 YAML 规格。
 

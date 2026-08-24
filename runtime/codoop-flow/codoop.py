@@ -44,6 +44,7 @@ def _cmd_setup(args) -> int:
             project_paths=project_paths,
             create_project_dirs=args.create_project_dirs,
             output_language=args.output_language,
+            user_role=args.user_role,
         )
     except (ValueError, FileExistsError) as e:
         print(f"error: {e}")
@@ -51,6 +52,7 @@ def _cmd_setup(args) -> int:
     print(f"config ready: {cfg_path}")
     print(f"ticket pipeline ready under: {config.tickets_dir}")
     print(f"output language: {config.output_language}")
+    print(f"user role: {config.user_role}")
     if config.project_paths:
         print("project paths: " + ", ".join(
             f"{kind}={path}" for kind, path in config.project_paths.items()
@@ -133,6 +135,11 @@ def main() -> int:
     p_setup.add_argument(
         "--output-language", default=None,
         help="BCP 47 language tag for Skill output (for example zh-CN, pt-BR, ar), or auto",
+    )
+    p_setup.add_argument(
+        "--user-role", default=None,
+        choices=("developer", "product_manager", "designer", "operations", "founder", "general"),
+        help="usual professional context for Skill conversations",
     )
     p_setup.add_argument(
         "--project-path", action="append", type=_parse_project_path,

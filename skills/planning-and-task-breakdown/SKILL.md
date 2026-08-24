@@ -5,6 +5,16 @@ description: Breaks work into ordered tasks. Use when you have a spec or clear r
 
 # Planning and Task Breakdown
 
+## Conversation Profile
+
+When `codoop_flow.toml` is available, read `user_role`; a missing value means
+`general`. It applies only to this conversation: use normal professional terms
+inside the user's field, and explain cross-field topics in plain language. The
+user may override it for the current conversation by asking for simpler or more
+professional language. Never apply the profile to code, PRD, Spec, Plan, Todo,
+reports, agent prompts, or other generated files; those stay precise and
+professional.
+
 ## Overview
 
 Decompose work into small, verifiable tasks with explicit acceptance criteria. Good task breakdown is the difference between an agent that completes work reliably and one that produces a tangled mess. Every task should be small enough to implement, test, and verify in a single focused session.

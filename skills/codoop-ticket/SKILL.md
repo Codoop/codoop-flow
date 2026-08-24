@@ -99,6 +99,13 @@ explicit request for the current task overrides the config. Translate scaffold
 headings when writing the final documents; do not inherit a different language
 from templates, research, or existing source files.
 
+Read `user_role` from the same config; a missing value means `general`. It
+changes only the live conversation: use normal professional terms inside the
+user's field, and explain cross-field topics in plain language. The user's
+current request for simpler or more professional language overrides it. Do not
+apply this profile to ticket documents, code, reports, or delegated agent
+prompts; those remain precise and professional.
+
 - `"strict"`: use the existing phase-by-phase review and confirmation flow.
 - `"one_pass"`: keep the Startup: Market Research and Grilling sequence
   unchanged. Once the user confirms shared understanding, generate every

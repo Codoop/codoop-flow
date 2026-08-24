@@ -118,6 +118,34 @@ def test_output_language_config(root: Path, worktrees: Path) -> None:
     print("  ok: empty output language is rejected")
 
 
+def test_user_role_config(root: Path, worktrees: Path) -> None:
+    print("[test] config: user role")
+    cfg_path = _write_config(root, worktrees)
+    _check(load_config(cfg_path).user_role == "general",
+           "old configs default to the general role")
+
+    cfg_path.write_text(
+        f'target_repo = "{root}"\n'
+        'user_role = "designer"\n',
+        encoding="utf-8",
+    )
+    _check(load_config(cfg_path).user_role == "designer",
+           "explicit user role is loaded")
+
+    cfg_path.write_text(
+        f'target_repo = "{root}"\n'
+        'user_role = "astronaut"\n',
+        encoding="utf-8",
+    )
+    try:
+        load_config(cfg_path)
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("unknown user role must fail")
+    print("  ok: unknown user role is rejected")
+
+
 def test_project_paths_config(root: Path, worktrees: Path) -> None:
     print("[test] config: custom project paths")
     cfg_path = _write_config(root, worktrees)
@@ -214,6 +242,16 @@ def test_shared_runtime_layout() -> None:
                f"codoop-discover does not require {external_skill}")
 
 
+def test_skills_apply_user_role_only_to_conversation() -> None:
+    print("[test] skills: user role communication boundary")
+    for skill in (_ROOT / "skills").glob("*/SKILL.md"):
+        content = skill.read_text(encoding="utf-8")
+        _check("user_role" in content,
+               f"{skill.parent.name} reads the user role")
+        _check("conversation" in content.lower(),
+               f"{skill.parent.name} limits the role to conversation")
+
+
 def test_manual_installer_shares_runtime_for_codex_and_claude() -> None:
     print("[test] install: Codex and Claude share one runtime per agent home")
     expected_skills = sorted(
@@ -278,6 +316,9 @@ def test_setup_writes_strict_ticket_design_mode(root: Path, worktrees: Path) -> 
     _check(config.output_language == "auto", "setup defaults output language to auto")
     _check('output_language = "auto"' in cfg_path.read_text(encoding="utf-8"),
            "setup writes output language to config")
+    _check(config.user_role == "general", "setup defaults user role to general")
+    _check('user_role = "general"' in cfg_path.read_text(encoding="utf-8"),
+           "setup writes user role to config")
 
 
 def test_setup_gitignores_config(root: Path, worktrees: Path) -> None:
@@ -333,6 +374,21 @@ def test_setup_sets_and_updates_output_language(root: Path, worktrees: Path) -> 
     _check(config.output_language == "pt-BR", "setup accepts and updates any language tag")
     _check(cfg_path.read_text(encoding="utf-8").count("output_language =") == 1,
            "setup keeps one output language setting")
+
+
+def test_setup_sets_and_preserves_user_role(root: Path, worktrees: Path) -> None:
+    print("[test] setup: sets and preserves user role")
+    cfg_path = root / "codoop_flow.toml"
+    config, _ = setup_target(root, worktrees, cfg_path, user_role="developer")
+    _check(config.user_role == "developer", "setup records selected user role")
+
+    config, _ = setup_target(root, worktrees, cfg_path)
+    _check(config.user_role == "developer", "setup preserves existing user role")
+
+    config, _ = setup_target(root, worktrees, cfg_path, user_role="founder")
+    _check(config.user_role == "founder", "setup updates selected user role")
+    _check(cfg_path.read_text(encoding="utf-8").count("user_role =") == 1,
+           "setup keeps one user role setting")
 
 
 def test_setup_existing_project_uses_custom_names(root: Path, worktrees: Path) -> None:
@@ -452,6 +508,8 @@ def test_setup_cli_creates_selected_new_project(root: Path, worktrees: Path) -> 
             str(worktrees),
             "--output-language",
             "zh-CN",
+            "--user-role",
+            "designer",
             "--project-path",
             "desktop=desktop",
             "--create-project-dirs",
@@ -465,6 +523,8 @@ def test_setup_cli_creates_selected_new_project(root: Path, worktrees: Path) -> 
            "CLI persisted the selected project path")
     _check(load_config(cfg_path).output_language == "zh-CN",
            "CLI persisted the selected output language")
+    _check(load_config(cfg_path).user_role == "designer",
+           "CLI persisted the selected user role")
 
 
 def _make_ticket(
@@ -978,17 +1038,20 @@ def test_promote_blocks_incomplete(root: Path, worktrees: Path) -> None:
 
 def main() -> int:
     test_shared_runtime_layout()
+    test_skills_apply_user_role_only_to_conversation()
     test_manual_installer_shares_runtime_for_codex_and_claude()
     test_marketplaces_publish_the_complete_plugin()
     tests = [
         test_ticket_design_mode_config,
         test_output_language_config,
+        test_user_role_config,
         test_project_paths_config,
         test_setup_writes_strict_ticket_design_mode,
         test_setup_gitignores_config,
         test_setup_appends_config_to_existing_gitignore,
         test_setup_skips_gitignore_when_config_outside_repo,
         test_setup_sets_and_updates_output_language,
+        test_setup_sets_and_preserves_user_role,
         test_setup_existing_project_uses_custom_names,
         test_setup_existing_standalone_client_uses_root,
         test_setup_new_project_creates_only_empty_standard_dirs,

@@ -42,6 +42,7 @@ Set the following in `codoop_flow.toml`:
 ```toml
 ticket_design_mode = "strict" # or "one_pass"
 output_language = "zh-CN"     # any BCP 47 tag, or "auto"
+user_role = "product_manager" # conversation only
 ```
 
 - `strict` (default) keeps the workflow above: review and confirm each phase.
@@ -52,6 +53,8 @@ output_language = "zh-CN"     # any BCP 47 tag, or "auto"
   before promotion to `pending/`. A missing field defaults to `strict`.
 - `output_language` keeps questions, summaries, and final ticket documents in
   one language. `"auto"` follows the user's current language.
+- `user_role` adapts only the live conversation. Cross-field explanations are
+  plain-language; PRD, Spec, Plan, Todo, and other ticket files remain precise.
 
 The phase confirmations below apply to `strict` mode.
 

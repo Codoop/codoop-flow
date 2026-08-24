@@ -37,6 +37,11 @@ During setup, `codoop-init` asks for an output language and stores it as
 such as `zh-CN`, `en`, `ko`, `es`, `pt-BR`, or `ar`; `auto` follows the user's
 current language. Manual setup can pass `--output-language <language>`.
 
+Setup also asks for a `user_role`: `developer`, `product_manager`, `designer`,
+`operations`, `founder`, or `general` (normal user / other industry). Pass it
+manually with `--user-role <role>`. It affects only live conversations; ticket
+documents, reports, and code remain professional and precise.
+
 ---
 
 ## One-shot install (all 12 skills)

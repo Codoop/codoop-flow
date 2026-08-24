@@ -147,6 +147,11 @@ Skill 编排多个专家角色（PM、GTM、UX/UI、架构师）协作：
 或 `"pt-BR"`），即可固定 Skill 回复和生成文档的语言；设为 `"auto"` 时跟随
 用户当前使用的语言。`codoop-init` 创建配置时会询问这个选择。
 
+将 `user_role` 设为 `developer`、`product_manager`、`designer`、`operations`、
+`founder` 或 `general`（普通用户 / 其他行业）。它只影响 Skill 的实时对话：跨领域
+话题会先用通俗语言解释，工单文档和代码仍保持精确。随时说“说简单点”或“讲专业一点”
+即可覆盖当前对话。
+
 **独立工具**（也被 codoop-ticket 调用）：
 ```
 /skill spec-driven-development 设计技术规格（不需要手工编排）

@@ -241,6 +241,7 @@ python3 runtime/codoop-flow/codoop-ticket.py ticket <command> <args>
 | `target_repo` | 字符串（路径） | 是 | 你的目标 git 仓库路径。第二环在 `<target_repo>/docs/tickets/` 下写入工单目录。 |
 | `ticket_design_mode` | 字符串 | 否 | `"strict"`（默认）逐阶段确认；`"one_pass"` 在拷问后一次生成完整工单包，提升前只询问一次。 |
 | `output_language` | 字符串 | 否 | Skill 回复与生成工单文档所用的任意 BCP 47 语言标签；`"auto"`（默认）跟随用户当前使用的语言。 |
+| `user_role` | 字符串 | 否 | `"general"` | `developer`、`product_manager`、`designer`、`operations`、`founder` 或 `general`。只改变实时对话，工单文档仍保持精确。 |
 
 ### `metadata.json` 模式
 

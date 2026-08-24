@@ -5,6 +5,16 @@ description: Project-level completion standard checklist. Every task must meet t
 
 # Definition of Done
 
+## Conversation Profile
+
+When `codoop_flow.toml` is available, read `user_role`; a missing value means
+`general`. It applies only to this conversation: use normal professional terms
+inside the user's field, and explain cross-field topics in plain language. The
+user may override it for the current conversation by asking for simpler or more
+professional language. Never apply the profile to code, PRD, Spec, Plan, Todo,
+reports, agent prompts, or other generated files; those stay precise and
+professional.
+
 Project-level standards that every completed task must satisfy. Unlike acceptance criteria (which vary per task), DoD is a fixed quality baseline.
 
 ## Definition of Done vs. Acceptance Criteria
@@ -98,4 +108,3 @@ Before declaring a task complete, ensure all items below are satisfied:
 | "Tight deadline so we'll lower standards" | Lowering standards creates tech debt and long-term delays. Keep standards. |
 | "Acceptance criteria = Done" | Acceptance criteria = "built correctly". DoD = "safe to ship". Both required. |
 | "Done before human review" | Automation matters, but human review is also the floor. |
-
