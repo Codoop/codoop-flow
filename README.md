@@ -1,552 +1,79 @@
-<div align="center">
-
 # codoop-flow
 
 **English** · [简体中文](./README.zh-CN.md)
 
-**Turn "AI writes code" into a ticket pipeline with guardrails**
-pick → build → verify → multi-review → archive, one ticket per closed loop
+**Turn ideas into actionable requirements, then let AI build, verify, and review the code.**
 
-![Codex Skill](https://img.shields.io/badge/Codex-skill-111827)
-![Claude Code Plugin](https://img.shields.io/badge/Claude%20Code-plugin-8A63D2)
-![Cursor Plugin](https://img.shields.io/badge/Cursor-plugin-000000)
-![Python](https://img.shields.io/badge/python-3.11%2B-blue)
-![Zero deps](https://img.shields.io/badge/deps-zero-brightgreen)
-![License](https://img.shields.io/badge/license-MIT-green)
-
-</div>
-
-**codoop-flow** is a three-loop AI-driven development system for turning "AI writes code" into a reliable engineering pipeline.
-
-**You steer Codex or Claude in plain language; guardrails backstop the grunt work.** The thinking (writing code, self-healing, review judgment) happens in the active agent session; the mechanical must-be-exact work (claiming tickets, managing git worktrees, checking required UI screenshot evidence) goes to a deterministic Python CLI that can't hallucinate. It's a portable tool with no business code — point one `codoop_flow.toml` at the project you want to build.
-
-**Three independent loops** that work together or standalone:
-- **Loop 1**: Multi-role product design sessions (0→1 planning)
-- **Loop 2**: Detailed ticket design (PRD + spec + visual preview when needed + task breakdown)
-- **Loop 3**: Continuous ticket execution (build → verify → review → merge)
-
-```
-        you say one line                       you decide whether to push
-             │                                     ▲
-             ▼                                     │
-  ┌───────────────── Codex/Claude reads SKILL.md and orchestrates ──────────────┐
-  │                                                                             │
-  │   pick ──▶ build ──▶ verify ──▶ review ──▶ ship docs ──▶ finish            │
-  │ [script] [agent]   [script]  [reviewers] [agent]       [script]           │
-  │  claim    write     capture    multi-      sync docs     commit &          │
-  │  ticket   code      +UI        review                    archive           │
-  │ +worktree           gate       unanimous                 dev/<id>          │
-  │                        │           │                                       │
-  │                        └─ fail ────┴─▶ self-heal (retry within budget)     │
-  └─────────────────────────────────────────────────────────────────────────┘
-```
-
----
-
-
-## Project configuration and UI snapshots
-
-Configuration defaults to `.codoop-flow/codoop_flow.toml` and remains Git-ignored
-personal settings. `ui-snapshots/index.json` and `ui-snapshots/pages/*.html` in
-that workspace are versioned with the implementation; do not ignore the whole
-`.codoop-flow/` directory. Explicit `--config` wins; otherwise resolve the Git
-root's new location, then the legacy root config, including from subdirectories.
-A later init migrates a lone legacy config without losing settings; explicit
-custom paths stay put. When both files exist, prefer and report the new one.
-
-Init inventories existing pages into representative offline HTML baselines and
-subsequently refreshes only changed pages. Ticket previews apply proposals within
-existing product pages. Execute refreshes verified baselines on the ticket branch,
-which merge with the implementation. Empty projects skip capture; inaccessible
-pages are recorded as unverified. CLI setup only initializes config; the init
-skill performs visual inspection. See [snapshot rules](skills/codoop-init/references/ui-snapshots.md).
+codoop-flow is a development workflow plugin for Codex, Claude Code, and Cursor. Describe what you want in plain language; it helps clarify requirements, break down tasks, and implement them. Use it to plan a new product, add features, or fix bugs in an existing project.
 
 ## Install
 
-### Codex (Desktop or CLI)
+Requires Git and Python 3.11+. Use it inside a local Git project.
 
-Install from the GitHub marketplace repo:
+**Codex (Desktop / CLI)** — run in your terminal, then reopen Codex:
 
 ```bash
 codex plugin marketplace add Codoop/codoop-flow
 codex plugin add codoop-flow@codoop-flow
 ```
 
-Or ask Codex:
-
-```text
-Install the codoop-flow Codex plugin from Codoop/codoop-flow, then set up this repo for codoop-flow.
-```
-
-Then restart/open Codex. The normal workflow is just:
-
-```text
-Use $codoop-init to inspect this existing repo and set up codoop-flow.
-Use the codoop-execute skill to run the next ticket against .codoop-flow/codoop_flow.toml.
-```
-
-Local development fallback:
-
-```bash
-bash scripts/install-skills.sh --agent codex
-```
-
-### Claude Code
-
-Install the plugin:
+**Claude Code** — run in your session:
 
 ```text
 /plugin marketplace add Codoop/codoop-flow
 /plugin install codoop-flow@codoop-flow
 ```
 
-Install the complete plugin; its skills share one bundled Runtime and are not
-published as separate Claude plugins.
+**Using Cursor, another agent, or having trouble?** See the [full installation guide](./docs/install.md).
 
-Or tell Claude Code to install the codoop-flow plugin from `Codoop/codoop-flow`
-and then run it against your repo.
+## Get started
 
-> SSH error? Use the full HTTPS URL: `/plugin marketplace add https://github.com/Codoop/codoop-flow.git`
-> Local development: `claude --plugin-dir /path/to/codoop-flow`
+Open your project and send these three prompts to your coding agent, one step at a time.
 
-### Cursor
-
-Cursor reads the same `SKILL.md` format and ships a plugin system, so
-codoop-flow installs as one plugin. For local development, symlink the repo and
-reload:
-
-```bash
-git clone https://github.com/Codoop/codoop-flow.git
-ln -s "$(pwd)/codoop-flow" ~/.cursor/plugins/local/codoop-flow
-# In Cursor: run "Developer: Reload Window"
-```
-
-Then invoke skills with `/codoop-init`, `/codoop-execute`, etc. See
-[`docs/install.md`](./docs/install.md) for details and the copy-based fallback.
-
-> Other agents (Gemini / …): see [`docs/install.md`](./docs/install.md).
-
-**Prerequisites**: the target project is a git repo; the machine has `python3` (standard library only, zero third-party deps).
-
----
-
-## The Three Loops
-
-codoop-flow implements a **Triple-Loop** system for AI-driven development:
-
-### 🔍 Loop 1: Venture-Discovery (Product Design)
-**Use when**: You have a product idea and need comprehensive 0→1 design before coding.
-
-**Invoke in-session**:
-```
-/skill codoop-discover I want to build a SaaS project management tool for remote teams
-```
-
-The skill orchestrates expert agents (PM, GTM, UX/UI, Architect) through:
-- **Discovery Intake** — short, plain-language question rounds establish the product, core flow, and visual direction before role dispatch
-- **SNAP clarification** — removes ambiguities via structured questions
-- **Multi-role drafting** — experts collaborate in-session
-- **Consistency audit** — catches cross-document conflicts
-- **Backlog generation** — outputs complete specs to `docs/backlog/`
-
-**Output**: Design documents in `docs/backlog/` ready for Loop 2
-
-[Learn more about codoop-discover →](./skills/codoop-discover/README.md)
-
-### 📋 Loop 2: Human-Centric (Ticket Design)
-Design work tickets through requirements (PRD) → technical spec → visual preview when needed → task breakdown. Ready for the agent loop.
-
-**Main orchestrator**:
-```
-/skill codoop-ticket Design the user search feature for our e-commerce platform
-```
-
-Set `ticket_design_mode = "strict"` in `codoop_flow.toml` to review each
-design phase, or `"one_pass"` to keep the full grilling intake and generate
-the complete ticket package before one final promotion confirmation. A missing
-field defaults to `strict`.
-
-Set `output_language` to any BCP 47 language tag, such as `"zh-CN"`, `"en"`,
-or `"pt-BR"`, to keep Skill replies and generated documents in that language.
-Use `"auto"` to follow the user's current language. `codoop-init` asks for this
-choice when it creates a config.
-
-Set `user_role` to `developer`, `product_manager`, `designer`, `operations`,
-`founder`, or `general` (normal user / other industry). It changes only live
-Skill conversations: cross-field topics are explained plainly, while ticket
-documents and code stay precise. Ask for simpler or more technical language at
-any time to override it for the current conversation.
-
-**Standalone tools** (also called by codoop-ticket):
-```
-/skill spec-driven-development Design technical specs before coding
-/skill planning-and-task-breakdown Break specs into ordered, implementable tasks
-/skill definition-of-done Check if completed work meets quality standards
-```
-
-**User experience walkthrough** — use it independently after a feature is
-runnable, or let Loop 3 invoke it after technical approval. It simulates a
-chosen persona completing a task and writes an advisory `experience_report.md`;
-only a human decides whether an idea becomes a new ticket.
-
-```
-/skill codoop-ux-walkthrough
-Experience this feature as a first-time operations manager and write an experience report.
-```
-
-These skills work independently or as phases in the codoop-ticket workflow.
-
-**Output**: Ticket specifications in `docs/tickets/pending/` ready for Loop 3
-
-[Learn more about codoop-ticket →](./skills/codoop-ticket/README.md)
-
-### 🤖 Loop 3: Agent-Centric (Implementation)
-Pick a ticket → build in isolated worktree → verify → multi-review → merge & archive.
-
-**Main orchestrator**:
-```
-/loop 20m run the codoop-execute skill against .codoop-flow/codoop_flow.toml
-```
-
-**How it works**:
-1. **Pick** — Claims oldest pending ticket, creates isolated git worktree on `dev/<ticket_id>` branch
-2. **Build** — Agent writes code following ticket specs inside worktree
-3. **Verify** — Hard gate: UI screenshots (if needed)
-4. **Review** — Multiple reviewer personas check code (unanimous approval required)
-5. **Merge** — Agent asks: "Merge `dev/<ticket_id>` to `main`?" → You decide
-6. **Archive** — Moves ticket to `done/`, removes worktree
-
-**Key features**:
-- **Idempotent**: Same command safely called repeatedly (resumes in-progress tickets)
-- **Self-healing**: Automatically retries on verify failure (up to 3 attempts by default)
-- **Baseline-aware verification**: Exact pre-existing diagnostics are reported
-  without hiding them; only new, changed, or diff-file diagnostics self-heal or fail a ticket
-- **Deterministic verification**: Required UI screenshots cannot be bypassed
-- **Async-friendly**: Timing controlled by `/loop` (Agent's scheduler, not Python)
-
-**Output**: Merged code in `main` branch, tickets archived in `docs/tickets/done/`
-
-[Learn more about codoop-execute →](./docs/loop-3-agent-centric.md)
-
----
-
-## Quick start
-
-### For Loop 1 (Product Design)
-
-```
-/skill codoop-discover I want to build [your product idea]
-```
-
-Outputs design specs to `docs/backlog/`.
-
-### For Loop 2 (Ticket Design)
-
-```
-/skill codoop-ticket Design [specific feature name]
-```
-
-Outputs ticket specs to `docs/tickets/pending/ticket_001/`.
-
-### For Loop 3 (Implementation) — Complete Workflow
-
-**① One-time setup** (creates ticket pipeline + config):
-
-In Claude Code, ask:
+**1. Set up your project (once)**
 
 ```text
-Use the codoop-init skill to inspect this existing repo and set up codoop-flow.
+Use codoop-init to inspect this project and set up codoop-flow.
 ```
 
-Or manually:
+The agent checks your project structure, creates the configuration, and asks for your language and role preferences.
 
-```bash
-python3 runtime/codoop-flow/codoop.py setup /path/to/your/repo \
-  --config /path/to/your/repo/.codoop-flow/codoop_flow.toml \
-  --output-language zh-CN \
-  --project-path backend=server \
-  --project-path web=admin-console
+**2. Describe a feature**
+
+```text
+Use codoop-ticket to design a ticket for letting users search and filter orders.
 ```
 
-For a new project, `codoop-init` uses the fixed names `backend/`, `web/`,
-`desktop/`, and `mobile/`, creates only the selected directories, and puts only
-`.gitkeep` inside them. It does not generate runnable applications.
+Replace the example with your requirement. The agent clarifies key questions and creates requirements, an implementation plan, and a task list, with a viewable UI preview when needed. After your confirmation, the ticket enters the queue. You don't need to write ticket files yourself.
 
-**② Add tickets** to `docs/tickets/pending/ticket_001/`, each containing:
-- `metadata.json` ([fields](#ticket-metadatajson))
-- `module_prd.md` (business requirements)
-- `spec.md` (technical contract)
-- `preview.html` (required only for a feature with `metadata.json.visual_preview: true`)
-- `plan.md` (execution plan)
-- `todo.md` (atomic tasks)
+**3. Let the agent implement it**
 
-**③ Process queue continuously** in Claude Code:
-
-```
-/loop 20m run the codoop-execute skill against .codoop-flow/codoop_flow.toml
+```text
+Use codoop-execute to run the next ticket in this project.
 ```
 
-The Agent will:
-1. Pick oldest pending ticket
-2. Build code in isolated worktree
-3. Verify (UI screenshots when required)
-4. Review (multi-reviewer approval)
-5. Ask: "Merge to main?" → You decide
-6. Archive and loop
+The agent implements the ticket on a separate branch, runs verification and reviews, then commits the code and archives the ticket. If verification or review fails, it attempts fixes within a retry budget; if it cannot finish, it leaves a report for you. You decide whether to merge and when to push.
 
-**No push step needed** — all changes are local. You control when to merge to `main`.
+For each subsequent feature, repeat steps 2 and 3.
 
----
+## Other common tasks
 
-## Single-ticket workflow (manual)
+| What you want | What to tell the agent |
+| --- | --- |
+| Explore a product idea before building | Use codoop-discover to plan an order management tool for small teams. |
+| Fix an existing bug | Use codoop-ticket to create a fix ticket for search filters being lost when changing pages. |
+| Implement a ticket already in the queue | Use codoop-execute to run the next ticket in this project. |
+| Check the experience from a user's perspective | Use codoop-ux-walkthrough to try order search as a first-time operations manager. |
 
-If you don't want continuous `/loop`, run once:
+Use these capabilities independently; you don't need to start with product planning every time.
 
-```
-Use the codoop-execute skill to run a ticket against .codoop-flow/codoop_flow.toml
-```
+## Documentation
 
-Agent picks the oldest pending ticket and runs the complete pipeline (pick → build → verify → review → ask merge). You decide whether to merge.
+- [Installation and configuration](./docs/install.md): agent setup, language and role preferences, and UI snapshots.
+- [Product planning](./docs/loop-1-venture-discovery.md): from idea to product proposal.
+- [Ticket design](./docs/loop-2-human-centric.md): requirements, UI previews, ticket formats, and design modes.
+- [Execution mechanics](./docs/loop-3-agent-centric.md): isolated development, verification, reviews, failure recovery, and CLI.
+- [Design blueprint](./docs/engineering-design.md): architecture and design rationale.
+- [Changelog](./CHANGELOG.md)
 
----
-
-## How it works
-
-Once installed you barely need to remember commands — **the skill is written for the coding agent to read**. You say one line, and the agent follows the skill to chain the whole thing together:
-
-### The Three Components
-
-1. **Skill orchestration** (`SKILL.md`): Agent reads the workflow and knows what to do in each phase.
-
-2. **Script guardrail** (`codoop_tools.py`): The deterministic CLI that handles all must-be-exact work:
-   - Claim a ticket (from pending → in_progress)
-   - Create isolated git worktree on `dev/<ticket_id>` branch
-   - Verify: check UI screenshots when required
-   - Commit and archive (in_progress → done)
-   - Handle failures gracefully
-
-3. **Review personas** (in `runtime/codoop-flow/agents/`): After verify passes, agent runs multiple reviewers:
-   - `code-reviewer` — correctness, readability, security, performance
-   - `security-auditor` — vulnerability scanning
-   - `test-engineer` — test strategy and coverage
-   - `evidence-collector` — UI/UX validation (UI tickets only)
-   - `reality-checker` — deployment readiness (UI tickets only)
-
-4. **Experience walkthrough** (`codoop-ux-walkthrough`): After technical
-   approval, a runnable user-facing ticket may be experienced by a chosen
-   persona. The resulting `experience_report.md` is archived with the ticket
-   and is advisory only: it never blocks release or changes code automatically.
-
-**Approval must be unanimous** — any rejection triggers self-heal (automatic retry within budget).
-
-### Design Philosophy
-
-**In a nutshell: thinking goes to the agent, counting-and-checking goes to the script.**
-
-- **Agent decides**: What code to write, how to fix failures, whether improvements are needed
-- **Script guarantees**: Ticket isolation, worktree lifecycle, test execution (unhackable)
-- **You control**: Whether to merge to main, timing of ticket intake, long-term prioritization
-
-### Key Properties
-
-| Property | Benefit |
-|----------|---------|
-| **Deterministic verification** | Required UI screenshot gate cannot be bypassed by AI hallucination |
-| **Self-healing** | Failed verify/review = automatic retry (up to `max_healing_attempts`, default 3) |
-| **Isolated worktrees** | Each ticket builds independently; no cross-ticket interference |
-| **Local-first** | Requires only local git repo; remote push optional (you decide) |
-| **Agent-agnostic** | Timing from `/loop` (Agent's scheduler), not Python internal timers |
-| **Transparent** | All state in git branches + file system; fully auditable and reversible |
-
-<details>
-<summary>Filing tickets by hand (expand if you don't want the agent to do it)</summary>
-
-After `setup`, you can also use the human-facing CLI to turn an idea into a ticket:
-
-```bash
-# Draft: scaffold metadata + empty docs under drafts/
-python3 runtime/codoop-flow/codoop-ticket.py ticket init ticket_001 --config .codoop-flow/codoop_flow.toml --title "add hello module"
-# Edit drafts/ticket_001/: module_prd.md (business), spec.md (contract), and preview.html when visual_preview is true
-python3 runtime/codoop-flow/codoop-ticket.py ticket validate ticket_001 --config .codoop-flow/codoop_flow.toml   # check required docs
-python3 runtime/codoop-flow/codoop-ticket.py ticket promote  ticket_001 --config .codoop-flow/codoop_flow.toml   # confirmed drafts → pending + dedicated ticket commit
-```
-
-To explore a brand-new idea (multi-role design session, output to `docs/backlog/`), invoke the skill in-session:
-
-```
-/skill codoop-discover an idea for an XX app
-```
-</details>
-
----
-
-## Ticket metadata.json
-
-```json
-{
-  "ticket_id": "ticket_001",
-  "title": "add hello module",
-  "ticket_type": "feature",
-  "modules": ["backend"],
-  "max_healing_attempts": 3,
-  "visual_preview": false,
-  "ui_capture": false
-}
-```
-
-| Field | Meaning |
-|---|---|
-| `ticket_type` | `feature` (需求单, default) or `fix` (修复单). Selects required docs in Loop 2 and the commit prefix (`feat`/`fix`) in Loop 3 |
-| `modules` | Modules involved |
-| `max_healing_attempts` | self-heal retry budget (default 3) |
-| `visual_preview` | when true: a feature ticket must include a reviewed `preview.html` before task breakdown; it communicates the local UI and key interactions, not production code |
-| `ui_capture` | when true: delivery must place screenshots under `public/qa-screenshots/` (no screenshots = hard fail), and review adds 2 UI personas that actually look at the images |
-
-Required: `ticket_id / title / modules`. `ticket_type` (default `feature`) is optional.
-
----
-
-<details>
-<summary>Guardrail CLI reference (<code>codoop_tools.py</code>, called by the agent automatically — you rarely type it)</summary>
-
-Every subcommand takes `--config <toml>` and emits JSON.
-
-| Subcommand | Behavior |
-|---|---|
-| `status` | Print tickets per stage |
-| `pick` | Claim the oldest pending ticket → move to in_progress → create worktree (`dev/<id>` branch). If one is already in_progress, report it instead of picking a new one |
-| `verify <id>` | In the worktree: run the UI screenshot hard gate when required |
-| `finish <id> --message` | Commit (excluding generated noise) to `dev/<id>` → move to done → remove worktree |
-| `fail <id> --report` | Move to failed → write `healing_report.md` → release lease and retain the worktree for human recovery |
-| `resume <id>` | Human-approved retry: move failed → in_progress, reuse the recovery worktree without reset, preserve the prior report, and mint a new lease |
-
-</details>
-
----
-
-## Repository layout
-
-```
-codoop-flow/
-├── codoop_flow.toml.example       # config sample
-├── .agents/plugins/marketplace.json # Codex marketplace manifest
-├── .claude-plugin/                # Claude Code plugin manifests
-├── .codex-plugin/                 # Codex plugin manifest
-├── .cursor-plugin/                # Cursor plugin manifest
-├── runtime/codoop-flow/           # one shared Runtime for all agents
-│   ├── codoop.py                  # setup CLI
-│   ├── codoop_tools.py            # deterministic Loop 3 guardrails
-│   ├── codoop-ticket.py           # ticket lifecycle CLI
-│   ├── codoop_lib_v1/             # shared Python library
-│   └── agents/                    # shared review personas
-├── skills/
-│   ├── codoop-init/               # ★Project inspection and initialization
-│   ├── codoop-execute/            # ★Loop 3: Agent-Centric code execution
-│   ├── codoop-ticket/             # ★Loop 2: Human-Centric ticket design  
-│   ├── codoop-discover/           # ★Loop 1: Venture-Discovery product design
-│   ├── codoop-ux-walkthrough/     # ★Persona-based, non-blocking experience insight
-│   └── [7 other skills]/          # standalone disciplines
-├── tests/test_skeleton.py         # subprocess CLI tests, no AI
-├── LICENSE                         # MIT
-└── docs/
-    ├── install.md                 # multi-agent install guide
-    └── engineering-design.md      # design blueprint (three-loop model)
-```
-
-> Chinese docs carry a `.zh-CN` suffix (e.g. `docs/install.zh-CN.md`); the suffix-less files are English.
-
----
-
-## Running tests
-
-```bash
-python3 tests/test_skeleton.py   # should print ALL SKELETON TESTS PASSED
-```
-
-The skeleton tests use a temp git repo + subprocess CLI calls, covering only the **deterministic guardrail + ticket lifecycle** — no AI, runs in seconds.
-
----
-
-## Compatible agents
-
-The skill is a self-contained directory; any coding agent that can read files and run Bash can use it. Subagents improve review isolation but are not mandatory.
-
-| Agent | Status | How to install |
-|---|---|---|
-| Codex Desktop | ✅ first-class | `codex plugin marketplace add Codoop/codoop-flow`, then `codex plugin add codoop-flow@codoop-flow` |
-| Codex CLI | ✅ first-class | same plugin install flow |
-| Claude Code | ✅ first-class | plugin marketplace (see [Install](#install)) |
-| Claude CLI | ✅ first-class | same local `claude` command used by Claude Code |
-| Cursor | ✅ first-class | plugin (`.cursor-plugin/`); symlink to `~/.cursor/plugins/local/`, see [`docs/install.md`](./docs/install.md) |
-| Gemini / others | 🟡 generic copy | copy the `skills/` dir, see [`docs/install.md`](./docs/install.md) |
-
-> If the host lacks a subagent tool, run the review personas serially in the same session.
-
----
-
-## FAQ
-
-**General**
-
-**What's the difference between the three loops?**
-- **Loop 1**: Multi-role product design (0→1 planning) → `docs/backlog/`
-- **Loop 2**: Single-ticket design (PRD + spec + visual preview when needed + tasks) → `docs/tickets/pending/`
-- **Loop 3**: Implementation (build + verify + review + merge) → `main` branch
-
-**Can I use all three loops together?**
-Yes. Typical workflow: Loop 1 (once per project) → Loop 2 (once per feature) → Loop 3 (continuous queue processing).
-
-**Do I need all three loops?**
-No. Each is independent. You can use just Loop 3 if you already have ticket specs.
-
-**Loop 3 Specific**
-
-**Where do my code changes end up?**
-In `dev/<ticket_id>` branches. Agent asks you to merge to `main` after review passes. You decide yes/no.
-
-**Can I use codoop-flow with existing ticket systems?**
-Yes. Just populate `docs/tickets/pending/` with the required structure. Loop 2 generates that format, but you can create it manually too.
-
-**What if I don't want continuous `/loop`?**
-Run single tickets manually: "Use the codoop-execute skill to run a ticket." Agent processes one ticket, asks to merge, then stops.
-
-**What happens if verify/review fails?**
-Agent automatically retries (up to 3 times by default). If still failing after budget exhausted, the ticket moves to `failed/` with `healing_report.md` explaining why. Its worktree and uncommitted changes are retained for human recovery; the report gives its path and branch.
-
-**Can multiple agents process tickets in parallel?**
-Currently no — only one ticket in `in_progress/` at a time. Future version could support multiple.
-
-**`/plugin marketplace add` throws an SSH error?**
-It clones over SSH by default. Without an SSH key, use the full HTTPS URL: `/plugin marketplace add https://github.com/Codoop/codoop-flow.git`.
-
-**`setup` reports "not a git repository"?**
-The target project must be `git init`-ed first. codoop-flow flows tickets inside your project's git repo.
-
-**The agent says it can't find the skill / command?**
-For Claude Code, confirm the complete `codoop-flow` plugin is installed. Then verify the guardrail is in place: `python3 runtime/codoop-flow/codoop_tools.py --config .codoop-flow/codoop_flow.toml status`.
-
-**A ticket is stuck in `failed/`?**
-Open `failed/<id>/healing_report.md`, then ask the agent to resume that ticket (or run `codoop_tools.py --config <toml> resume <id>`). It returns the ticket to `in_progress/` and preserves its retained worktree; do not move it back to `pending/`, which can reset recovery work.
-
----
-
-## Learn more
-
-### Deep Dives
-
-- [`docs/loop-3-agent-centric.md`](./docs/loop-3-agent-centric.md) — Complete Loop 3 mechanics (worktrees, verification, local workflow)
-- [`docs/engineering-design.md`](./docs/engineering-design.md) — The three-loop design blueprint
-- [`docs/install.md`](./docs/install.md) — Install guides for each coding agent
-
-### Skill READMEs
-
-- [`skills/codoop-discover/README.md`](./skills/codoop-discover/README.md) — Loop 1 details
-- [`skills/codoop-ticket/README.md`](./skills/codoop-ticket/README.md) — Loop 2 details
-- [`skills/codoop-execute/SKILL.md`](./skills/codoop-execute/SKILL.md) — Loop 3 instructions (what the Agent reads)
-- [`skills/codoop-ux-walkthrough/SKILL.md`](./skills/codoop-ux-walkthrough/SKILL.md) — Persona walkthrough and experience report
-
----
-
-<div align="center">
-MIT License
-</div>
+[MIT License](./LICENSE)
