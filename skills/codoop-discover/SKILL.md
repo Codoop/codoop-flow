@@ -12,7 +12,10 @@ and other coding agents that can read files and write project docs.
 
 ## Project Paths
 
-Read `[project_paths]` from `codoop_flow.toml` before designing implementation.
+Read `[project_paths]` from the session's explicit config or the Git root's
+`.codoop-flow/codoop_flow.toml` (legacy fallback: root `codoop_flow.toml`) before
+designing implementation. The Runtime's `codoop.py config-path` resolves the path
+from the target repository or a subdirectory.
 If it is missing, run the sibling `codoop-init` skill first.
 
 The keys describe the system project type; the values are the real directories

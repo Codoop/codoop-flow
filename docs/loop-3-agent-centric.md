@@ -1,5 +1,15 @@
 # Loop 3: Agent-Centric (Implementation)
 
+
+Page baselines live in the current checkout's `.codoop-flow/ui-snapshots/`;
+configuration defaults to `.codoop-flow/codoop_flow.toml` with legacy root fallback.
+Init inventories pages; ticket checks/reuses relevant baselines for proposals.
+Approval never replaces implemented UI. After verification and review, execute
+refreshes baselines in the isolated worktree and finish commits them with code
+on the ticket branch, without copying them back to the main checkout. Retain old
+HTML and mark unavailable captures stale with reasons. HTML does not replace the
+`ui_capture` screenshot gate. See [shared rules](../skills/codoop-init/references/ui-snapshots.md).
+
 ## Overview
 
 **Loop 3** is the third and final loop in codoop-flow's Triple-Loop Model. It is a fully automated, end-to-end ticket execution pipeline that reliably implements, verifies, reviews, and ships software tickets.
@@ -15,13 +25,13 @@
 In any AI coding tool, say:
 
 ```
-Use the codoop-execute skill to run a ticket against /path/to/codoop_flow.toml
+Use the codoop-execute skill to run a ticket against /path/to/repo/.codoop-flow/codoop_flow.toml
 ```
 
 Or schedule it to run continuously:
 
 ```
-/loop 5m run the codoop-execute skill against /path/to/codoop_flow.toml
+/loop 5m run the codoop-execute skill against /path/to/repo/.codoop-flow/codoop_flow.toml
 ```
 
 The skill picks the oldest pending ticket, builds it in an isolated worktree, runs tests, gathers review feedback, self-heals on failure, and ships the result when ready.

@@ -82,11 +82,12 @@ this Runtime once for all codoop-flow skills.
 
 ## Ticket Design Mode
 
-Before the Startup sequence, resolve the configuration path: reuse an explicit
-`--config <path>` already supplied in the session; otherwise, when operating in
-the target repository, use `./codoop_flow.toml`; otherwise use a known
-`<target_repo>/codoop_flow.toml`. If none is known, ask for the path. Read
-`ticket_design_mode` from that file before deciding the ticket flow.
+Before Startup, reuse an explicit `--config <path>`; otherwise run
+`$SKILL/../../runtime/codoop-flow/codoop.py config-path` from the target repo.
+It resolves `.codoop-flow/codoop_flow.toml` at the Git root, falling back to the
+legacy root file. Report the selected path when both exist. If no target or
+config is known, ask for the missing path (or use codoop-init for onboarding).
+Read `ticket_design_mode` from that file before deciding the ticket flow.
 
 Its allowed values are `"strict"` and `"one_pass"`; a missing field means
 `"strict"`. If the value is invalid, stop and ask the user to correct the
@@ -122,7 +123,7 @@ skip grilling or infer product decisions merely because `"one_pass"` is set.
 
 Before initializing a ticket or writing ticket documents, run this sequence:
 
-1. Read `project_paths`, relevant `docs/backlog/`, project documentation, and existing code to establish project facts and constraints.
+1. Read `project_paths`, relevant `docs/backlog/`, project documentation, and existing code to establish project facts and constraints. For UI work, first locate the affected page in `.codoop-flow/ui-snapshots/index.json`; inspect only relevant UI sources and dependencies, not every page on every ticket.
 2. For a **feature** ticket, use available web/search tools to identify relevant existing products. Prefer primary product pages and documentation; report only patterns that are relevant to the requested feature. If browsing is unavailable, state that plainly rather than inventing competitors. A **fix** ticket skips market research unless the user requests it.
 3. Present a short, evidence-based recommendation: comparable patterns to keep, gaps or risks to avoid, and the tailored product direction that best fits this project's users, existing product decisions, architecture, and scope. Learn from competitors; do not copy branded UI, copy, or proprietary flows.
 4. Load and run the `grilling` skill on the proposal. It asks one decision at a time, looks up facts from the project or available tools instead of asking for them, offers a recommended answer, and waits for the response before continuing.
@@ -223,13 +224,29 @@ promotion approval remains mandatory in both modes.
 
 #### Visual Preview (`preview.html`)
 
-Generate this file only for a `feature` ticket with `visual_preview: true`. It is a single, self-contained HTML file for discussing the ticket's local UI change; it is not a production implementation or a full-product shell.
+Generate this file only for a `feature` ticket with `visual_preview: true`.
+Read [UI snapshot rules](../codoop-init/references/ui-snapshots.md) before creating it.
+It is one self-contained HTML design preview, using the existing page as context.
 
-- Base its visual language on `docs/backlog/interface/design-system.md` when available. Do not invent a conflicting visual direction.
-- Cover the new or changed local screen/area, one primary user path, and the states needed to understand it (for example: empty, loading, error, success, confirmation, or permission state).
-- Make only the key interactions clickable with local mock data and client-side state. Do not call real APIs, require login, add dependencies, or reproduce unrelated product flows.
-- Use clear placeholder content only where final content is unknown; do not leave the whole page as a wireframe or a static screenshot.
-- In `"strict"` mode, present the preview and ask for explicit feedback before Phase 3. Apply approved feedback to `module_prd.md` and `spec.md`, then regenerate the preview if the change affects it.
+- Determine which existing page receives the change. Check its baseline and source
+  fingerprints, refreshing only affected pages when stale or missing. Copy/recreate
+  that page in `preview.html`, including necessary navigation, title, surrounding
+  content, layout and component styling, then apply the proposed feature there.
+- For a new page, reuse existing product layouts/components; design independently
+  only when there is no existing interface. Consult `docs/backlog/interface/design-system.md`
+  when present; preserve current UI by default and surface conflicting written guidance.
+- Cover the main user path and necessary empty/loading/error/success/confirmation
+  states with mock data and client-side interactions. Background navigation may be
+  visual context only. No real APIs, login, new dependencies or unrelated flows.
+- Open the preview, compare its overall visual language with the actual page,
+  and exercise key interactions and applicable narrow layouts. Record unavailable
+  evidence rather than claiming a guess is a verified match.
+- Record baseline page IDs, revision and input fingerprints in `spec.md` so delivery
+  can detect intervening changes. Keep the proposed preview in the ticket directory;
+  creation, approval and promotion never replace the implemented-page baseline.
+- In `"strict"` mode, present the preview and ask for explicit feedback before
+  Phase 3. Apply approved feedback to `module_prd.md` and `spec.md`, then regenerate
+  the preview if the change affects it. `"one_pass"` keeps its final review gate.
 
 `visual_preview: true` makes `preview.html` a promotion requirement. It is independent from `ui_capture`, which checks screenshots of the real implementation after development.
 
@@ -446,23 +463,23 @@ Loop 2 can be used independently via CLI without requiring codoop-flow:
 ```bash
 # Initialize a new ticket draft (feature by default)
 python3 $SKILL/../../runtime/codoop-flow/codoop-ticket.py \
-  ticket init ticket_001 --config codoop_flow.toml --title "Add user search"
+  ticket init ticket_001 --config .codoop-flow/codoop_flow.toml --title "Add user search"
 
 # Initialize a fix ticket (scaffolds bug_report.md instead of PRD + Spec)
 python3 $SKILL/../../runtime/codoop-flow/codoop-ticket.py \
-  ticket init ticket_002 --type fix --config codoop_flow.toml --title "Fix pagination overflow"
+  ticket init ticket_002 --type fix --config .codoop-flow/codoop_flow.toml --title "Fix pagination overflow"
 
 # Validate ticket completeness
 python3 $SKILL/../../runtime/codoop-flow/codoop-ticket.py \
-  ticket validate ticket_001 --config codoop_flow.toml
+  ticket validate ticket_001 --config .codoop-flow/codoop_flow.toml
 
 # Promote a confirmed ticket from drafts/ to pending/ and commit that ticket
 python3 $SKILL/../../runtime/codoop-flow/codoop-ticket.py \
-  ticket promote ticket_001 --config codoop_flow.toml
+  ticket promote ticket_001 --config .codoop-flow/codoop_flow.toml
 
 # Update metadata.json from docs
 python3 $SKILL/../../runtime/codoop-flow/codoop-ticket.py \
-  ticket update-metadata ticket_001 --config codoop_flow.toml
+  ticket update-metadata ticket_001 --config .codoop-flow/codoop_flow.toml
 ```
 
 ### Independent Workflow

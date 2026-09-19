@@ -1,5 +1,15 @@
 # Loop 2: Human-Centric (Ticket Design)
 
+
+Page baselines live in the current checkout's `.codoop-flow/ui-snapshots/`;
+configuration defaults to `.codoop-flow/codoop_flow.toml` with legacy root fallback.
+Init inventories pages; ticket checks/reuses relevant baselines for proposals.
+Approval never replaces implemented UI. After verification and review, execute
+refreshes baselines in the isolated worktree and finish commits them with code
+on the ticket branch, without copying them back to the main checkout. Retain old
+HTML and mark unavailable captures stale with reasons. HTML does not replace the
+`ui_capture` screenshot gate. See [shared rules](../skills/codoop-init/references/ui-snapshots.md).
+
 ## Overview
 
 **Loop 2** is the second of three nested loops in codoop-flow's Triple-Loop Model. It is a structured, human-driven process for designing deterministic, machine-readable work tickets that an AI coding agent can execute reliably.
@@ -72,7 +82,7 @@ The phase gates below describe `"strict"` mode.
 1. **trigger** — you confirm Phase 1 is done; `codoop-ticket` loads `/skill spec-driven-development`
 2. **design** — Architect agent writes `spec.md` based on the confirmed `module_prd.md`
 3. **content** — includes API contracts (per platform: backend/web/mobile/desktop), data schema field-level, UI interactions and state management, code examples, testing strategy, Always/Ask First/Never boundaries
-4. **preview** — for a feature that adds or materially changes a visible screen, primary task flow, or interaction state, generate a self-contained `preview.html` before review and set `metadata.json.visual_preview` to `true`. It shows only the ticket's local UI change, primary path, and relevant states with mock data and key clickable interactions; it is not a production implementation or a full-product shell.
+4. **preview** — for a feature that adds or materially changes a visible screen, primary task flow, or interaction state, generate a self-contained `preview.html` before review and set `metadata.json.visual_preview` to `true`. It recreates the existing page, including navigation, layout and surrounding content, then applies the ticket's change with mock data and key clickable interactions. Reuse checked baselines from `.codoop-flow/ui-snapshots/`; design independently only when no existing interface is available. It is not production code.
 5. **review** — you review the spec and, when present, the preview; approved feedback is reflected in both before task breakdown
 
 ### Phase 3 — Task Breakdown (plan.md + todo.md)

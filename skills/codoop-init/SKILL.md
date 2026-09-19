@@ -1,6 +1,6 @@
 ---
 name: codoop-init
-description: Inspect an existing repository or create selected empty project directories, then initialize or refresh codoop-flow configuration. Use when setting up codoop-flow, when existing backend/web/desktop/mobile directories use custom names, when a standalone client lives at the repository root, or when starting a new empty multi-project repository.
+description: Inspect an existing repository or create selected empty project directories, then initialize or refresh codoop-flow configuration and existing-page UI snapshots. Use when setting up codoop-flow, when existing backend/web/desktop/mobile directories use custom names, when a standalone client lives at the repository root, or when starting a new empty multi-project repository.
 ---
 
 # Codoop Init
@@ -13,6 +13,22 @@ Locate the absolute directory containing this `SKILL.md` as `$SKILL` before
 running the plugin-level Runtime commands below. Every host that installs the
 whole plugin (Codex, Claude Code, Cursor, ...) keeps the Runtime at
 `$SKILL/../../runtime/codoop-flow/`.
+
+## Configuration location
+
+Default to `<repo-root>/.codoop-flow/codoop_flow.toml`. Before reading existing
+preferences, reuse an explicit `--config` or run the Runtime's
+`codoop.py config-path` from the target repository (also works in subdirectories).
+It prefers the new location and falls back to root `codoop_flow.toml`. If both
+exist, report the selected path; do not merge their settings.
+
+For ordinary setup omit `--config`: the Runtime migrates a lone root config to
+the new location, preserving settings and unknown fields. Keep an explicitly
+requested custom config path by passing it unchanged. Project paths remain
+relative to `target_repo`, as does a relative `worktree_root`; moving the config
+never moves application directories. A relative `target_repo` in the default
+config locations is anchored at the project root, not the invoking subdirectory.
+The config is local; `.codoop-flow/ui-snapshots/` is versioned project data.
 
 ## Output Language
 
@@ -61,7 +77,6 @@ Run the sibling setup CLI with one mapping per owned project:
 
 ```bash
 python3 "$SKILL/../../runtime/codoop-flow/codoop.py" setup <repo-root> \
-  --config <repo-root>/codoop_flow.toml \
   --output-language <language> \
   --user-role <role> \
   --project-path backend=server \
@@ -82,7 +97,6 @@ the requested project types are missing, ask which of `backend`, `web`,
 
 ```bash
 python3 "$SKILL/../../runtime/codoop-flow/codoop.py" setup <repo-root> \
-  --config <repo-root>/codoop_flow.toml \
   --output-language <language> \
   --user-role <role> \
   --project-path web=web \
@@ -94,6 +108,21 @@ This creates each selected directory with only `.gitkeep`. Do not generate
 framework files, package manifests, build files, source code, or runnable
 scaffolding. Refuse to overwrite a non-empty project directory.
 
+## Inventory existing pages
+
+After setup, read [UI snapshot rules](references/ui-snapshots.md). Inspect the
+configured web/desktop/mobile projects, identify their existing page types and
+create the index and representative self-contained HTML baselines under
+`<repo-root>/.codoop-flow/ui-snapshots/`. On every later init, inspect route/page
+changes and reuse unchanged baselines; refresh only added or changed pages and
+those affected by shared layout/styles. Confirm deletions in source before cleanup.
+
+Open the actual UI and generated HTML for comparison where available. Record
+unverified/missing pages when runtime or tools are unavailable; do not call
+source-only reconstructions verified. Skip empty and backend-only projects,
+without generating an application just to capture it. Report capture counts and
+unfinished pages. The setup CLI alone performs configuration, not UI capture.
+
 ## Verify
 
 Read the resulting `codoop_flow.toml` and report the mapping, output language,
@@ -103,4 +132,5 @@ created, and `docs/tickets/{pending,in_progress,done,failed}/` exists.
 Confirm the config file is listed in the repository `.gitignore`; setup adds it
 automatically because the config holds per-developer choices that must not be
 committed. Tell the user the config stays local so teammates' settings never
-clash.
+clash. Confirm the snapshot directory is not ignored; snapshots follow the normal
+project commit workflow, separately from the personal config.

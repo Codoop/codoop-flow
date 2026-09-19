@@ -16,12 +16,13 @@ calls the guardrail CLI codoop_tools.py.
 from __future__ import annotations
 
 import argparse
+import json
 import sys
 from pathlib import Path
 
 # The shared library lives beside this plugin-level CLI.
 sys.path.insert(0, str(Path(__file__).parent))
-from codoop_lib_v1.config import load_config, setup_target
+from codoop_lib_v1.config import load_config, setup_target, resolve_config_path
 from codoop_lib_v1.tickets_cli import init_draft, promote, validate_draft, update_metadata_from_docs, write_metadata
 
 
@@ -57,8 +58,35 @@ def _cmd_setup(args) -> int:
         print("project paths: " + ", ".join(
             f"{kind}={path}" for kind, path in config.project_paths.items()
         ))
-    print("Next: add a ticket to pending/, then in Codex or Claude Code say")
+    print("Config setup only; use codoop-init to inventory and verify existing UI snapshots.")
+    print("Next: design and approve a ticket, then in Codex or Claude Code say")
     print(f'  "use the codoop-execute skill and run a ticket against {cfg_path}"')
+    return 0
+
+
+def _cmd_snapshots(args) -> int:
+    from codoop_lib_v1.snapshots import check_page, fingerprints
+    repo = Path(args.repo).expanduser().resolve()
+    try:
+        if args.snapshot_command == "fingerprint":
+            result = fingerprints(repo, args.paths)
+            code = 0
+        else:
+            result = check_page(repo, args.page_id)
+            code = 0 if result["reusable"] else 1
+        print(json.dumps(result, ensure_ascii=False, indent=2))
+        return code
+    except (OSError, ValueError) as exc:
+        print(json.dumps({"error": str(exc)}))
+        return 1
+
+
+def _cmd_config_path(args) -> int:
+    try:
+        print(resolve_config_path(args.config))
+    except (OSError, ValueError) as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 1
     return 0
 
 
@@ -130,7 +158,7 @@ def main() -> int:
 
     p_setup = sub.add_parser("setup", help="onboard a target repo: make ticket dirs + write config")
     p_setup.add_argument("target_repo", help="path to the target git repo to drive")
-    p_setup.add_argument("--config", default=None, help="where to write codoop_flow.toml (default: ./codoop_flow.toml)")
+    p_setup.add_argument("--config", default=None, help="where to write codoop_flow.toml (default: <target_repo>/.codoop-flow/codoop_flow.toml)")
     p_setup.add_argument("--worktree-root", default="~/codoop_tickets/worktrees", help="where per-ticket worktrees are created")
     p_setup.add_argument(
         "--output-language", default=None,
@@ -151,6 +179,21 @@ def main() -> int:
         help="create selected standard project directories with only .gitkeep",
     )
     p_setup.set_defaults(func=_cmd_setup)
+
+    p_snapshots = sub.add_parser("snapshots", help="fingerprint or check agent-authored UI snapshots")
+    snap_sub = p_snapshots.add_subparsers(dest="snapshot_command", required=True)
+    for name in ("fingerprint", "check"):
+        sp = snap_sub.add_parser(name)
+        sp.add_argument("--repo", required=True, help="checkout to inspect (use the isolated worktree during execution)")
+        if name == "fingerprint":
+            sp.add_argument("paths", nargs="+", help="repository-relative files")
+        else:
+            sp.add_argument("page_id")
+        sp.set_defaults(func=_cmd_snapshots)
+
+    p_config = sub.add_parser("config-path", help="resolve the current project's config")
+    p_config.add_argument("--config", default=None)
+    p_config.set_defaults(func=_cmd_config_path)
 
     p_install = sub.add_parser("install", help="copy the core skills to global agent paths")
     p_install.add_argument("--agent", choices=["codex", "claude", "all"],

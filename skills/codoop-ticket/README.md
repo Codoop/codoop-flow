@@ -144,8 +144,10 @@ privacy, payments/costs, compliance, and irreversible behavior.
 - Say "OK, move to next phase"
 
 For visual feature tickets, `preview.html` is generated after `spec.md` and
-before task breakdown. It shows the changed area, the primary path, and relevant
-states with a small amount of clickable interaction. It is not a production
+before task breakdown. It recreates the existing page with its navigation, layout
+and surrounding content, then adds the proposed change and key clickable states.
+Reuse checked baselines from `.codoop-flow/ui-snapshots/`; if no interface exists,
+design independently. Approved previews never replace implemented-page baselines. It is not a production
 implementation and does not call real services. The ticket cannot be published
 until this preview exists; `strict` mode also requires its review.
 

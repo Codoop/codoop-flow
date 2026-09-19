@@ -7,7 +7,8 @@ description: Guides systematic root-cause debugging. Use when tests fail, builds
 
 ## Conversation Profile
 
-When `codoop_flow.toml` is available, read `user_role`; a missing value means
+When the session's explicit config, or the Git root's
+`.codoop-flow/codoop_flow.toml` (legacy fallback: root `codoop_flow.toml`), is available, read `user_role`; a missing value means
 `general`. It applies only to this conversation: use normal professional terms
 inside the user's field, and explain cross-field topics in plain language. The
 user may override it for the current conversation by asking for simpler or more

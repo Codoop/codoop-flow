@@ -1,5 +1,14 @@
 # 第二环：人工设计（工单设计）
 
+
+页面基线保存在当前 checkout 的 `.codoop-flow/ui-snapshots/`，配置默认在
+`.codoop-flow/codoop_flow.toml`（仍兼容旧根目录位置）。init 建档，ticket
+仅核对和复用相关页面制作提案；提案批准不覆盖已实现基线。execute 在验证
+与评审后更新隔离 worktree 中的基线，通过 finish 与代码一起提交到工单分支，
+不提前复制回主分支。无法核实的页面保留旧 HTML 并标记失效和原因。
+HTML 快照不替代 `ui_capture` 截图门禁。
+详见 [共享快照规则](../skills/codoop-init/references/ui-snapshots.md)。
+
 ## 概述
 
 **第二环**是 codoop-flow 三环系统的第二个环。是一套结构化的、人类驱动的流程，用于设计确定性的、机器可读的工单包，使 AI 编码代理能够可靠地执行。
@@ -78,7 +87,7 @@ API 形式、数据库索引、框架模式、状态管理、测试布局等常�
 1. **触发** — 你确认阶段 1 完成；`codoop-ticket` 加载 `/skill spec-driven-development`
 2. **设计** — 架构师代理基于确认的 `module_prd.md` 写入 `spec.md`
 3. **内容** — 包括 API 契约（按平台：后端/网页/移动/桌面）、数据模式字段级、UI 交互和状态管理、代码示例、测试策略、Always/Ask First/Never 边界
-4. **预览** — 若需求单新增或实质性修改可见界面、主要任务流程或交互状态，则在审查前生成单文件 `preview.html`，并将 `metadata.json.visual_preview` 设为 `true`。它只展示该工单的局部界面改动、主路径和相关状态，使用模拟数据与少量关键可点击交互；不是实际实现，也不是完整产品外壳。
+4. **预览** — 若需求单新增或实质性修改可见界面、主要任务流程或交互状态，则在审查前生成单文件 `preview.html`，并将 `metadata.json.visual_preview` 设为 `true`。它先还原现有页面的导航、布局和相邻内容，再加入工单改动，使用模拟数据与关键可点击交互。优先复用 `.codoop-flow/ui-snapshots/` 中经核对的基线；没有现有界面时才独立设计。预览不是实际实现。
 5. **审查** — agent 先说明用户能获得什么、刻意不做什么、还需要你决定什么；你再审查 Spec，并在有预览时审查预览。获准的反馈同时回写后再进入任务分解
 
 ### 阶段 3 — 任务分解（plan.md + todo.md）

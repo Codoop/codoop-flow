@@ -8,7 +8,9 @@ config file so the tool itself carries no business-project state.
 from __future__ import annotations
 
 import json
+import subprocess
 import sys
+import tempfile
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -61,6 +63,7 @@ class Config:
 
 
 DEFAULT_CONFIG_NAME = "codoop_flow.toml"
+DEFAULT_CONFIG_PATH = Path(".codoop-flow") / DEFAULT_CONFIG_NAME
 VALID_TICKET_DESIGN_MODES = ("strict", "one_pass")
 VALID_PROJECT_TYPES = ("backend", "web", "desktop", "mobile")
 VALID_USER_ROLES = (
@@ -95,10 +98,13 @@ def setup_target(
     if not (repo / ".git").exists():
         raise ValueError(f"target_repo is not a git repository: {repo}")
 
-    wt_root = Path(worktree_root).expanduser()
+    wt_root = (repo / Path(worktree_root).expanduser()).resolve()
     cfg_path = Path(config_path).expanduser() if config_path \
-        else Path.cwd() / DEFAULT_CONFIG_NAME
-    existing = load_config(cfg_path) if cfg_path.exists() else None
+        else repo / DEFAULT_CONFIG_PATH
+    legacy = repo / DEFAULT_CONFIG_NAME
+    migration = not config_path and not cfg_path.exists() and legacy.is_file()
+    existing_path = legacy if migration else cfg_path
+    existing = load_config(existing_path) if existing_path.exists() else None
     if existing and existing.target_repo != repo:
         raise FileExistsError(
             f"{cfg_path} already exists and points at a different "
@@ -125,13 +131,34 @@ def setup_target(
         if missing:
             raise ValueError(f"project directories not found: {', '.join(missing)}")
 
+    cfg_path.parent.mkdir(parents=True, exist_ok=True)
+    if migration:
+        # Preserve comments and unknown fields; the old file survives any failure.
+        with tempfile.NamedTemporaryFile(dir=cfg_path.parent, suffix=".toml", delete=False) as f:
+            temporary = Path(f.name)
+            f.write(legacy.read_bytes())
+        try:
+            if project_paths is not None:
+                _write_project_paths(temporary, paths)
+            if language is not None:
+                _write_setting(temporary, "output_language", language)
+            if role is not None:
+                _write_setting(temporary, "user_role", role)
+            if load_config(temporary).target_repo != repo:
+                raise ValueError("migrated config points at a different target_repo")
+            _ensure_config_gitignored(repo, cfg_path)
+            temporary.replace(cfg_path)
+        finally:
+            temporary.unlink(missing_ok=True)
+        existing = load_config(cfg_path)
+
     if existing:
-        if project_paths is not None:
+        if project_paths is not None and not migration:
             _write_project_paths(cfg_path, paths)
-        if language is not None:
-            _write_output_language(cfg_path, language)
-        if role is not None:
-            _write_user_role(cfg_path, role)
+        if language is not None and not migration:
+            _write_setting(cfg_path, "output_language", language)
+        if role is not None and not migration:
+            _write_setting(cfg_path, "user_role", role)
         if project_paths is not None or language is not None or role is not None:
             existing = load_config(cfg_path)
         config = existing
@@ -161,6 +188,8 @@ def setup_target(
     # The config captures per-developer choices (output language, project
     # paths). Committing it would clash across teammates, so keep it local.
     _ensure_config_gitignored(repo, cfg_path)
+    if migration:
+        legacy.unlink()
     return config, cfg_path
 
 
@@ -191,26 +220,45 @@ def _ensure_config_gitignored(repo: Path, cfg_path: Path) -> None:
         f.write(f"{entry}\n")
 
 
-def load_config(path: str | Path | None = None) -> Config:
-    """Load config from a TOML file.
+def resolve_config_path(path: str | Path | None = None) -> Path:
+    """Explicit path, then Git-root workspace config, then legacy root config."""
+    if path is not None:
+        chosen = Path(path).expanduser().resolve()
+    else:
+        result = subprocess.run(
+            ["git", "rev-parse", "--show-toplevel"],
+            capture_output=True, text=True,
+        )
+        if result.returncode:
+            raise FileNotFoundError("outside a Git project; supply --config <path>")
+        repo = Path(result.stdout.strip())
+        preferred, legacy = repo / DEFAULT_CONFIG_PATH, repo / DEFAULT_CONFIG_NAME
+        chosen = preferred if preferred.exists() or not legacy.exists() else legacy
+        if preferred.exists() and legacy.exists():
+            print(f"Using {preferred}; legacy config also exists at {legacy}", file=sys.stderr)
+    if not chosen.is_file():
+        raise FileNotFoundError(f"config file not found: {chosen}")
+    return chosen
 
-    Search order when ``path`` is None: ./codoop_flow.toml
-    """
-    cfg_path = Path(path) if path else Path.cwd() / DEFAULT_CONFIG_NAME
-    if not cfg_path.exists():
-        raise FileNotFoundError(f"config file not found: {cfg_path}")
+
+def load_config(path: str | Path | None = None) -> Config:
+    """Load the explicit config or discover it within the current Git project."""
+    cfg_path = resolve_config_path(path)
 
     with open(cfg_path, "rb") as f:
         raw = tomllib.load(f)
 
     try:
-        target_repo = Path(raw["target_repo"]).expanduser().resolve()
+        target_repo = Path(raw["target_repo"]).expanduser()
+        # Both default locations anchor relative targets at the project root.
+        base = cfg_path.parent.parent if cfg_path.parent.name == ".codoop-flow" else cfg_path.parent
+        target_repo = (base / target_repo).resolve()
     except KeyError as e:
         raise ValueError("config missing required key: target_repo") from e
 
-    worktree_root = Path(
+    worktree_root = (target_repo / Path(
         raw.get("worktree_root", "~/codoop_tickets/worktrees")
-    ).expanduser()
+    ).expanduser()).resolve()
     ticket_design_mode = raw.get("ticket_design_mode", "strict")
     if ticket_design_mode not in VALID_TICKET_DESIGN_MODES:
         raise ValueError(
@@ -315,41 +363,17 @@ def _write_project_paths(path: Path, paths: dict[str, str]) -> None:
     path.write_text("".join(lines), encoding="utf-8")
 
 
-def _write_output_language(path: Path, language: str) -> None:
+def _write_setting(path: Path, key: str, value: str) -> None:
+    """Edit a root setting without touching same-named keys in unknown tables."""
     lines = path.read_text(encoding="utf-8").splitlines(keepends=True)
-    assignment = f'output_language = {json.dumps(language, ensure_ascii=False)}\n'
-    index = next(
-        (index for index, line in enumerate(lines)
-         if line.partition("=")[0].strip() == "output_language"),
-        None,
-    )
+    end = next((i for i, line in enumerate(lines) if line.lstrip().startswith("[")), len(lines))
+    index = next((i for i, line in enumerate(lines[:end])
+                  if line.partition("=")[0].strip().strip('"\'') == key), None)
+    assignment = f'{key} = {json.dumps(value, ensure_ascii=False)}\n'
     if index is None:
-        index = next(
-            (index for index, line in enumerate(lines)
-             if line.lstrip().startswith("[")),
-            len(lines),
-        )
-        lines.insert(index, assignment)
-    else:
-        lines[index] = assignment
-    path.write_text("".join(lines), encoding="utf-8")
-
-
-def _write_user_role(path: Path, role: str) -> None:
-    lines = path.read_text(encoding="utf-8").splitlines(keepends=True)
-    assignment = f'user_role = {json.dumps(role, ensure_ascii=False)}\n'
-    index = next(
-        (index for index, line in enumerate(lines)
-         if line.partition("=")[0].strip() == "user_role"),
-        None,
-    )
-    if index is None:
-        index = next(
-            (index for index, line in enumerate(lines)
-             if line.lstrip().startswith("[")),
-            len(lines),
-        )
-        lines.insert(index, assignment)
+        if end and not lines[end - 1].endswith("\n"):
+            lines[end - 1] += "\n"
+        lines.insert(end, assignment)
     else:
         lines[index] = assignment
     path.write_text("".join(lines), encoding="utf-8")

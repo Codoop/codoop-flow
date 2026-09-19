@@ -1,5 +1,14 @@
 # 第三环：AI 编排（实现）
 
+
+页面基线保存在当前 checkout 的 `.codoop-flow/ui-snapshots/`，配置默认在
+`.codoop-flow/codoop_flow.toml`（仍兼容旧根目录位置）。init 建档，ticket
+仅核对和复用相关页面制作提案；提案批准不覆盖已实现基线。execute 在验证
+与评审后更新隔离 worktree 中的基线，通过 finish 与代码一起提交到工单分支，
+不提前复制回主分支。无法核实的页面保留旧 HTML 并标记失效和原因。
+HTML 快照不替代 `ui_capture` 截图门禁。
+详见 [共享快照规则](../skills/codoop-init/references/ui-snapshots.md)。
+
 ## 概述
 
 **第三环**是 codoop-flow 三环系统的第三个也是最后一个环。是一套完全自动化的、端到端的工单执行管道，可靠地实现、验证、审查和发布软件工单。
@@ -15,13 +24,13 @@
 在任何 AI 编码工具中，说：
 
 ```
-使用 codoop-execute skill，针对 /path/to/codoop_flow.toml 跑一张工单
+使用 codoop-execute skill，针对 /path/to/repo/.codoop-flow/codoop_flow.toml 跑一张工单
 ```
 
 或者定时运行：
 
 ```
-/loop 5m 使用 codoop-execute skill，针对 /path/to/codoop_flow.toml 跑一张工单
+/loop 5m 使用 codoop-execute skill，针对 /path/to/repo/.codoop-flow/codoop_flow.toml 跑一张工单
 ```
 
 这个 skill 拾取最旧的 pending 工单，在隔离 worktree 中构建它、运行测试、收集审查反馈、自愈失败、准备好时发布结果。

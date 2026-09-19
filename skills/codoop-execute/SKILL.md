@@ -32,9 +32,11 @@ SKILL.md. Build every path below from it and invoke the Runtime by absolute path
 
 ## Prerequisites
 
-- A `codoop_flow.toml` pointing at the target repo. All CLI calls take
-  `--config <path>`. Ask the user for the path if it isn't obvious; reuse it for
-  every call in the run.
+- Reuse an explicit config path. Otherwise run
+  `$SKILL/../../runtime/codoop-flow/codoop.py config-path` from the target repo:
+  it prefers `.codoop-flow/codoop_flow.toml` at the Git root and falls back to
+  root `codoop_flow.toml`. Report which is used if both exist. Ask for the target
+  or config path only when unknown; reuse the resolved path for all CLI calls.
 
 Read `output_language` from that config before starting. Use it for all
 user-facing replies and generated prose, including reports and delegated agent
@@ -102,6 +104,11 @@ history could be recovered. The prior `healing_report.md` is preserved under a
   flow), and `plan.md` + `todo.md` (steps). Also read the target
   repo's `docs/tech/project-structure.md` and `docs/tech/tech-standards.md` if
   present — respect them as hard architectural boundaries.
+- For UI work, read [UI snapshot rules](../codoop-init/references/ui-snapshots.md).
+  Compare the preview's baseline references with the current worktree sources;
+  preserve intervening valid UI changes instead of overwriting them with an old
+  design. Resolve material product conflicts with the user. Missing snapshots
+  can be rebuilt from the worktree; never import a different branch's baseline.
 - Read `[project_paths]` from `codoop_flow.toml` and map the ticket's `modules`
   to their real directories. Keep implementation inside those mapped paths;
   repository workflow docs remain allowed. Never create or modify an
@@ -207,11 +214,21 @@ when no runnable evidence exists. Record the reason in a short
 `experience_report.md` only when the walkthrough was requested for that ticket.
 
 ### 7. Ship living docs (your work) — after unanimous approval
-Before finishing, sync the target repo's living docs inside the worktree (only
-under `docs/prd/` and `docs/tech/`, never source):
+Before finishing, sync living docs and UI baselines inside the worktree. This
+step may edit `docs/prd/`, `docs/tech/` and `.codoop-flow/ui-snapshots/`, not source:
 - Update `docs/prd/` with changed business logic.
 - Update `docs/tech/project-structure.md` for new/moved files.
 - Append a concise entry to `docs/tech/changelog.md`.
+- After verification and review, refresh affected UI snapshots from the actual
+  rendered implementation, including UI fixes without preview and pages affected
+  by shared styles/components. Follow the shared snapshot reference, then run
+  `snapshots check --repo <worktree> <page-id>` for each verified result. If capture
+  is unavailable, retain old HTML, mark its index entry stale with the reason,
+  and list snapshot sync as unfinished in the delivery report. Never copy the
+  proposed preview into the baseline as proof of implementation.
+- Ensure snapshots are trackable and the personal config is ignored. Baselines
+  and implementation must enter the same finish commit before worktree removal;
+  HTML snapshots never replace the existing `ui_capture` screenshot gate.
 Adopt the technical-writer discipline
 (`$SKILL/../../runtime/codoop-flow/agents/engineering-technical-writer.md`).
 
@@ -222,7 +239,10 @@ python3 $SKILL/../../runtime/codoop-flow/codoop_tools.py --config <toml> finish 
 ```
 This stages (excluding generated noise), commits on `dev/<ticket_id>`, moves the
 ticket to `done/`, and removes the worktree. **Pushing is the human's call** —
-tell the user the branch is ready; only push if they ask.
+tell the user the branch is ready; only push if they ask. Snapshot updates stay
+on this branch until merged with the implementation; do not copy them back into
+`config.target_repo` or another branch. Resolve index merge conflicts per page
+and recheck the corresponding source and HTML fingerprints.
 
 ### Fail (the tool) — when the healing budget is exhausted
 ```

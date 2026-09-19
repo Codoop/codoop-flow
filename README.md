@@ -43,6 +43,24 @@ pick → build → verify → multi-review → archive, one ticket per closed lo
 
 ---
 
+
+## Project configuration and UI snapshots
+
+Configuration defaults to `.codoop-flow/codoop_flow.toml` and remains Git-ignored
+personal settings. `ui-snapshots/index.json` and `ui-snapshots/pages/*.html` in
+that workspace are versioned with the implementation; do not ignore the whole
+`.codoop-flow/` directory. Explicit `--config` wins; otherwise resolve the Git
+root's new location, then the legacy root config, including from subdirectories.
+A later init migrates a lone legacy config without losing settings; explicit
+custom paths stay put. When both files exist, prefer and report the new one.
+
+Init inventories existing pages into representative offline HTML baselines and
+subsequently refreshes only changed pages. Ticket previews apply proposals within
+existing product pages. Execute refreshes verified baselines on the ticket branch,
+which merge with the implementation. Empty projects skip capture; inaccessible
+pages are recorded as unverified. CLI setup only initializes config; the init
+skill performs visual inspection. See [snapshot rules](skills/codoop-init/references/ui-snapshots.md).
+
 ## Install
 
 ### Codex (Desktop or CLI)
@@ -64,7 +82,7 @@ Then restart/open Codex. The normal workflow is just:
 
 ```text
 Use $codoop-init to inspect this existing repo and set up codoop-flow.
-Use the codoop-execute skill to run the next ticket against codoop_flow.toml.
+Use the codoop-execute skill to run the next ticket against .codoop-flow/codoop_flow.toml.
 ```
 
 Local development fallback:
@@ -187,7 +205,7 @@ Pick a ticket → build in isolated worktree → verify → multi-review → mer
 
 **Main orchestrator**:
 ```
-/loop 20m run the codoop-execute skill against codoop_flow.toml
+/loop 20m run the codoop-execute skill against .codoop-flow/codoop_flow.toml
 ```
 
 **How it works**:
@@ -244,7 +262,7 @@ Or manually:
 
 ```bash
 python3 runtime/codoop-flow/codoop.py setup /path/to/your/repo \
-  --config /path/to/your/repo/codoop_flow.toml \
+  --config /path/to/your/repo/.codoop-flow/codoop_flow.toml \
   --output-language zh-CN \
   --project-path backend=server \
   --project-path web=admin-console
@@ -265,7 +283,7 @@ For a new project, `codoop-init` uses the fixed names `backend/`, `web/`,
 **③ Process queue continuously** in Claude Code:
 
 ```
-/loop 20m run the codoop-execute skill against codoop_flow.toml
+/loop 20m run the codoop-execute skill against .codoop-flow/codoop_flow.toml
 ```
 
 The Agent will:
@@ -285,7 +303,7 @@ The Agent will:
 If you don't want continuous `/loop`, run once:
 
 ```
-Use the codoop-execute skill to run a ticket against codoop_flow.toml
+Use the codoop-execute skill to run a ticket against .codoop-flow/codoop_flow.toml
 ```
 
 Agent picks the oldest pending ticket and runs the complete pipeline (pick → build → verify → review → ask merge). You decide whether to merge.
@@ -347,10 +365,10 @@ After `setup`, you can also use the human-facing CLI to turn an idea into a tick
 
 ```bash
 # Draft: scaffold metadata + empty docs under drafts/
-python3 runtime/codoop-flow/codoop-ticket.py ticket init ticket_001 --config codoop_flow.toml --title "add hello module"
+python3 runtime/codoop-flow/codoop-ticket.py ticket init ticket_001 --config .codoop-flow/codoop_flow.toml --title "add hello module"
 # Edit drafts/ticket_001/: module_prd.md (business), spec.md (contract), and preview.html when visual_preview is true
-python3 runtime/codoop-flow/codoop-ticket.py ticket validate ticket_001 --config codoop_flow.toml   # check required docs
-python3 runtime/codoop-flow/codoop-ticket.py ticket promote  ticket_001 --config codoop_flow.toml   # confirmed drafts → pending + dedicated ticket commit
+python3 runtime/codoop-flow/codoop-ticket.py ticket validate ticket_001 --config .codoop-flow/codoop_flow.toml   # check required docs
+python3 runtime/codoop-flow/codoop-ticket.py ticket promote  ticket_001 --config .codoop-flow/codoop_flow.toml   # confirmed drafts → pending + dedicated ticket commit
 ```
 
 To explore a brand-new idea (multi-role design session, output to `docs/backlog/`), invoke the skill in-session:
@@ -505,7 +523,7 @@ It clones over SSH by default. Without an SSH key, use the full HTTPS URL: `/plu
 The target project must be `git init`-ed first. codoop-flow flows tickets inside your project's git repo.
 
 **The agent says it can't find the skill / command?**
-For Claude Code, confirm the complete `codoop-flow` plugin is installed. Then verify the guardrail is in place: `python3 runtime/codoop-flow/codoop_tools.py --config codoop_flow.toml status`.
+For Claude Code, confirm the complete `codoop-flow` plugin is installed. Then verify the guardrail is in place: `python3 runtime/codoop-flow/codoop_tools.py --config .codoop-flow/codoop_flow.toml status`.
 
 **A ticket is stuck in `failed/`?**
 Open `failed/<id>/healing_report.md`, then ask the agent to resume that ticket (or run `codoop_tools.py --config <toml> resume <id>`). It returns the ticket to `in_progress/` and preserves its retained worktree; do not move it back to `pending/`, which can reset recovery work.

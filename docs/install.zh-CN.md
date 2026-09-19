@@ -38,6 +38,22 @@ Python 模块和评审 persona 只保留一份，统一放在
 
 ---
 
+
+## 项目配置与页面快照
+
+项目配置默认位于 `.codoop-flow/codoop_flow.toml`，仍作为个人设置由 Git
+忽略；同目录下的 `ui-snapshots/index.json` 和 `ui-snapshots/pages/*.html`
+是随实现版本管理的页面基线，不能忽略整个 `.codoop-flow/`。
+显式 `--config` 优先，否则从 Git 根目录先查新位置、再查旧根目录配置；
+在项目子目录运行同样有效。再次 init 会迁移唯一的旧配置并保留设置，
+自定义显式路径不迁移；两份并存时使用新位置并报告，不合并。
+
+init 首次盘点现有页面并建立代表性离线 HTML，后续只刷新变化页面。
+ticket 在已有页面上下文中生成工单预览；execute 验证交付后在工单分支
+更新基线，随代码合并。没有界面时跳过建档，无法查看时记录未核实状态。
+CLI setup 只初始化配置，视觉扫描由 init skill 执行。
+详见 [快照规则](../skills/codoop-init/references/ui-snapshots.md)。
+
 ## 一键安装（全部 12 个 Skill）
 
 克隆一次，然后运行：
@@ -72,7 +88,7 @@ codex plugin add codoop-flow@codoop-flow
 
 ```text
 使用 $codoop-init，分析这个仓库并初始化 codoop-flow。
-使用 codoop-execute skill，针对 /path/to/codoop_flow.toml 跑下一张工单。
+使用 codoop-execute skill，针对 /path/to/repo/.codoop-flow/codoop_flow.toml 跑下一张工单。
 ```
 
 本地开发时也可以不走插件安装，改为克隆并用安装脚本：
@@ -133,12 +149,12 @@ claude --plugin-dir /path/to/codoop-flow
 
 **6. codoop-execute**（第三环：代码实现）— 在会话内调用：
 ```
-使用 codoop-execute skill，针对 /path/to/codoop_flow.toml 跑下一张工单
+使用 codoop-execute skill，针对 /path/to/repo/.codoop-flow/codoop_flow.toml 跑下一张工单
 ```
 
 或用循环定时跑：
 ```
-/loop 5m 使用 codoop-execute skill，针对 /path/to/codoop_flow.toml 跑下一张工单
+/loop 5m 使用 codoop-execute skill，针对 /path/to/repo/.codoop-flow/codoop_flow.toml 跑下一张工单
 ```
 
 **7. codoop-ux-walkthrough**（独立使用 / 技术批准后的洞察）— 让指定 persona 体验任务，写一份非阻塞报告：
@@ -169,7 +185,7 @@ Cursor 会像其他 agent 一样按 `description` 自动发现 skill：
 
 ```
 /codoop-init 分析这个仓库并初始化 codoop-flow
-使用 codoop-execute，针对 /path/to/codoop_flow.toml 跑下一张工单
+使用 codoop-execute，针对 /path/to/repo/.codoop-flow/codoop_flow.toml 跑下一张工单
 ```
 
 Cursor 支持并行 **subagent**，所以 `codoop-execute` 能像 Codex/Claude

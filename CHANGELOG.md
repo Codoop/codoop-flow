@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.8-alpha.1] - 2026-09-19
+
+### Added
+
+- Project UI baselines in `.codoop-flow/ui-snapshots/`, with shared capture rules
+  and read-only Runtime fingerprint/validity checks.
+- Init inventories existing pages; ticket previews retain existing page context;
+  execute updates verified baselines alongside implementation on the ticket branch.
+
+### Changed
+
+- Setup defaults to `.codoop-flow/codoop_flow.toml`, migrates a lone legacy root
+  config while preserving settings, and keeps explicit custom paths supported.
+  Config discovery works from project subdirectories, preferring the new location.
+- Personal configuration stays ignored; UI baselines are versioned project data.
+
 ## [0.1.7] - 2026-09-19
 
 ### Changed

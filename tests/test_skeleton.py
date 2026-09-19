@@ -61,6 +61,127 @@ def _config_obj(root: Path, worktrees: Path) -> Config:
     return Config(target_repo=root, worktree_root=worktrees)
 
 
+def test_workspace_config_migration(root: Path, worktrees: Path) -> None:
+    print("[test] workspace config: defaults, migration, resolution, Git policy")
+    from codoop_lib_v1.config import resolve_config_path
+    legacy = _write_config(root, worktrees)
+    legacy.write_text(legacy.read_text() + '# keep comment\ncustom = "keep"\noutput_language = "zh-CN"\n')
+    before = legacy.read_bytes()
+    original_cwd = Path.cwd()
+    try:
+        os.chdir(root / "backend")
+        _check(resolve_config_path() == legacy.resolve(), "subdirectory finds legacy root config")
+        config, path = setup_target(root, worktrees)
+        _check(path == root.resolve() / ".codoop-flow/codoop_flow.toml", "default is target workspace")
+        _check(path.read_bytes() == before and not legacy.exists(), "migration preserves exact content")
+        _check(config.output_language == "zh-CN", "migration preserves preferences")
+        _check(load_config().target_repo == root.resolve(), "nested config does not shift target")
+        legacy.write_bytes(before)
+        _check(resolve_config_path() == path.resolve(), "new config wins when both exist")
+        _check(resolve_config_path(legacy) == legacy.resolve(), "explicit config wins")
+        try:
+            load_config(root / "missing.toml")
+        except FileNotFoundError:
+            pass
+        else:
+            raise AssertionError("explicit missing config must not fall back")
+        os.chdir(root.parent)
+        try:
+            resolve_config_path()
+        except FileNotFoundError:
+            pass
+        else:
+            raise AssertionError("outside project requires explicit config")
+    finally:
+        os.chdir(original_cwd)
+    ignored = subprocess.run(["git", "check-ignore", str(path)], cwd=root, capture_output=True)
+    _check(ignored.returncode == 0, "new config stays local")
+    snapshots = root / ".codoop-flow/ui-snapshots/pages/example.html"
+    snapshots.parent.mkdir(parents=True)
+    snapshots.write_text("<html></html>")
+    ignored = subprocess.run(["git", "check-ignore", str(snapshots)], cwd=root, capture_output=True)
+    _check(ignored.returncode == 1, "snapshots are versionable")
+
+
+def test_workspace_config_failed_migration(root: Path, worktrees: Path) -> None:
+    print("[test] workspace config: failed migration leaves old file untouched")
+    legacy = _write_config(root, worktrees)
+    original = legacy.read_bytes()
+    try:
+        setup_target(root, worktrees, project_paths={"web": "missing"})
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("missing project must fail")
+    _check(legacy.read_bytes() == original, "failed migration preserves legacy config")
+    _check(not (root / ".codoop-flow/codoop_flow.toml").exists(), "failure creates no new config")
+    legacy.write_text('target_repo = "."\nworktree_root = "local-worktrees"\n[custom]\noutput_language = "keep"\nuser_role = "keep"\n')
+    config, path = setup_target(root, worktrees, output_language="zh-CN", user_role="designer")
+    _check(config.output_language == "zh-CN" and config.user_role == "designer", "migration writes root settings")
+    _check('output_language = "keep"' in path.read_text() and 'user_role = "keep"' in path.read_text(), "unknown table settings survive migration")
+    _check(config.target_repo == root.resolve(), "relative legacy target remains project-relative after migration")
+    _check(config.worktree_root == root.resolve() / "local-worktrees", "relative worktree path stays anchored at target")
+    _check('[custom]' in path.read_text(), "migration preserves unknown tables")
+    path.unlink()
+    _, path = setup_target(root, worktrees)
+    _check(path.is_file() and path.parent == root.resolve() / ".codoop-flow", "fresh setup creates parent directory")
+
+
+def _snapshot_fixture(root: Path) -> tuple[Path, dict]:
+    from codoop_lib_v1.snapshots import fingerprints
+    source = root / "backend/page.html"
+    source.write_text('<nav>Orders</nav><main>Orders</main>')
+    style = root / "backend/theme.css"
+    style.write_text('main { color: navy; }')
+    html = '.codoop-flow/ui-snapshots/pages/web-orders.html'
+    (root / html).parent.mkdir(parents=True, exist_ok=True)
+    (root / html).write_text(source.read_text())
+    page = dict(name="Orders", project="web", entry="/orders", snapshot=html,
+                sources=fingerprints(root, ['backend/page.html', 'backend/theme.css']),
+                snapshot_sha256=fingerprints(root, [html])[html], revision="test-revision",
+                evidence="test fixture", viewport=[1280, 800], status="verified", reason="")
+    index = root / '.codoop-flow/ui-snapshots/index.json'
+    index.write_text(json.dumps(dict(schema_version=1, pages={'web-orders': page})))
+    return index, page
+
+
+def test_snapshot_validity(root: Path, worktrees: Path) -> None:
+    print("[test] snapshots: source, theme, HTML, missing files and corrupt index")
+    from codoop_lib_v1.snapshots import check_page, fingerprints
+    index, page = _snapshot_fixture(root)
+    _check(check_page(root, 'web-orders')['reusable'], "unchanged page is reusable")
+    for relative in ['backend/page.html', 'backend/theme.css', page['snapshot']]:
+        path = root / relative
+        before = path.read_bytes()
+        path.write_bytes(before + b' changed')
+        _check(not check_page(root, 'web-orders')['reusable'], "uncommitted change invalidates page")
+        path.write_bytes(before)
+    (root / 'backend/page.html').unlink()
+    _check(not check_page(root, 'web-orders')['reusable'], "missing source invalidates without deleting snapshot")
+    _check((root / page['snapshot']).exists(), "stale HTML retained")
+    index.write_text('{broken')
+    _check(not check_page(root, 'web-orders')['reusable'], "corrupt index cannot be reused")
+    _check(index.read_text() == '{broken', "check never overwrites damaged index")
+    outside = root.parent / 'external.css'
+    outside.write_text('secret')
+    (root / 'link.css').symlink_to(outside)
+    for relative in ['../external.css', 'link.css', str(outside)]:
+        try:
+            fingerprints(root, [relative])
+        except ValueError:
+            pass
+        else:
+            raise AssertionError("fingerprint must stay inside checkout")
+    index, page = _snapshot_fixture(root)
+    page['status'] = 'unverified'
+    page['reason'] = 'runtime unavailable'
+    index.write_text(json.dumps(dict(schema_version=1, pages={'web-orders': page})))
+    _check(not check_page(root, 'web-orders')['reusable'], "source-only draft is not verified")
+    proc = subprocess.run([sys.executable, str(_CODOOP_CLI), 'snapshots', 'check',
+                           '--repo', str(root), 'web-orders'], capture_output=True, text=True)
+    _check(proc.returncode == 1 and not json.loads(proc.stdout)['reusable'], "CLI reports invalid baseline")
+
+
 def test_ticket_design_mode_config(root: Path, worktrees: Path) -> None:
     print("[test] config: ticket design mode")
     cfg_path = _write_config(root, worktrees)
@@ -769,7 +890,10 @@ def test_finish_commits_and_archives(root: Path, worktrees: Path) -> None:
     cfg = _write_config(root, worktrees)
     _make_ticket(root, "ticket_005")
     _, picked = _tool(cfg, "pick")
-    (Path(picked["worktree"]) / "backend" / "f.txt").write_text("x", encoding="utf-8")
+    wt = Path(picked["worktree"])
+    _snapshot_fixture(wt)
+    (wt / ".gitignore").write_text('/.codoop-flow/codoop_flow.toml\n')
+    (wt / ".codoop-flow/codoop_flow.toml").write_text('local = true')
     code, data = _tool(cfg, "finish", "ticket_005", "--message", "feat(backend): x [ticket_005]")
     _check(code == 0 and data["state"] == "done", "finish returned done")
     _check(data["committed"], "committed changes")
@@ -780,6 +904,12 @@ def test_finish_commits_and_archives(root: Path, worktrees: Path) -> None:
         cwd=str(root), capture_output=True, text=True,
     ).stdout
     _check("ticket_005" in log, "commit landed on dev/ticket_005")
+    files = subprocess.run(["git", "ls-tree", "-r", "--name-only", "dev/ticket_005"],
+                           cwd=root, capture_output=True, text=True, check=True).stdout.splitlines()
+    _check('.codoop-flow/ui-snapshots/index.json' in files, "finish commits snapshot index")
+    _check('.codoop-flow/ui-snapshots/pages/web-orders.html' in files, "finish commits HTML")
+    _check('.codoop-flow/codoop_flow.toml' not in files, "finish excludes personal config")
+    _check(not (root / '.codoop-flow/ui-snapshots').exists(), "finish leaves original branch baseline untouched")
 
 
 def test_finish_fix_uses_fix_prefix(root: Path, worktrees: Path) -> None:
@@ -805,6 +935,7 @@ def test_fail_archives_with_report_and_preserves_worktree(root: Path, worktrees:
     _make_ticket(root, "ticket_006")
     picked = _tool(cfg, "pick")[1]
     worktree = Path(picked["worktree"])
+    _snapshot_fixture(worktree)
     (worktree / "backend" / "unfinished.txt").write_text("keep this work\n", encoding="utf-8")
     code, data = _tool(cfg, "fail", "ticket_006", "--report", "root cause: boom")
     _check(code == 0 and data["state"] == "failed", "fail returned failed")
@@ -813,6 +944,7 @@ def test_fail_archives_with_report_and_preserves_worktree(root: Path, worktrees:
     _check(str(worktree) in report and picked["branch"] in report,
            "healing_report identifies the recovery worktree and branch")
     _check(worktree.exists(), "worktree remains available after fail")
+    _check(not (root / '.codoop-flow/ui-snapshots').exists(), "failure does not publish snapshot")
     _check((worktree / "backend" / "unfinished.txt").read_text() == "keep this work\n",
            "unfinished work is preserved for recovery")
     _check(not (worktrees / ".codoop-leases" / "ticket_006.json").exists(),
@@ -939,6 +1071,8 @@ def test_confirmed_promotion_commits_only_ticket(root: Path, worktrees: Path) ->
 
     config_path = _write_config(root, worktrees)
     cfg = _config_obj(root, worktrees)
+    index, _ = _snapshot_fixture(root)
+    baseline = index.read_bytes()
     draft = init_draft(cfg, "ticket_012", title="commit confirmed ticket")
     metadata = json.loads((draft / "metadata.json").read_text(encoding="utf-8"))
     (draft / "module_prd.md").write_text("# PRD\nUsers can confirm tickets.\n", encoding="utf-8")
@@ -960,6 +1094,7 @@ def test_confirmed_promotion_commits_only_ticket(root: Path, worktrees: Path) ->
     _check(committed_files and all(path.startswith("docs/tickets/pending/ticket_012/") for path in committed_files),
            "ticket commit contains no unrelated files")
     _check((root / "unrelated.txt").exists(), "unrelated working-tree file preserved")
+    _check(index.read_bytes() == baseline, "ticket creation and promotion preserve actual UI baseline")
 
 
 def test_fix_ticket_lifecycle(root: Path, worktrees: Path) -> None:
@@ -1042,6 +1177,9 @@ def main() -> int:
     test_manual_installer_shares_runtime_for_codex_and_claude()
     test_marketplaces_publish_the_complete_plugin()
     tests = [
+        test_workspace_config_migration,
+        test_workspace_config_failed_migration,
+        test_snapshot_validity,
         test_ticket_design_mode_config,
         test_output_language_config,
         test_user_role_config,

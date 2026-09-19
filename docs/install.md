@@ -44,6 +44,24 @@ documents, reports, and code remain professional and precise.
 
 ---
 
+
+## Project configuration and UI snapshots
+
+Configuration defaults to `.codoop-flow/codoop_flow.toml` and remains Git-ignored
+personal settings. `ui-snapshots/index.json` and `ui-snapshots/pages/*.html` in
+that workspace are versioned with the implementation; do not ignore the whole
+`.codoop-flow/` directory. Explicit `--config` wins; otherwise resolve the Git
+root's new location, then the legacy root config, including from subdirectories.
+A later init migrates a lone legacy config without losing settings; explicit
+custom paths stay put. When both files exist, prefer and report the new one.
+
+Init inventories existing pages into representative offline HTML baselines and
+subsequently refreshes only changed pages. Ticket previews apply proposals within
+existing product pages. Execute refreshes verified baselines on the ticket branch,
+which merge with the implementation. Empty projects skip capture; inaccessible
+pages are recorded as unverified. CLI setup only initializes config; the init
+skill performs visual inspection. See [snapshot rules](../skills/codoop-init/references/ui-snapshots.md).
+
 ## One-shot install (all 12 skills)
 
 Clone the repo once, then run:
@@ -77,7 +95,7 @@ Then restart/open Codex. The normal workflow is just:
 
 ```text
 Use $codoop-init to inspect this repo and set up codoop-flow.
-Use the codoop-execute skill to run the next ticket against /path/to/codoop_flow.toml.
+Use the codoop-execute skill to run the next ticket against /path/to/repo/.codoop-flow/codoop_flow.toml.
 ```
 
 For local development without plugin installation, clone and use the install script:
@@ -138,12 +156,12 @@ Once installed, you can invoke the core skills and engineering disciplines:
 
 **6. codoop-execute** (Phase 3: Code Implementation) — invoke in-session:
 ```
-Use the codoop-execute skill to run a ticket against /path/to/codoop_flow.toml
+Use the codoop-execute skill to run a ticket against /path/to/repo/.codoop-flow/codoop_flow.toml
 ```
 
 Or schedule continuously with:
 ```
-/loop 5m run the codoop-execute skill against /path/to/codoop_flow.toml
+/loop 5m run the codoop-execute skill against /path/to/repo/.codoop-flow/codoop_flow.toml
 ```
 
 **7. codoop-ux-walkthrough** (Standalone / post-approval insight) — simulate a task as a chosen persona and write a non-blocking report:
@@ -191,7 +209,7 @@ their `description` like the other agents:
 
 ```
 /codoop-init inspect this repo and set up codoop-flow
-Use codoop-execute to run the next ticket against /path/to/codoop_flow.toml
+Use codoop-execute to run the next ticket against /path/to/repo/.codoop-flow/codoop_flow.toml
 ```
 
 Cursor supports parallel **subagents**, so `codoop-execute` can run the review

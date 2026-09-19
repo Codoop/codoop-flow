@@ -223,7 +223,7 @@ To guarantee high-standard requirement scoping, agile management, and code plann
   - **Hard Technical Constraint Definition**: The engineer (or an assisting architecture Subagent) uniformly defines in `spec.md` the multi-platform interface formats involved in this ticket, the API data Schema, technical architecture details, contract specifications, UI interaction conventions, and public state machines.
 4. **Visual Preview Review (Conditional)**:
   - **Applicability**: Only for a feature that adds or materially changes a visible screen, primary task flow, or interaction state.
-  - **Behavior**: Create a self-contained `preview.html` after `spec.md` and before task breakdown. It covers the ticket-local change, primary path, and relevant states with mock data and limited clickable interactions; it is reviewed by the human and is not a production implementation or a full-product shell.
+  - **Behavior**: Create a self-contained `preview.html` after `spec.md` and before task breakdown. It recreates the existing page from a checked `.codoop-flow/ui-snapshots/` baseline, retaining product navigation and visual context, then adds the ticket change, primary path and relevant states using mock data. It is a design preview, not production code; only projects without an existing interface use independent design.
   - **Promotion Gate**: Set `metadata.json.visual_preview` to `true`; promotion requires the reviewed `preview.html`. Runtime screenshots remain controlled separately by `ui_capture`.
 5. **Atomic Task Breakdown Design (Plan & Todo Authoring)**:
   - **Behavior**: Based on the established `spec.md` technical contract, plan the concrete cross-platform execution steps and produce `**plan.md`** and the atomic task list `**todo.md**`.
