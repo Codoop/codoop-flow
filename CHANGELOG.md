@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.7] - 2026-09-19
+
+### Changed
+
+- Promoted the `0.1.7-alpha.x` line to stable: conversation roles and role-aware
+  Skill communication, plus the Cursor plugin packaging and installation flow.
+- Cursor support remains experimental pending live-host validation. This release
+  does not include the UI snapshot/configuration workspace changes planned for
+  `0.1.8-alpha.1`.
+
 ## [0.1.7-alpha.2] - 2026-08-24
 
 ### Added
