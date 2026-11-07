@@ -144,12 +144,19 @@ privacy, payments/costs, compliance, and irreversible behavior.
 - Say "OK, move to next phase"
 
 For visual feature tickets, `preview.html` is generated after `spec.md` and
-before task breakdown. It recreates the existing page with its navigation, layout
-and surrounding content, then adds the proposed change and key clickable states.
-Reuse checked baselines from `.codoop-flow/ui-snapshots/`; if no interface exists,
-design independently. Approved previews never replace implemented-page baselines. It is not a production
-implementation and does not call real services. The ticket cannot be published
-until this preview exists; `strict` mode also requires its review.
+before task breakdown. Existing-product previews start from the real screen
+or closest sibling and reuse checked UI snapshots, product components and
+project assets. New-product previews establish a visual direction around the
+core task and brand assets. Both use realistic content and are opened and
+walked through at applicable viewport sizes before review. Internal acceptance
+covers UI visual review, PM/UX task completion and browser runtime checks.
+Defects are repaired and rechecked before user review; results and incomplete
+checks are recorded in `spec.md`. See the
+[preview standard](SKILL.md#visual-preview-previewhtml).
+
+The preview runs offline with mock data. It stays with the ticket throughout
+review and promotion. Promotion requires the file, and `strict` mode also
+requires its review.
 
 ### Phase 3: Task Breakdown
 

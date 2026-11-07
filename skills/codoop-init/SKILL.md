@@ -108,6 +108,51 @@ This creates each selected directory with only `.gitkeep`. Do not generate
 framework files, package manifests, build files, source code, or runnable
 scaffolding. Refuse to overwrite a non-empty project directory.
 
+## Shared project structure
+
+Setup creates the shared framework below for both new and existing repositories.
+Empty leaf directories contain `.gitkeep` so the framework survives a clone.
+Existing contents are preserved. Application directories still follow the selected
+project types and existing path mappings.
+
+```text
+<repo>/
+├── backend/ | web/ | desktop/ | mobile/   (selected projects only)
+├── .codoop-flow/
+│   ├── codoop_flow.toml                  (local config)
+│   └── ui-snapshots/pages/               (versioned implementation baselines)
+├── docs/
+│   ├── backlog/
+│   │   ├── product/
+│   │   ├── interface/
+│   │   ├── architecture/
+│   │   ├── modules/
+│   │   └── bridge/
+│   ├── prd/
+│   ├── tech/
+│   └── tickets/{drafts,pending,in_progress,done,failed}/
+├── resources/
+│   ├── icons/
+│   ├── branding/
+│   └── fonts/
+└── deploy/
+```
+
+Explain the framework using the target project's actual paths. `backlog` holds
+exploration and design inputs; `prd` holds current business rules; `tech` holds
+current architecture, contracts and engineering guidance. Tickets own their proposed `preview.html`; snapshots
+represent the implemented UI. Resources hold shared source assets, with application
+packaging assets kept in the corresponding application. Deploy holds release and
+deployment tooling, with platform subdirectories added when needed.
+
+Create `docs/README.md` and `resources/README.md` when absent. The first maps
+document ownership and lifecycle; the second explains asset categories and how
+to record source, license, intended usage and application mappings. For existing
+files, read and preserve their content; report conflicting conventions. Empty
+directories are valid. Generate substantive documents and platform scaffolding
+in the workflows that own them. Create the snapshot index only when inventorying
+actual pages, with verified or explicitly unverified evidence.
+
 ## Inventory existing pages
 
 After setup, read [UI snapshot rules](references/ui-snapshots.md). Inspect the
@@ -128,9 +173,21 @@ unfinished pages. The setup CLI alone performs configuration, not UI capture.
 Read the resulting `codoop_flow.toml` and report the mapping, output language,
 and user role in plain language.
 Confirm that every path is relative and real, no unselected project was
-created, and `docs/tickets/{pending,in_progress,done,failed}/` exists.
+created, and the shared framework above exists, including `docs/tickets/drafts/`.
 Confirm the config file is listed in the repository `.gitignore`; setup adds it
 automatically because the config holds per-developer choices that must not be
 committed. Tell the user the config stays local so teammates' settings never
 clash. Confirm the snapshot directory is not ignored; snapshots follow the normal
 project commit workflow, separately from the personal config.
+
+## Git ignore baseline
+
+Setup appends missing operating-system/editor temporary-file rules, local
+`.env` patterns (with `.env.example` and `.env.*.example` exceptions), and
+root `.tmp/` and `.worktrees/` directories. It preserves existing contents.
+Inspect the resulting policy with `git check-ignore --no-index`: local config
+and environment files should be ignored, while environment examples, ticket
+previews and UI snapshots should remain trackable. Report conflicting existing
+rules. Add framework-specific dependency/build/cache rules when the actual
+toolchain is established. Keep shared editor configuration, agent skills,
+resources and dependency lockfiles trackable.

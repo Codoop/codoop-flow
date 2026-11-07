@@ -78,6 +78,15 @@ VALID_USER_ROLES = (
 # Ticket pipeline stages the target repo needs under docs/tickets/.
 TICKET_STAGES = ("pending", "in_progress", "done", "failed")
 
+# Shared project structure, independent of the selected application platforms.
+PROJECT_DIRECTORIES = (
+    "docs/backlog/product", "docs/backlog/interface",
+    "docs/backlog/architecture", "docs/backlog/modules", "docs/backlog/bridge",
+    "docs/prd", "docs/tech",
+    "resources/icons", "resources/branding", "resources/fonts",
+    "deploy", ".codoop-flow/ui-snapshots/pages",
+)
+
 
 def setup_target(
     target_repo: str | Path,
@@ -182,15 +191,41 @@ def setup_target(
             encoding="utf-8",
         )
 
-    for stage in TICKET_STAGES:
-        (config.tickets_dir / stage).mkdir(parents=True, exist_ok=True)
+    directories = [repo / relative for relative in PROJECT_DIRECTORIES]
+    directories.extend(config.tickets_dir / stage for stage in ("drafts", *TICKET_STAGES))
+    for directory in directories:
+        directory.mkdir(parents=True, exist_ok=True)
+        if not any(directory.iterdir()):
+            (directory / ".gitkeep").touch()
 
     # The config captures per-developer choices (output language, project
     # paths). Committing it would clash across teammates, so keep it local.
+    _ensure_base_gitignore(repo)
     _ensure_config_gitignored(repo, cfg_path)
     if migration:
         legacy.unlink()
     return config, cfg_path
+
+
+def _ensure_base_gitignore(repo: Path) -> None:
+    """Append missing baseline rules while preserving existing project policy."""
+    groups = (
+        ("Operating system files", (".DS_Store", "._*", "Thumbs.db", "ehthumbs.db", "Desktop.ini")),
+        ("Editor temporary files", ("*.swp", "*.swo", "*~")),
+        ("Local environment configuration", (".env", ".env.*", "!.env.example", "!.env.*.example")),
+        ("Local temporary directories", ("/.tmp/", "/.worktrees/")),
+    )
+    path = repo / ".gitignore"
+    content = path.read_text(encoding="utf-8") if path.exists() else ""
+    existing = {line.strip() for line in content.splitlines()}
+    additions = []
+    for heading, rules in groups:
+        missing = [rule for rule in rules if rule not in existing]
+        if missing:
+            additions.append("# " + heading + "\n" + "\n".join(missing))
+    if additions:
+        separator = "\n\n" if content and not content.endswith("\n") else "\n" if content else ""
+        path.write_text(content + separator + "\n\n".join(additions) + "\n", encoding="utf-8")
 
 
 def _ensure_config_gitignored(repo: Path, cfg_path: Path) -> None:

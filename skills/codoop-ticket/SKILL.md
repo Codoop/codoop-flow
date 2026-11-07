@@ -29,7 +29,7 @@ A ticket is a complete design document package for one feature module:
 |------|---------|--------|
 | `module_prd.md` | Business requirements (pure business language, no tech) | PM agent |
 | `spec.md` | Technical specification (APIs, DB, implementation details) | Architect agent |
-| `preview.html` | Static, reviewable preview of a user-visible feature | Ticket agent, when required |
+| `preview.html` | Interactive offline design preview of a user-visible feature | Ticket agent, when required |
 | `plan.md` | Implementation plan (steps) | Auto-inferred |
 | `todo.md` | Atomic task list (≤100 lines code/task) | Auto-inferred |
 | `metadata.json` | Ticket metadata (modules, execution settings) | Auto-inferred |
@@ -226,24 +226,94 @@ promotion approval remains mandatory in both modes.
 
 Generate this file only for a `feature` ticket with `visual_preview: true`.
 Read [UI snapshot rules](../codoop-init/references/ui-snapshots.md) before creating it.
-It is one self-contained HTML design preview, using the existing page as context.
+Deliver one self-contained, offline HTML file at the visual and interaction
+standard of a shipped product. Use realistic mock data and local interactions
+for the ticket's scope.
 
-- Determine which existing page receives the change. Check its baseline and source
-  fingerprints, refreshing only affected pages when stale or missing. Copy/recreate
-  that page in `preview.html`, including necessary navigation, title, surrounding
-  content, layout and component styling, then apply the proposed feature there.
-- For a new page, reuse existing product layouts/components; design independently
-  only when there is no existing interface. Consult `docs/backlog/interface/design-system.md`
-  when present; preserve current UI by default and surface conflicting written guidance.
-- Cover the main user path and necessary empty/loading/error/success/confirmation
-  states with mock data and client-side interactions. Background navigation may be
-  visual context only. No real APIs, login, new dependencies or unrelated flows.
-- Open the preview, compare its overall visual language with the actual page,
-  and exercise key interactions and applicable narrow layouts. Record unavailable
-  evidence rather than claiming a guess is a verified match.
-- Record baseline page IDs, revision and input fingerprints in `spec.md` so delivery
-  can detect intervening changes. Keep the proposed preview in the ticket directory;
-  creation, approval and promotion never replace the implemented-page baseline.
+Before writing HTML, apply the plugin's role definitions to the same user task.
+Read the [PM](../../runtime/codoop-flow/agents/product-sprint-prioritizer.md),
+[UI Designer](../../runtime/codoop-flow/agents/design-ui-designer.md), and
+[UX Architect](../../runtime/codoop-flow/agents/design-ux-architect.md) definitions.
+Use their relevant criteria within the approved ticket scope.
+
+- PM defines who starts where, what they need to accomplish, and how they know
+  it worked. Use the user's vocabulary and remove decisions and steps that do
+  not serve that goal.
+- UI Designer owns hierarchy, density, typography, spacing, components, icon
+  consistency and visible states. Check the result at target viewport sizes.
+- UX Architect walks the task from entry to outcome and recovery. Check sensible
+  defaults, action placement, preservation of inputs on recoverable errors, and
+  applicable keyboard, focus and responsive behavior.
+
+Choose the design path for the affected surface before building it.
+
+- **Existing product, including a new page inside it.** Start with the rendered
+  target screen or the closest real sibling flow. Use the checked HTML snapshot
+  as the editable baseline, following the evidence and refresh rules in the
+  snapshot reference. Reuse the actual shell, content hierarchy, components,
+  tokens, density, labels and interaction conventions. Apply only the changes
+  the task requires. Compare the surrounding UI side by side at matching
+  viewports. Consult `docs/backlog/interface/design-system.md` when present and
+  flag conflicts with the current UI.
+- **New product without an interface foundation.** Start with the target user,
+  core task, platform conventions, brand assets and any agreed design direction.
+  Establish a coherent shell, type hierarchy, spacing, semantic colors and
+  component states before composing screens. Use believable content and density.
+  Reject generic hero sections, decorative gradients or glass effects, repeated
+  card grids, gratuitous badges and filler copy when they serve no product or
+  brand purpose. Every prominent element should help users orient, decide or act.
+
+Inspect the project-root `resources/README.md` and relevant files under
+`resources/` when present. Prefer the product's existing component and icon
+mappings, then reuse matching project assets, including SVG icons, logos and
+fonts, with their documented usage constraints. Preserve their intended size,
+weight and meaning. Inline the assets needed by the preview for offline use.
+Record reused asset paths and any fallback affecting visual fidelity in
+`spec.md`.
+
+##### Preview internal acceptance
+
+Run this acceptance loop on the generated HTML in both design modes before
+requesting user review. Review the rendered result using the PM, UI Designer and
+UX Architect criteria above. A file-existence check cannot establish acceptance.
+
+1. **Visual review — UI Designer.** Open the HTML at representative target
+   viewports and inspect hierarchy, density, typography, spacing, icon consistency,
+   contrast and component states. For existing products compare with the actual
+   screen or verified baseline at the same viewport, theme and state. For new
+   products compare with the agreed visual direction and assets. Check long
+   content and applicable narrow layouts for clipping and overflow.
+2. **Task review — PM and UX Architect.** Start at the intended entry point and
+   complete the primary task with realistic data. Check that labels and the primary
+   action are understandable, each step serves the task, and the outcome is visible.
+   Exercise applicable empty, loading, error, success and confirmation states,
+   including recovery and preservation of user input. Check keyboard operation and
+   visible focus. Surrounding navigation may remain visual context, but every
+   control required for the ticket's task must work.
+3. **Runtime review.** Load the offline preview in a browser, exercise its task
+   controls and inspect console errors, missing assets and unexpected network
+   requests. Keep required assets inline and interactions local. Resolve errors
+   attributable to the preview and record tool or browser limitations.
+4. **Repair and recheck.** Record each concrete defect, its affected state and
+   required correction. Fix it, reload the latest HTML and repeat affected checks,
+   then complete the main task again. Continue until all acceptance defects are
+   resolved. If blocked by missing access, tools or baseline evidence, mark the
+   review incomplete and explain what is needed to resume.
+
+Record a compact preview acceptance section in `spec.md`, including:
+
+- Design path, baseline page IDs, revision and relevant input fingerprints,
+  reused assets, representative viewports and theme/state.
+- Checks actually performed, their observed results and browser evidence
+  references when available.
+- Defects found, corrections and recheck results, plus any remaining limitations.
+- Overall result of passed, needs changes or incomplete. A pass requires all
+  applicable checks to have run and all acceptance defects to be resolved.
+
+Present the preview as ready for user review only after acceptance passes.
+When blocked, report the incomplete result and remaining checks. Keep proposed
+HTML in the ticket directory throughout creation, review and promotion.
+Re-run affected acceptance checks whenever feedback changes the preview.
 - In `"strict"` mode, present the preview and ask for explicit feedback before
   Phase 3. Apply approved feedback to `module_prd.md` and `spec.md`, then regenerate
   the preview if the change affects it. `"one_pass"` keeps its final review gate.

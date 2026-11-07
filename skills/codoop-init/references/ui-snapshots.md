@@ -117,15 +117,22 @@ Do not use HEAD alone: hashes also detect uncommitted changes and branch switche
 
 ## Ticket and delivery boundaries
 
-For a visual ticket, copy/recreate the relevant existing page into the ticket's
-single `preview.html`, then apply the proposed changes there. Preserve the product
-context; make only the ticket's key path and necessary states interactive with
-mock data. For a new page reuse the existing product layout/components; design
-independently only when there is no interface foundation. If actual UI and written
-design guidance conflict, preserve current UI by default and surface the mismatch.
-Record page IDs, revision and relevant input fingerprints in `spec.md`. Visually
-check the preview and key interactions before review. If blocked, describe the
-missing evidence rather than presenting a guess as a faithful reproduction.
+For existing-product previews, start from the affected page or closest real
+sibling and follow the [ticket preview standard](../../codoop-ticket/SKILL.md#visual-preview-previewhtml).
+Use current rendered UI as visual evidence and a verified, hash-valid HTML
+snapshot as the reusable editing base. Capture or refresh only the relevant
+pages when no valid base exists. Compare at the same viewport, theme and
+representative state, including the shell, density, typography, key controls and
+icons. Record the entry point, theme/state and evidence in the existing
+`evidence` field. Include repository assets under `resources/` in `sources`
+when they affect the captured implementation.
+
+If the current UI is inaccessible and no valid snapshot exists, use the actual
+components, tokens and source assets to reconstruct a provisional base. Record
+the missing evidence in the index and ticket spec and retain any previous
+snapshot according to the refresh rules. Keep the existing-product design path
+even when capture is blocked. A new product without an existing interface
+skips baseline capture until there is a real implementation to compare.
 
 After implementation verification and review, execute refreshes affected baselines
 from the actual result, including UI fixes without a preview. Changes to shared UI

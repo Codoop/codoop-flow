@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.8-alpha.2] - 2026-11-07
+
+### Added
+
+- Initialize a shared project directory framework and baseline Git ignore rules.
+- Add internal visual, task and browser acceptance for ticket previews.
+
+### Changed
+
+- Ground existing-product previews in actual UI and verified snapshots, reuse
+  project assets, and establish a coherent visual direction for new products.
+- Document snapshot evidence and refresh expectations for preview work.
+
 ## [0.1.8-alpha.1] - 2026-09-19
 
 ### Added

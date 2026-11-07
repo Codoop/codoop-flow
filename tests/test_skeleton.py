@@ -73,6 +73,17 @@ def test_workspace_config_migration(root: Path, worktrees: Path) -> None:
         _check(resolve_config_path() == legacy.resolve(), "subdirectory finds legacy root config")
         config, path = setup_target(root, worktrees)
         _check(path == root.resolve() / ".codoop-flow/codoop_flow.toml", "default is target workspace")
+        for relative in ("docs/tickets/drafts", "docs/backlog/interface", "docs/prd",
+                         "docs/tech", "resources/icons",
+                         "deploy", ".codoop-flow/ui-snapshots/pages"):
+            _check((root / relative / ".gitkeep").is_file(), f"setup preserves empty {relative}")
+        for relative in ("docs/verification", "resources/provider-icons", "resources/image",
+                         "resources/video", "resources/audio", "resources/app-store"):
+            _check(not (root / relative).exists(), f"setup omits {relative}")
+        marker = root / "resources/icons/custom.svg"
+        marker.write_text("<svg/>")
+        setup_target(root, worktrees)
+        _check(marker.read_text() == "<svg/>", "repeated setup preserves existing assets")
         _check(path.read_bytes() == before and not legacy.exists(), "migration preserves exact content")
         _check(config.output_language == "zh-CN", "migration preserves preferences")
         _check(load_config().target_repo == root.resolve(), "nested config does not shift target")
@@ -97,7 +108,7 @@ def test_workspace_config_migration(root: Path, worktrees: Path) -> None:
     ignored = subprocess.run(["git", "check-ignore", str(path)], cwd=root, capture_output=True)
     _check(ignored.returncode == 0, "new config stays local")
     snapshots = root / ".codoop-flow/ui-snapshots/pages/example.html"
-    snapshots.parent.mkdir(parents=True)
+    snapshots.parent.mkdir(parents=True, exist_ok=True)
     snapshots.write_text("<html></html>")
     ignored = subprocess.run(["git", "check-ignore", str(snapshots)], cwd=root, capture_output=True)
     _check(ignored.returncode == 1, "snapshots are versionable")
@@ -451,8 +462,22 @@ def test_setup_gitignores_config(root: Path, worktrees: Path) -> None:
     _check("/codoop_flow.toml" in gitignore.read_text(encoding="utf-8").splitlines(),
            "setup ignores the config file")
 
+    expected = {
+        ".env": True, ".env.production": True,
+        ".env.example": False, ".env.production.example": False,
+        ".codoop-flow/ui-snapshots/pages/web-home.html": False,
+        "docs/tickets/drafts/task/preview.html": False,
+        "package-lock.json": False, ".worktrees/task/file": True,
+    }
+    for relative, ignored in expected.items():
+        result = subprocess.run(["git", "check-ignore", "--no-index", relative],
+                                cwd=root, capture_output=True, text=True)
+        _check((result.returncode == 0) == ignored, f"ignore policy for {relative}")
+    before = gitignore.read_text()
+
     # Re-running must not duplicate the entry.
     setup_target(root, worktrees, cfg_path)
+    _check(gitignore.read_text() == before, "repeated setup preserves exact ignore contents")
     _check(gitignore.read_text(encoding="utf-8").count("/codoop_flow.toml") == 1,
            "re-running setup does not duplicate the ignore entry")
 
@@ -469,11 +494,12 @@ def test_setup_appends_config_to_existing_gitignore(root: Path, worktrees: Path)
 
 
 def test_setup_skips_gitignore_when_config_outside_repo(root: Path, worktrees: Path) -> None:
-    print("[test] setup: leaves .gitignore alone for external config")
+    print("[test] setup: adds baseline with external config")
     cfg_path = root.parent / "outside_flow.toml"
     setup_target(root, worktrees, cfg_path)
-    _check(not (root / ".gitignore").exists(),
-           "config outside the repo is not added to .gitignore")
+    contents = (root / ".gitignore").read_text()
+    _check(".DS_Store" in contents and "outside_flow.toml" not in contents,
+           "external config still receives baseline without config entry")
 
 
 def test_setup_sets_and_updates_output_language(root: Path, worktrees: Path) -> None:
