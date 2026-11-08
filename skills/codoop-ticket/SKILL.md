@@ -271,6 +271,39 @@ weight and meaning. Inline the assets needed by the preview for offline use.
 Record reused asset paths and any fallback affecting visual fidelity in
 `spec.md`.
 
+##### Existing-screen fidelity checkpoint
+
+For changes to an existing screen, complete this checkpoint before adding the
+proposed feature to the HTML:
+
+1. Identify current rendered evidence for the target screen: source revision,
+   viewport, theme and interaction state. Check the snapshot's relevant source
+   fingerprints. An old ticket preview is a proposal, not evidence of the
+   implemented screen. If the baseline is stale, missing or unverified, obtain
+   current rendered evidence and reconstruct only the affected screen first.
+2. Render the unchanged HTML reconstruction and compare it with the real screen
+   at matching viewport, theme and state. Check navigation, titles, icons,
+   content bounds, fixed overlays, toolbars, bottom controls and panel placement.
+   Resolve differences before adding the feature. A schematic demonstrating the
+   feature cannot substitute for this comparison. For a new page inside an
+   existing product, establish the shared shell from the closest real sibling.
+3. Record the comparison evidence and the intended visible differences in
+   `spec.md`. Then apply the approved change to the checked reconstruction;
+   preserve surrounding UI unless the confirmed scope changes it. The unchanged
+   comparison may be a temporary capture; no second deliverable HTML is required.
+
+If current rendered evidence or browser rendering is unavailable, continue work
+that does not depend on it, but mark this checkpoint incomplete. Any experimental
+HTML must be labeled an unverified draft, not a faithful preview or ready design.
+Resume the checkpoint before presenting a completed preview or requesting
+promotion. Recording a limitation does not waive the fidelity requirement.
+
+Keep review-only controls, device selectors and scenario switches outside the
+simulated product screen and label them as review tools. Inside the screen, use
+only existing controls and controls explicitly required by the confirmed scope.
+Simulate the product's relevant interaction rather than silently replacing it
+with a different visible control.
+
 ##### Preview internal acceptance
 
 Run this acceptance loop on the generated HTML in both design modes before
@@ -306,6 +339,8 @@ Record a compact preview acceptance section in `spec.md`, including:
   reused assets, representative viewports and theme/state.
 - Checks actually performed, their observed results and browser evidence
   references when available.
+- For existing screens, the unchanged-screen comparison result and the final
+  comparison showing that differences are limited to the confirmed scope.
 - Defects found, corrections and recheck results, plus any remaining limitations.
 - Overall result of passed, needs changes or incomplete. A pass requires all
   applicable checks to have run and all acceptance defects to be resolved.
