@@ -1052,7 +1052,46 @@ def test_visual_preview_gate(root: Path, worktrees: Path) -> None:
     )
 
     (draft / "preview.html").write_text("<!doctype html><title>Preview</title>", encoding="utf-8")
-    _check(validate_draft(cfg, "ticket_preview").ok, "visual preview unblocks promotion")
+    _check(not validate_draft(cfg, "ticket_preview").ok, "HTML alone must not unblock promotion")
+    import hashlib
+    from codoop_lib_v1.tickets_cli import promote
+    try:
+        promote(cfg, "ticket_preview")
+        raise AssertionError("promotion must reject unreviewed HTML")
+    except ValueError:
+        pass
+    (draft / "browser-evidence.txt").write_text("Browser observations for the reviewed task", encoding="utf-8")
+    report = {
+        "result": "passed", "design_path": "existing_product", "unresolved_defects": [],
+        "sha256": {name: hashlib.sha256((draft / name).read_bytes()).hexdigest()
+                   for name in ("preview.html", "spec.md")},
+        "checks": {name: {"result": "passed", "observations": "Observed expected behavior",
+                           "evidence": ["browser-evidence.txt"]}
+                   for name in ("visual", "task", "runtime", "fidelity")},
+    }
+    report_path = draft / "preview-acceptance.json"
+    def save_report():
+        report_path.write_text(json.dumps(report), encoding="utf-8")
+    save_report()
+    _check(validate_draft(cfg, "ticket_preview").ok, "complete review contract validates")
+    for name in ("visual", "task", "runtime", "fidelity"):
+        report["checks"][name]["result"] = "incomplete"
+        save_report()
+        _check(not validate_draft(cfg, "ticket_preview").ok, f"incomplete {name} blocks")
+        report["checks"][name]["result"] = "passed"
+    report["unresolved_defects"] = ["broken primary action"]
+    save_report()
+    _check(not validate_draft(cfg, "ticket_preview").ok, "unresolved defects block")
+    report["unresolved_defects"] = []
+    save_report()
+    for name in ("preview.html", "spec.md"):
+        original = (draft / name).read_bytes()
+        (draft / name).write_bytes(original + b" changed")
+        _check(not validate_draft(cfg, "ticket_preview").ok, f"changed {name} invalidates review")
+        (draft / name).write_bytes(original)
+    (draft / "browser-evidence.txt").unlink()
+    _check(not validate_draft(cfg, "ticket_preview").ok, "missing evidence blocks")
+
 
 
 def test_ticket_metadata_has_no_test_command(root: Path, worktrees: Path) -> None:

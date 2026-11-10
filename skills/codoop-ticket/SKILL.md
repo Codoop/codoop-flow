@@ -309,6 +309,18 @@ with a different visible control.
 Run this acceptance loop on the generated HTML in both design modes before
 requesting user review. Review the rendered result using the PM, UI Designer and
 UX Architect criteria above. A file-existence check cannot establish acceptance.
+The agent owns this review and repair loop in both `strict` and `one_pass` modes;
+do not wait for the user to discover defects or request another iteration.
+
+Before reviewing, derive a requirement checklist from the confirmed PRD, spec,
+user constraints and shipped-product standards above. Include every in-scope
+screen, primary action, interaction state and acceptance criterion. For each item,
+record the expected behavior, the observed result in the latest rendered preview,
+evidence and a verdict of passed, needs changes or incomplete. Explicitly assess
+whether the result is a usable shipped-product design: realistic content, clear
+hierarchy, coherent components and a complete task with visible outcomes and
+recovery. A working demo flow alone does not satisfy these criteria.
+Missing evidence or an unexercised requirement is incomplete, never passed.
 
 1. **Visual review — UI Designer.** Open the HTML at representative target
    viewports and inspect hierarchy, density, typography, spacing, icon consistency,
@@ -327,11 +339,24 @@ UX Architect criteria above. A file-existence check cannot establish acceptance.
    controls and inspect console errors, missing assets and unexpected network
    requests. Keep required assets inline and interactions local. Resolve errors
    attributable to the preview and record tool or browser limitations.
-4. **Repair and recheck.** Record each concrete defect, its affected state and
-   required correction. Fix it, reload the latest HTML and repeat affected checks,
-   then complete the main task again. Continue until all acceptance defects are
-   resolved. If blocked by missing access, tools or baseline evidence, mark the
-   review incomplete and explain what is needed to resume.
+4. **Agent feedback and repair.** Review the current rendered preview against
+   the requirement checklist and produce concrete feedback for every gap: the
+   violated requirement, affected screen/state, observed problem, user impact,
+   and the agent's recommended correction. Include visual and usability defects,
+   even when the main click path works. Apply in-scope corrections autonomously
+   before asking the user to review; listing suggestions alone is not completion.
+   Preserve confirmed requirements and surrounding UI. If a correction requires
+   a new product decision or a scope change, ask only for that decision and
+   continue independent repairs; keep the affected requirement incomplete.
+5. **Recheck the latest result.** Reload the modified HTML in the browser, repeat
+   affected visual, task, runtime and fidelity checks, then complete the main task
+   again to catch regressions. Record each review round as problem → suggestion →
+   applied change → observed recheck result, with evidence of the final state.
+   Repeat until every applicable checklist item passes and no acceptance defect
+   remains. Do not stop after an arbitrary number of iterations, mark an item
+   passed merely because code was changed, or weaken requirements to obtain a
+   pass. If blocked by missing access, tools or baseline evidence, mark the review
+   incomplete and explain what is needed to resume.
 
 Record a compact preview acceptance section in `spec.md`, including:
 
@@ -341,9 +366,40 @@ Record a compact preview acceptance section in `spec.md`, including:
   references when available.
 - For existing screens, the unchanged-screen comparison result and the final
   comparison showing that differences are limited to the confirmed scope.
-- Defects found, corrections and recheck results, plus any remaining limitations.
+- Requirement checklist with expected versus observed results and per-item verdicts.
+- Agent feedback and repair rounds: defects, recommended corrections, applied
+  changes and observed recheck results, plus any remaining limitations. If no
+  defects were found, record the checks supporting that conclusion; do not invent
+  defects or perform gratuitous changes to demonstrate iteration.
 - Overall result of passed, needs changes or incomplete. A pass requires all
   applicable checks to have run and all acceptance defects to be resolved.
+
+Before validation or promotion, write `preview-acceptance.json` in the ticket
+folder. The runtime blocks visual tickets without this review contract:
+
+```json
+{
+  "result": "passed",
+  "design_path": "existing_product",
+  "sha256": {"preview.html": "<SHA-256 of reviewed file>", "spec.md": "<SHA-256 of reviewed file>"},
+  "unresolved_defects": [],
+  "checks": {
+    "visual": {"result": "passed", "observations": "<viewports, states and observed visual results>", "evidence": ["evidence/visual.png"]},
+    "task": {"result": "passed", "observations": "<steps, state coverage, recovery and keyboard results>", "evidence": ["evidence/task.md"]},
+    "runtime": {"result": "passed", "observations": "<browser, console, assets and network results>", "evidence": ["evidence/runtime.md"]},
+    "fidelity": {"result": "passed", "observations": "<unchanged and final baseline comparisons>", "evidence": ["evidence/comparison.png"]}
+  }
+}
+```
+
+Evidence paths must be nonempty files inside the ticket directory; preserve them
+on promotion. Use actual browser captures and observed logs, never invented
+results or placeholder evidence. For a new product use `design_path: new_product`;
+only fidelity may be `not_applicable`, with an explicit reason in observations.
+Hash the final files after recording spec acceptance. Any subsequent HTML or spec
+change invalidates the report: rerun affected checks and update the hashes only
+after review. The runtime checks completeness and freshness, not aesthetic
+quality; passing JSON validation cannot replace the browser acceptance loop.
 
 Present the preview as ready for user review only after acceptance passes.
 When blocked, report the incomplete result and remaining checks. Keep proposed

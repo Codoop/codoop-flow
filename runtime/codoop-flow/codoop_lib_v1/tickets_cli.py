@@ -10,6 +10,7 @@ that: scaffold a draft, validate it's complete, and promote it to pending/
 
 from __future__ import annotations
 
+import hashlib
 import json
 import shutil
 from dataclasses import dataclass, field
@@ -174,6 +175,46 @@ def _is_meaningfully_filled(path: Path) -> bool:
     return False
 
 
+def _validate_preview(draft: Path) -> list[str]:
+    """Require review evidence tied to the exact reviewed artifacts.
+
+    This validates the review contract; visual quality still requires browser review.
+    """
+    try:
+        report = json.loads((draft / "preview-acceptance.json").read_text(encoding="utf-8"))
+        if not isinstance(report, dict) or report.get("result") != "passed":
+            raise ValueError("result must be passed")
+        for name in ("preview.html", "spec.md"):
+            digest = hashlib.sha256((draft / name).read_bytes()).hexdigest()
+            if report.get("sha256", {}).get(name) != digest:
+                raise ValueError(f"missing or stale hash: {name}")
+        if report.get("unresolved_defects") != []:
+            raise ValueError("unresolved_defects must be empty")
+        checks = report.get("checks", {})
+        for name in ("visual", "task", "runtime", "fidelity"):
+            check = checks.get(name, {})
+            if not isinstance(check, dict):
+                raise ValueError(f"invalid check: {name}")
+            if name == "fidelity" and check.get("result") == "not_applicable":
+                if report.get("design_path") != "new_product" or not check.get("observations", "").strip():
+                    raise ValueError("fidelity exemption requires new_product and a reason")
+                continue
+            if check.get("result") != "passed" or not check.get("observations", "").strip():
+                raise ValueError(f"missing passed check and observations: {name}")
+            evidence = check.get("evidence")
+            if not isinstance(evidence, list) or not evidence:
+                raise ValueError(f"missing evidence: {name}")
+            for ref in evidence:
+                path = (draft / ref).resolve()
+                if not path.is_relative_to(draft.resolve()) or not path.is_file() or path.stat().st_size == 0:
+                    raise ValueError(f"missing or unsafe evidence: {name}")
+        if report.get("design_path") not in ("existing_product", "new_product"):
+            raise ValueError("invalid design_path")
+    except (OSError, ValueError, TypeError, AttributeError) as exc:
+        return [f"preview acceptance incomplete: {exc}"]
+    return []
+
+
 def validate_draft(config: Config, ticket_id: str) -> ValidationResult:
     """Check a draft is ready to promote: metadata parses + required docs are
     meaningfully filled. Returns errors (blocking) and warnings (advisory)."""
@@ -203,6 +244,9 @@ def validate_draft(config: Config, ticket_id: str) -> ValidationResult:
 
     if not errors and ticket.visual_preview and not (draft / "preview.html").exists():
         errors.append("missing required visual preview: preview.html")
+
+    if not errors and ticket.visual_preview:
+        errors.extend(_validate_preview(draft))
 
     for doc in RECOMMENDED_DOCS:
         p = draft / doc
