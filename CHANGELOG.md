@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.8-alpha.3] - 2026-11-10
+
+### Added
+
+- Require preview acceptance records and evidence before visual tickets can be promoted.
+- Bind acceptance to the reviewed preview and specification so later changes require renewed review.
+
+### Changed
+
+- Check existing-screen fidelity against current rendered evidence before applying proposed changes.
+- Require agents to review previews against requirements, propose corrections, repair defects and recheck before user review.
+
 ## [0.1.8-alpha.2] - 2026-11-07
 
 ### Added
